@@ -1,0 +1,11 @@
+[package]
+name = "worm"
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+eds = { git = "https://github.com/urbanslug/eds.git" }
+# eds = { path = "/home/sluggie/src/phd/eds" }
+petgraph = "0.6.2"
