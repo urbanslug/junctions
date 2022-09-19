@@ -20,6 +20,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 
 [[package]]
+name = "generalized_suffix_tree"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20304eada44e614a5c9a06d844a5704ad4873a6b97e79e15389d798d450944cd"
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -50,5 +56,6 @@ name = "worm"
 version = "0.0.1"
 dependencies = [
  "eds",
+ "generalized_suffix_tree",
  "petgraph",
 ]

@@ -3,6 +3,9 @@ use petgraph::Graph;
 use petgraph::graph::NodeIndex;
 use std::collections::HashSet;
 use petgraph::dot::{Dot, Config};
+use generalized_suffix_tree::GeneralizedSuffixTree;
+
+
 
 const ADD_Q_0: bool = true;
 const ADD_ACCEPTING_STATE: bool = false;
@@ -118,6 +121,19 @@ node [shape=box]
 }
 
 
+fn build_generalized_suffix_tree(text: Vec<&str>) {
+    let mut tree = GeneralizedSuffixTree::new();
+
+    
+
+    text.into_iter().enumerate().for_each(|(idx, s)| {
+        tree.add_string(String::from(s), (idx as u8) as char);
+    }
+    );
+    tree.pretty_print();
+    println!("{}", tree.is_suffix("BCE"));
+}
+
 fn main() {
     // let ed_string = "A{T,G}{C,A}{T,A}TC";
     // let ed_string = EDT::from_str("ACTA{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A");
@@ -127,9 +143,12 @@ fn main() {
 }
 
 
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_build_compacted_trie() {
         // let ed_string = "A{T,G}{C,A}{T,A}TC";
@@ -143,6 +162,12 @@ mod tests {
         println!("\n{edt}");
 
         let automaton = build_automaton(edt);
-        print_dot(automaton);
+        print_dot(automaton, ed_string);
+    }
+
+    #[test]
+    fn test_search_using_st() {
+        let text = Vec::from(["ATCAT", "ATCAG"]);
+        build_generalized_suffix_tree(text);
     }
 }
