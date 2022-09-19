@@ -7,7 +7,7 @@ use petgraph::dot::{Dot, Config};
 const ADD_Q_0: bool = true;
 const ADD_ACCEPTING_STATE: bool = false;
 
-fn build_automaton(edt: EDT) -> Graph<(usize, usize, usize), String>{
+fn build_automaton(edt: EDT) -> Graph<(usize, usize), String>{
     let diameter =  edt.w();
     let solids: &Vec<(usize, usize)> =  edt.get_solid_intervals();
     let degenerates: &Vec<(usize, usize)> = edt.get_degenerate_letters();
@@ -15,15 +15,18 @@ fn build_automaton(edt: EDT) -> Graph<(usize, usize, usize), String>{
     let mut i: usize = 0; // solids_pointer
     let mut j: usize = 0; // degenerates_pointer
 
-    let mut automaton = Graph::<(usize, usize, usize), String>::new();
+    let mut automaton = Graph::<(usize, usize), String>::new();
     // temporary buffer to store the nodes from the previous iteration of the loop
     // from_nodes
     let mut stored = HashSet::<(NodeIndex, usize)>::new();
 
+    let mut n = 0;
+
     if ADD_Q_0 {
         // start node
-        let start_node = automaton.add_node((0, 0, 0));
+        let start_node = automaton.add_node((n, 0));
         stored.insert(((start_node), 0));
+        n += 1;
     }
 
     while i < solids.len() || j < degenerates.len() {
@@ -55,7 +58,7 @@ fn build_automaton(edt: EDT) -> Graph<(usize, usize, usize), String>{
             let h = edt[stop-1].len();
             let nodes_added = (0..h)
                 .map(|element| {
-                    let node = automaton.add_node((start, stop, element));
+                    let node = automaton.add_node((n, element));
                     let mut seed: String = (start..stop)
                         .map(|col|  edt.base_at([col, element]) as char )
                         .collect::<String>();
@@ -80,11 +83,13 @@ fn build_automaton(edt: EDT) -> Graph<(usize, usize, usize), String>{
             automaton.extend_with_edges(edges);
         }
 
+        n += 1;
+
     }
 
 
     if ADD_ACCEPTING_STATE {
-        let accepting_state = automaton.add_node((diameter, diameter, 0));
+        let accepting_state = automaton.add_node((n, 0));
 
         let edges = stored
             .iter()
@@ -99,12 +104,13 @@ fn build_automaton(edt: EDT) -> Graph<(usize, usize, usize), String>{
 }
 
 
-fn print_dot(automaton: Graph<(usize, usize, usize), String>) {
+fn print_dot(automaton: Graph<(usize, usize), String>, input_str: &str) {
     print!("digraph {{");
     print!("
+graph [label=\"{}\", labelloc=t, fontsize=12];
 rankdir=LR
 node [shape=box]
-");
+", input_str);
     print!("{:?}", Dot::with_config(&automaton, &[Config::GraphContentOnly]));
     println!("}}");
     println!()
