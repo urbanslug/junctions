@@ -1,5 +1,5 @@
 [package]
-name = "worm"
+name = "junctions"
 version = "0.0.1"
 edition = "2021"
 
@@ -7,6 +7,5 @@ edition = "2021"
 
 [dependencies]
 eds = { git = "https://github.com/urbanslug/eds.git" }
-# eds = { path = "/home/sluggie/src/phd/eds" }
 petgraph = "0.6.2"
 generalized_suffix_tree = "1.2.1"
