@@ -1,16 +1,16 @@
 use eds::EDT;
-use petgraph::Graph;
-use petgraph::graph::NodeIndex;
+use std::cmp::min;
 use std::collections::HashSet;
+use petgraph::graph::NodeIndex;
 use petgraph::dot::{Dot, Config};
+use petgraph::{Graph, data::Build};
 use generalized_suffix_tree::GeneralizedSuffixTree;
-
 
 
 const ADD_Q_0: bool = true;
 const ADD_ACCEPTING_STATE: bool = false;
 
-fn build_automaton(edt: EDT) -> Graph<usize, String>{
+fn build_automaton(edt: EDT) -> Graph<usize, String> {
     let diameter =  edt.w();
     let solids: &Vec<(usize, usize)> =  edt.get_solid_intervals();
     let degenerates: &Vec<(usize, usize)> = edt.get_degenerate_letters();
@@ -91,7 +91,7 @@ fn build_automaton(edt: EDT) -> Graph<usize, String>{
 }
 
 
-fn print_dot(automaton: Graph<usize, String>, input_str: &str) {
+fn print_dot(automaton: &Graph<usize, String>, input_str: &str) {
     print!("digraph {{");
     print!("
 graph [label=\"{}\", labelloc=t, fontsize=12];
@@ -107,14 +107,166 @@ node [shape=circle]
 fn build_generalized_suffix_tree(text: Vec<&str>) {
     let mut tree = GeneralizedSuffixTree::new();
 
-    
-
     text.into_iter().enumerate().for_each(|(idx, s)| {
         tree.add_string(String::from(s), (idx as u8) as char);
     }
     );
     tree.pretty_print();
     println!("{}", tree.is_suffix("BCE"));
+}
+
+struct Tree {
+    root: NodeIndex,
+    graph: Graph<usize, String>,
+    leaves: HashSet<NodeIndex>
+}
+
+// TODO: handle duplicate string
+fn build_radix_tree(text: &Vec<&str>, id: usize) -> Tree {
+    let mut text: Vec<&[u8]> = text.iter().map(|s| s.as_bytes()).collect();
+    text.sort();
+
+    let mut leaves = HashSet::<NodeIndex>::new();
+
+    let mut trie = Graph::<usize, String>::new();
+    let root_node: NodeIndex = trie.add_node(id);
+
+    let mut i_path = Vec::<(NodeIndex, NodeIndex, String)>::new();
+    let mut branches = Vec::<String>::new();
+
+    let mut i: usize = 0;
+
+    while i < text.len() - 1 {
+        let f = text.get(i).unwrap();
+        let s = text.get(i+1).unwrap();
+
+        let f_len = f.len();
+        let s_len = s.len();
+
+        let mut j: usize = 0;
+
+        let mut string_buffer = String::new();
+
+        // dbg!(f[j..].iter().map(|b| *b as char).collect::<String>(),
+        //     s[j..].iter().map(|b| *b as char).collect::<String>(),
+        //     &branches,
+        //     f_len,
+        //     s_len);
+
+        loop {
+            if  j < min(f_len, s_len) &&  f[j] == s[j] {
+                string_buffer.push(f[j] as char);
+            } else {
+                let mut h = HashSet::<(NodeIndex, NodeIndex, String)>::new();
+                let f_suffix: String = f[j..].iter().map(|b| *b as char).collect();
+                let s_suffix: String = s[j..].iter().map(|b| *b as char).collect();
+
+                // replace with i_path check
+                //if  trie.edges(root_node).count() == 0 {
+                if  i_path.is_empty() {
+                    let internal_node = trie.add_node(id);
+
+                    h.insert((root_node, internal_node, string_buffer.clone()));
+
+                    let leaf_f = trie.add_node(id);
+                    let leaf_s = trie.add_node(id);
+
+                    h.insert((internal_node, leaf_f, f_suffix));
+                    h.insert((internal_node, leaf_s, s_suffix.clone()));
+
+                    i_path.push((root_node, internal_node, string_buffer.clone()));
+                    i_path.push((internal_node, leaf_s, s_suffix.clone()));
+
+
+                    trie.extend_with_edges(h);
+
+                    leaves.insert(leaf_f);
+                    leaves.insert(leaf_s);
+
+                } else {
+                    // walk down the trie following the path of the ith string
+                    let mut k: usize = 0; // TODO: rename furthest similar char
+                    let mut furthest_edge: usize = 0;
+                    for (_, _, s) in i_path.iter() {
+
+                        k += s.len();
+
+                        if k >= j {
+                            break;
+                        }
+
+                        furthest_edge += 1;
+                    }
+
+                    dbg!(k, j);
+
+                    if furthest_edge >= i_path.len() {
+                        let (i, o, s) = i_path[furthest_edge-1].clone();
+
+                        // let internal_node = trie.add_node(id);
+                        let leaf_s = trie.add_node(id);
+                        let leaf_f = trie.add_node(id);
+
+                        h.insert((o, leaf_f, String::from("")));
+                        h.insert((o, leaf_s, s_suffix.clone()));
+
+                        i_path.push((o, leaf_s, s_suffix.clone()));
+                        trie.extend_with_edges(h);
+
+
+                        // update leaves
+                        leaves.remove(&o);
+                        leaves.insert(leaf_f);
+                        leaves.insert(leaf_s);
+
+                    } else {
+                        // break the current furthest edge
+                        let (i, o, s) = i_path[furthest_edge].clone();
+                        let edge_index = trie.find_edge(i, o).unwrap();
+                        trie.remove_edge(edge_index);
+
+                        // add the new leaf and internal node
+                        let internal_node = trie.add_node(id);
+                        let leaf_s = trie.add_node(id);
+
+                        let s_len = s.len();
+                        let s_break = s_len - (k - j);
+
+                        dbg!(&s, s_break);
+
+                        let f_prefix = s[0..s_break].chars().collect::<String>();
+                        let f_prefix_2 = s[s_break..].chars().collect::<String>();
+
+                        dbg!(&f_prefix, &f_prefix_2, &s_suffix);
+
+                        h.insert((i, internal_node, f_prefix));
+                        h.insert((internal_node, o, f_prefix_2));
+                        h.insert((internal_node, leaf_s, s_suffix.clone()));
+
+                        // glue it back together
+                        trie.extend_with_edges(h);
+
+                        i_path.truncate(furthest_edge);
+                        i_path.push((internal_node, leaf_s, s_suffix.clone()));
+
+                        // update leaves
+                        leaves.insert(leaf_s);
+                    }
+                }
+
+                break;
+            }
+
+            j += 1;
+        }
+        i+= 1;
+    }
+
+    Tree {
+        root: root_node,
+        graph: trie,
+        leaves
+    }
 }
 
 fn main() {
@@ -133,7 +285,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_build_compacted_trie() {
+    fn test_build_automaton() {
         // let ed_string = "A{T,G}{C,A}{T,A}TC";
         // let ed_string = "ACTA{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A";
         // let ed_string = "ACTA{ATC,CGA}C{ACGT,GCGC}A";
@@ -145,12 +297,31 @@ mod tests {
         println!("\n{edt}");
 
         let automaton = build_automaton(edt);
-        print_dot(automaton, ed_string);
+        print_dot(&automaton, ed_string);
     }
 
     #[test]
     fn test_search_using_st() {
         let text = Vec::from(["ATCAT", "ATCAG"]);
         build_generalized_suffix_tree(text);
+    }
+
+    #[test]
+    fn test_build_radix_tree() {
+        // let text = Vec::from(["ATCAT", "ATCAG", "AAACTA"]);
+        let text = Vec::from(["A", "ATCAGA", "ATCAG", "AAACTA"]);
+
+        let radix_tree = build_radix_tree(&text, 0);
+        print_dot(&radix_tree.graph, &text.join(" "));
+
+
+
+        for leaf in radix_tree.leaves.iter() {
+            radix_tree
+                .graph
+                .edges_directed(*leaf, petgraph::Incoming)
+                .for_each(|e| { dbg!(e); } );
+        }
+
     }
 }
