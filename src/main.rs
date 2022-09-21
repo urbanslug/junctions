@@ -61,7 +61,6 @@ fn build_automaton(edt: EDT) -> Graph<usize, String> {
         // add nodes or edges for that degenerate letter or solid string
         if stop <= diameter {
             let h = edt[stop-1].len();
-            // let current_node = automaton.add_node(n);
 
             let edge_labels = (0..h)
                 .map(|element| {
@@ -77,22 +76,34 @@ fn build_automaton(edt: EDT) -> Graph<usize, String> {
                 })
                 .collect::<HashSet<String>>();
 
+            if edge_labels.len() == 1 {
+                // solid
+                let previous_node =  maybe_previous_node.unwrap();
+                let current_node = automaton.add_node(n);
+                let edges = edge_labels
+                    .iter()
+                    .map(|label| (previous_node, current_node, label.clone()))
+                    .collect::<Vec<(NodeIndex, NodeIndex, String)>>();
 
-            let previous_node =  maybe_previous_node.unwrap();
+                automaton.extend_with_edges(edges);
+                maybe_previous_node.replace(current_node);
+            } else {
+                let previous_node =  maybe_previous_node.unwrap();
 
-            let labels_vec = edge_labels.iter().map(|l| l.as_str() ).collect::<Vec<&str>>();
+                let labels_vec = edge_labels.iter().map(|l| l.as_str() ).collect::<Vec<&str>>();
 
-            let mut trie = Tree {
-                root: previous_node,
-                hard_node: None,
-                graph: &mut automaton,
-                leaves: HashSet::<NodeIndex>::new(),
-            };
+                let mut trie = Tree {
+                    root: previous_node,
+                    hard_node: None,
+                    graph: &mut automaton,
+                    leaves: HashSet::<NodeIndex>::new(),
+                };
 
-            build_radix_tree(&mut trie, &labels_vec, n, true);
+                build_radix_tree(&mut trie, &labels_vec, n, true);
 
-            maybe_previous_node.replace(trie.hard_node.unwrap());
-            // automaton.extend_with_edges(edges);
+                maybe_previous_node.replace(trie.hard_node.unwrap());
+                // automaton.extend_with_edges(edges);
+            }
         }
 
         n += 1;
@@ -135,18 +146,20 @@ struct Tree<'a> {
 
 // TODO: handle duplicate string
 fn build_radix_tree(automaton: &mut Tree, text: &Vec<&str>, id: usize, add_hard_node: bool) {
-    let mut text: Vec<&[u8]> = text.iter().map(|s| s.as_bytes()).collect();
+
+
+    // let mut text: Vec<&[u8]> = text.iter().map(|s| s.as_bytes()).collect();
+    let mut text: Vec<Vec<char>> = text.iter()
+        .map(|s| s.chars().collect::<Vec<char>>() )
+        .collect();
     text.sort();
 
     let mut leaves = HashSet::<NodeIndex>::new();
 
     let root_node: NodeIndex = automaton.root;
     let trie = &mut automaton.graph;
-    // let mut trie = Graph::<usize, String>::new();
-    
 
     let mut i_path = Vec::<(NodeIndex, NodeIndex, String)>::new();
-    let mut branches = Vec::<String>::new();
 
     let mut i: usize = 0;
 
@@ -178,9 +191,10 @@ fn build_radix_tree(automaton: &mut Tree, text: &Vec<&str>, id: usize, add_hard_
                 // replace with i_path check
                 //if  trie.edges(root_node).count() == 0 {
                 if  i_path.is_empty() {
-                    let internal_node = trie.add_node(id);
+                    //let internal_node = trie.add_node(id);
+                    let internal_node = root_node;
 
-                    h.insert((root_node, internal_node, string_buffer.clone()));
+                    // h.insert((root_node, internal_node, string_buffer.clone()));
 
                     let leaf_f = trie.add_node(id);
                     let leaf_s = trie.add_node(id);
@@ -188,7 +202,7 @@ fn build_radix_tree(automaton: &mut Tree, text: &Vec<&str>, id: usize, add_hard_
                     h.insert((internal_node, leaf_f, f_suffix));
                     h.insert((internal_node, leaf_s, s_suffix.clone()));
 
-                    i_path.push((root_node, internal_node, string_buffer.clone()));
+                    // i_path.push((root_node, internal_node, string_buffer.clone()));
                     i_path.push((internal_node, leaf_s, s_suffix.clone()));
 
 
@@ -278,8 +292,11 @@ fn build_radix_tree(automaton: &mut Tree, text: &Vec<&str>, id: usize, add_hard_
 
     let hard_node = trie.add_node(id);
     automaton.hard_node = Some(hard_node);
-    let edges = leaves.iter().map(|leaf_node| (*leaf_node, hard_node, String::new() ) );
-    trie.extend_with_edges(edges);
+
+    if add_hard_node {
+        let edges = leaves.iter().map(|leaf_node| (*leaf_node, hard_node, String::new() ) );
+        trie.extend_with_edges(edges);
+    }
 }
 
 fn main() {
@@ -322,7 +339,8 @@ mod tests {
     #[test]
     fn test_build_radix_tree() {
         // let text = Vec::from(["ATCAT", "ATCAG", "AAACTA"]);
-        let text = Vec::from(["A", "ATCAGA", "ATCAG", "AAACTA"]);
+        //let text = Vec::from(["A", "ATCAGA", "ATCAG", "AAACTA"]);
+        let text = Vec::from(["CAT", "A", "ATCAGA", "ATCAG", "AAACTA"]);
 
         let id = 0;
 
