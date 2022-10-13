@@ -7,5 +7,7 @@ edition = "2021"
 
 [dependencies]
 eds = { git = "https://github.com/urbanslug/eds.git" }
+ndarray-to-img = { git = "https://github.com/urbanslug/ndarray-to-img.git" }
+ndarray = "0.15.6"
 petgraph = "0.6.2"
 generalized_suffix_tree = "1.2.1"
