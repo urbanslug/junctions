@@ -252,7 +252,8 @@ pub fn intersect(w: &Graph<usize, String>, q: &Graph<usize, String>) -> bool {
             for (i_str, i_src, i_tgt) in current_w.iter() {
                 for (j_str, j_src, j_tgt) in current_q.iter() {
                     if (matrix[(*i_src, *j_src)] == 1
-                        || (matrix[(*i_src, *j_tgt)] == 1 && *i_str == String::from("*")))
+                        || (matrix[(*i_src, *j_tgt)] == 1
+                            || matrix[(*i_tgt, *j_src)] == 1 && *i_str == String::from("*")))
                         && (*i_str == String::from("*")
                             || *j_str == String::from("*")
                             || *j_str == *i_str)
