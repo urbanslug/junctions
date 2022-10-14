@@ -27,7 +27,7 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
     let mut j: usize = 0; // degenerates_pointer
 
     let mut automaton = Graph::<usize, String>::new();
-    let mut previous_nodes = Vec::<NodeIndex>::new();
+    let mut previous_nodes = Vec::<(NodeIndex, usize)>::new();
 
     let mut n: usize = 0;
     // let mut idx: usize = 0;
@@ -36,7 +36,7 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
     // Always add start node
     // start node
     let start_node: NodeIndex = automaton.add_node(n);
-    previous_nodes.push(start_node);
+    previous_nodes.push((start_node, 0));
     // stored.insert(((start_node), 0));
     n += 1;
 
@@ -72,9 +72,9 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
 
                 let nodes_buf = if idx + 1 == diameter {
                     // an accepting state node
-                    Vec::<NodeIndex>::from([automaton.add_node(n)])
+                    Vec::<(NodeIndex, usize)>::from([(automaton.add_node(n), 0)])
                 } else {
-                    let mut v = Vec::<NodeIndex>::new();
+                    let mut v = Vec::<(NodeIndex, usize)>::new();
 
                     for node_height in 0..h {
                         if h == 1
@@ -93,7 +93,7 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                             );
                             let current_node = automaton.add_node(n);
                             n += 1;
-                            v.push(current_node);
+                            v.push((current_node, node_height));
                         }
                     }
 
@@ -101,41 +101,59 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                 };
 
                 if idx == start {
-                    previous_nodes
-                        .iter()
-                        .for_each(|previous_node_id: &NodeIndex| {
-                            nodes_buf.iter().enumerate().for_each(|(h, node_index)| {
-                                automaton.add_edge(
-                                    *previous_node_id,
-                                    *node_index,
-                                    String::from(edt.base_at([idx, h]) as char),
-                                );
-                            })
+                    previous_nodes.iter().for_each(|(previous_node_id, _)| {
+                        nodes_buf.iter().for_each(|(node_index, height)| {
+                            automaton.add_edge(
+                                *previous_node_id,
+                                *node_index,
+                                String::from(edt.base_at([idx, *height]) as char),
+                            );
                         })
+                    })
                 } else if idx + 1 == diameter {
                     previous_nodes
                         .iter()
-                        .enumerate()
-                        .for_each(|(h, previous_node_id)| {
-                            nodes_buf.iter().for_each(|node_index| {
+                        .for_each(|(previous_node_id, height)| {
+                            nodes_buf.iter().for_each(|(node_index, _)| {
                                 automaton.add_edge(
                                     *previous_node_id,
                                     *node_index,
-                                    String::from(edt.base_at([idx, h]) as char),
+                                    String::from(edt.base_at([idx, *height]) as char),
                                 );
                             })
                         })
                 } else {
-                    nodes_buf.iter().enumerate().for_each(|(h, node_index)| {
+                    nodes_buf.iter().for_each(|(node_index, height)| {
                         automaton.add_edge(
-                            previous_nodes[h],
+                            previous_nodes
+                                .iter()
+                                .find(|(_, previous_height)| *previous_height == *height)
+                                .unwrap()
+                                .0,
                             *node_index,
-                            String::from(edt.base_at([idx, h]) as char),
+                            String::from(edt.base_at([idx, *height]) as char),
                         );
                     })
                 }
 
+                // the short nodes to keep
+                let mut x: Vec<(NodeIndex, usize)> = if h > 1 {
+                    previous_nodes
+                        .into_iter()
+                        .filter(|(_, prev_height)| {
+                            !nodes_buf
+                                .iter()
+                                .any(|(_, curr_height)| *prev_height == *curr_height)
+                        })
+                        .collect()
+                } else {
+                    Vec::new()
+                };
+
+                // dbg!(idx, &x);
+
                 previous_nodes = nodes_buf;
+                previous_nodes.append(&mut x);
             }
         }
     }
@@ -239,8 +257,8 @@ mod tests {
         // let ed_string = "A{T,G}{C,A}{T,A}TC";
         // let ed_string = "ACTA{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A";
         // let ed_string = "ACTA{ATC,CGA}C{ACGT,GCGC}A";
-        //let ed_string = "{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA,}";
-        let ed_string = "A{CTA,C,}A";
+        let ed_string = "{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA,GT,}";
+        // let ed_string = "A{CTA,AT,C,}A";
         // let ed_string = EDT::from_str("ACTA{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA}");
 
         let edt = EDT::from_str(ed_string);
