@@ -1,36 +1,37 @@
+use eds::EDT;
+use generalized_suffix_tree::GeneralizedSuffixTree;
+use ndarray::{Array, Array2};
 use ndarray_to_img;
 use ndarray_to_img::plot::{self, Plottable};
-use ndarray::{Array, Array2};
-use eds::EDT;
+use petgraph::dot::{Config, Dot};
+use petgraph::graph::NodeIndex;
 use petgraph::visit::EdgeRef;
+use petgraph::Graph;
 use std::cmp::min;
 use std::collections::HashSet;
-use petgraph::graph::NodeIndex;
-use petgraph::dot::{Dot, Config};
-use petgraph::{Graph};
-use generalized_suffix_tree::GeneralizedSuffixTree;
 
+use super::utils::print_dot;
 use crate::utils;
-use super::utils::{print_dot};
+
+const LOG_LEVEL: u8 = 5;
 
 /// Build an automaton on all the chars of the ED-string
 pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
-    let diameter =  edt.w();
-    let size =  edt.size();
+    let diameter = edt.w();
+    let size = edt.size();
 
-    let solids: &Vec<(usize, usize)> =  edt.get_solid_intervals();
+    let solids: &Vec<(usize, usize)> = edt.get_solid_intervals();
     let degenerates: &Vec<(usize, usize)> = edt.get_degenerate_letters();
 
     let mut i: usize = 0; // solids_pointer
     let mut j: usize = 0; // degenerates_pointer
 
     let mut automaton = Graph::<usize, String>::new();
-    let mut previous_nodes  = Vec::<NodeIndex>::new();
+    let mut previous_nodes = Vec::<NodeIndex>::new();
 
     let mut n: usize = 0;
     // let mut idx: usize = 0;
     // let mut prev_hard_node = n;
-
 
     // Always add start node
     // start node
@@ -40,7 +41,6 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
     n += 1;
 
     while i < solids.len() || j < degenerates.len() {
-
         // figure out what we are iterating through
         let (start, stop) = if i < solids.len() && j < degenerates.len() {
             let (s_s, s_e): (usize, usize) = solids[i];
@@ -53,8 +53,6 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                 j += 1;
                 (d_s, d_e)
             }
-
-
         } else if i >= solids.len() {
             let (d_s, d_e): (usize, usize) = degenerates[j];
             j += 1;
@@ -65,15 +63,13 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
             (s_s, s_e)
         };
 
-
         // add nodes or edges for that degenerate letter or solid string
         if stop <= diameter {
-
-
-            for idx  in start..stop {
+            for idx in start..stop {
                 let h = edt[idx].len();
 
-                let nodes_buf = if idx+1 == diameter {
+                let nodes_buf = if idx + 1 == diameter {
+                    // an accepting state node
                     Vec::<NodeIndex>::from([automaton.add_node(n)])
                 } else {
                     (0..h)
@@ -81,11 +77,11 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                             let current_node = automaton.add_node(n);
                             n += 1;
                             current_node
-                        }).collect::<Vec<NodeIndex>>()
-
+                        })
+                        .collect::<Vec<NodeIndex>>()
                 };
 
-                if idx == start  {
+                if idx == start {
                     previous_nodes
                         .iter()
                         .for_each(|previous_node_id: &NodeIndex| {
@@ -93,10 +89,11 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                                 automaton.add_edge(
                                     *previous_node_id,
                                     *node_index,
-                                    String::from( edt.base_at([idx, h]) as char));
+                                    String::from(edt.base_at([idx, h]) as char),
+                                );
                             })
                         })
-                } else if idx+1 == diameter {
+                } else if idx + 1 == diameter {
                     previous_nodes
                         .iter()
                         .enumerate()
@@ -105,7 +102,8 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                                 automaton.add_edge(
                                     *previous_node_id,
                                     *node_index,
-                                    String::from( edt.base_at([idx, h]) as char));
+                                    String::from(edt.base_at([idx, h]) as char),
+                                );
                             })
                         })
                 } else {
@@ -113,7 +111,8 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                         automaton.add_edge(
                             previous_nodes[h],
                             *node_index,
-                            String::from( edt.base_at([idx, h]) as char));
+                            String::from(edt.base_at([idx, h]) as char),
+                        );
                     })
                 }
 
@@ -142,69 +141,74 @@ w . |                    |
  */
 
 pub fn intersect(w: &Graph<usize, String>, q: &Graph<usize, String>) -> bool {
-
-    let n = w.node_count();
-    let m = q.node_count();
+    let n = q.node_count(); // cols
+    let m = w.node_count(); // rows
 
     // array takes (cols, row) tuple
-    let mut matrix: Array2<i32> = Array::zeros((m, n));
+    let mut matrix: Array2<i32> = Array::zeros((m, n)); // cols, rows
+                                                        // let mut matrix: Array2<i32> = Array::zeros((n, m)); // cols, rows
 
-    matrix[[0,0]] = 1;
+    matrix[[0, 0]] = 1;
 
     let w_vec = w.node_indices().collect::<Vec<NodeIndex>>();
     let q_vec = q.node_indices().collect::<Vec<NodeIndex>>();
 
-    dbg!(m, n, w_vec.len(), q_vec.len());
-    eprintln!("i\tj\t<-\tw\tq\t->q\t->w");
+    if LOG_LEVEL > 4 {
+        dbg!(m, n, w_vec.len(), q_vec.len());
+    }
 
-    for i in 0..n {
-        for j in 0..m {
+    // rows
+    for i in 0..m {
+        let current_w = w
+            .edges_directed(w_vec[i], petgraph::Incoming)
+            .map(|in_w| {
+                (
+                    in_w.weight().clone(),
+                    in_w.source().index(),
+                    in_w.target().index(),
+                )
+            })
+            .collect::<HashSet<(String, usize, usize)>>();
 
+        if LOG_LEVEL > 4 {
+            eprintln!("{} => {:?}", i, current_w);
+        }
 
+        // cols
+        for j in 0..n {
             // An incoming label can either be * and/or A, T, C or G.
-            let w_strings = w.edges_directed(w_vec[i], petgraph::Incoming)
-                .map(|in_w| in_w.weight().clone())
-                .collect::<HashSet<String>>();
+            let current_q = q
+                .edges_directed(q_vec[j], petgraph::Incoming)
+                .map(|in_q| {
+                    (
+                        in_q.weight().clone(),
+                        in_q.source().index(),
+                        in_q.target().index(),
+                    )
+                })
+                .collect::<HashSet<(String, usize, usize)>>();
 
-            let q_strings = q.edges_directed(q_vec[j], petgraph::Incoming)
-                .map(|in_q| in_q.weight().clone())
-                .collect::<HashSet<String>>();
-
-            if !q_strings.is_disjoint(&w_strings)
-                || !q_strings.contains("*")
-                || !w_strings.contains("*") {
-                    matrix[[j,i]] = 1;
-                    break;
-            }
-
-            let mut w_nodes = w.edges_directed(w_vec[i], petgraph::Incoming)
-                .flat_map(|in_w| vec![in_w.source().index(), in_w.target().index()] )
-                .collect::<HashSet<usize>>();
-            w_nodes.insert(i);
-
-            let mut q_nodes = q.edges_directed(w_vec[j], petgraph::Incoming)
-                .flat_map(|in_q| vec![in_q.source().index(), in_q.target().index()] )
-                .collect::<HashSet<usize>>();
-            q_nodes.insert(j);
-
-
-            for w_idx in w_nodes.iter() {
-                for q_idx in q_nodes.iter() {
-                    if matrix[(*q_idx, *w_idx)] == 1 {
-                        matrix[[j,i]] = 1;
+            for (i_str, i_src, i_tgt) in current_w.iter() {
+                for (j_str, j_src, j_tgt) in current_q.iter() {
+                    if (matrix[(*i_src, *j_src)] == 1
+                        || (matrix[(*i_src, *j_tgt)] == 1 && *i_str == String::from("*")))
+                        && (*i_str == String::from("*")
+                            || *j_str == String::from("*")
+                            || *j_str == *i_str)
+                    {
+                        matrix[(*i_tgt, *j_tgt)] = 1;
                         break;
                     }
                 }
             }
-
-
-
         }
     }
 
-    utils::visualize_matrix(&matrix, "matrix.png");
+    if LOG_LEVEL > 4 {
+        utils::visualize_matrix(&matrix, "matrix.png");
+    }
 
-    matrix[(m-1,n-1)] == 1
+    matrix[(m - 1, n - 1)] == 1
 }
 
 #[cfg(test)]
@@ -228,8 +232,8 @@ mod tests {
 
     #[test]
     fn test_contains_intersect() {
-        let  ed_string_w = "{AT,TC}{ATC,T}";
-        let  ed_string_q = "{TT,T}{CT,T}";
+        let ed_string_w = "{AT,TC}{ATC,T}";
+        let ed_string_q = "{TT,T,}{CT,T}";
 
         let edt_w = EDT::from_str(ed_string_w);
         let n = edt_w.size();
@@ -250,8 +254,8 @@ mod tests {
 
     #[test]
     fn test_no_intersect() {
-        let  ed_string_w = "{AT,TC}{ATC,T}";
-        let  ed_string_q = "{TT,A}{CT,T}";
+        let ed_string_w = "{AT,TC}{ATC,T}";
+        let ed_string_q = "{TT,A}{CT,T}";
 
         let edt_w = EDT::from_str(ed_string_w);
         let n = edt_w.size();
@@ -269,7 +273,4 @@ mod tests {
 
         assert_eq!(intersect(&automaton_w, &automaton_q), false);
     }
-
 }
-
-
