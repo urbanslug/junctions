@@ -65,6 +65,8 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
 
         // add nodes or edges for that degenerate letter or solid string
         if stop <= diameter {
+            let maybe_epsiolon: Option<NodeIndex> = None;
+
             for idx in start..stop {
                 let h = edt[idx].len();
 
@@ -72,13 +74,30 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                     // an accepting state node
                     Vec::<NodeIndex>::from([automaton.add_node(n)])
                 } else {
-                    (0..h)
-                        .map(|node_height: usize| {
+                    let mut v = Vec::<NodeIndex>::new();
+
+                    for node_height in 0..h {
+                        if h == 1
+                            || edt.base_at([idx, node_height]) != '*' as u8
+                            || (edt.base_at([idx, node_height]) == '*' as u8
+                                && edt.base_at([start, node_height]) == '*' as u8
+                                && edt.base_at([stop - 1, node_height]) == '*' as u8)
+                        {
+                            eprintln!(
+                                "idx {} height {} start {} char {} stop {}",
+                                idx,
+                                node_height,
+                                edt.base_at([start, node_height]) as char,
+                                edt.base_at([idx, node_height]) as char,
+                                edt.base_at([stop - 1, node_height]) as char
+                            );
                             let current_node = automaton.add_node(n);
                             n += 1;
-                            current_node
-                        })
-                        .collect::<Vec<NodeIndex>>()
+                            v.push(current_node);
+                        }
+                    }
+
+                    v
                 };
 
                 if idx == start {
@@ -220,7 +239,8 @@ mod tests {
         // let ed_string = "A{T,G}{C,A}{T,A}TC";
         // let ed_string = "ACTA{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A";
         // let ed_string = "ACTA{ATC,CGA}C{ACGT,GCGC}A";
-        let ed_string = "{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA,}";
+        //let ed_string = "{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA,}";
+        let ed_string = "A{CTA,C,}A";
         // let ed_string = EDT::from_str("ACTA{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA}");
 
         let edt = EDT::from_str(ed_string);
