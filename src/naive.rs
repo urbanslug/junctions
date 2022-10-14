@@ -3,10 +3,11 @@ use generalized_suffix_tree::GeneralizedSuffixTree;
 use ndarray::{Array, Array2};
 use ndarray_to_img;
 use ndarray_to_img::plot::{self, Plottable};
+use petgraph::adj::EdgeReference;
 use petgraph::dot::{Config, Dot};
-use petgraph::graph::NodeIndex;
+use petgraph::graph::{Edges, NodeIndex};
 use petgraph::visit::EdgeRef;
-use petgraph::Graph;
+use petgraph::{Directed, Graph};
 use std::cmp::min;
 use std::collections::HashSet;
 
@@ -111,17 +112,31 @@ pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
                         })
                     })
                 } else if idx + 1 == diameter {
-                    previous_nodes
-                        .iter()
-                        .for_each(|(previous_node_id, height)| {
-                            nodes_buf.iter().for_each(|(node_index, _)| {
-                                automaton.add_edge(
-                                    *previous_node_id,
-                                    *node_index,
-                                    String::from(edt.base_at([idx, *height]) as char),
-                                );
+                    if h == 1 {
+                        previous_nodes
+                            .iter()
+                            .for_each(|(previous_node_id, height)| {
+                                nodes_buf.iter().for_each(|(node_index, _)| {
+                                    automaton.add_edge(
+                                        *previous_node_id,
+                                        *node_index,
+                                        String::from(edt.base_at([idx, *height]) as char),
+                                    );
+                                })
                             })
+                    } else {
+                        nodes_buf.iter().for_each(|(node_index, height)| {
+                            automaton.add_edge(
+                                previous_nodes
+                                    .iter()
+                                    .find(|(_, previous_height)| *previous_height == *height)
+                                    .unwrap()
+                                    .0,
+                                *node_index,
+                                String::from(edt.base_at([idx, *height]) as char),
+                            );
                         })
+                    }
                 } else {
                     nodes_buf.iter().for_each(|(node_index, height)| {
                         automaton.add_edge(
@@ -194,6 +209,15 @@ pub fn intersect(w: &Graph<usize, String>, q: &Graph<usize, String>) -> bool {
         dbg!(m, n, w_vec.len(), q_vec.len());
     }
 
+    // find accepting states
+    let accepting_states_w = (0..m)
+        .filter(|i| w.edges_directed(w_vec[*i], petgraph::Outgoing).count() == 0)
+        .collect::<Vec<usize>>();
+
+    let accepting_states_q = (0..n)
+        .filter(|j| w.edges_directed(q_vec[*j], petgraph::Outgoing).count() == 0)
+        .collect::<Vec<usize>>();
+
     // rows
     for i in 0..m {
         let current_w = w
@@ -245,7 +269,14 @@ pub fn intersect(w: &Graph<usize, String>, q: &Graph<usize, String>) -> bool {
         utils::visualize_matrix(&matrix, "matrix.png");
     }
 
-    matrix[(m - 1, n - 1)] == 1
+    for accept_i in accepting_states_w.iter() {
+        for accept_j in accepting_states_q.iter() {
+            if matrix[(*accept_i, *accept_j)] == 1 {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 #[cfg(test)]
