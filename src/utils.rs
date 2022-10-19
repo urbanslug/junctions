@@ -1,5 +1,5 @@
 use eds::EDT;
-use generalized_suffix_tree::GeneralizedSuffixTree;
+
 use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
 use petgraph::{data::Build, Graph};
@@ -132,16 +132,6 @@ node [shape=circle]
     );
     println!("}}");
     println!()
-}
-
-fn build_generalized_suffix_tree(text: Vec<&str>) {
-    let mut tree = GeneralizedSuffixTree::new();
-
-    text.into_iter().enumerate().for_each(|(idx, s)| {
-        tree.add_string(String::from(s), (idx as u8) as char);
-    });
-    tree.pretty_print();
-    println!("{}", tree.is_suffix("BCE"));
 }
 
 // TODO: handle duplicate string
@@ -330,12 +320,6 @@ mod tests {
 
         let automaton = build_automaton(edt);
         print_dot(&automaton, ed_string);
-    }
-
-    #[test]
-    fn test_search_using_st() {
-        let text = Vec::from(["ATCAT", "ATCAG"]);
-        build_generalized_suffix_tree(text);
     }
 
     #[test]

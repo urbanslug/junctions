@@ -6,6 +6,7 @@
 // use petgraph::{Graph, data::Build};
 // use generalized_suffix_tree::GeneralizedSuffixTree;
 
+mod improved;
 mod naive;
 mod types;
 mod utils;

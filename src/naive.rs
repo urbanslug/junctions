@@ -1,17 +1,10 @@
 use eds::EDT;
-use generalized_suffix_tree::GeneralizedSuffixTree;
 use ndarray::{Array, Array2};
-use ndarray_to_img;
-use ndarray_to_img::plot::{self, Plottable};
-use petgraph::adj::EdgeReference;
-use petgraph::dot::{Config, Dot};
-use petgraph::graph::{Edges, NodeIndex};
+use petgraph::graph::NodeIndex;
 use petgraph::visit::EdgeRef;
-use petgraph::{Directed, Graph};
-use std::cmp::min;
+use petgraph::Graph;
 use std::collections::HashSet;
 
-use super::utils::print_dot;
 use crate::utils;
 
 const LOG_LEVEL: u8 = 5;
@@ -283,6 +276,7 @@ pub fn intersect(w: &Graph<usize, String>, q: &Graph<usize, String>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::print_dot;
 
     #[test]
     fn test_build_automaton() {
