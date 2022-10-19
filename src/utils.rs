@@ -1,5 +1,5 @@
+use eds::Letter;
 use eds::EDT;
-
 use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
 use petgraph::{data::Build, Graph};
@@ -9,10 +9,73 @@ use std::collections::HashSet;
 use ndarray::{Array, Array2};
 use ndarray_to_img::plot::{self, Plottable};
 
-use crate::types::Tree;
+use crate::types::{EdtSets, Height, Tree};
 
 const ADD_Q_0: bool = true;
 const ADD_ACCEPTING_STATE: bool = false;
+
+// iterate from 0..n
+pub fn iterate_sets(edt: &EDT) -> EdtSets {
+    let solids: &Vec<(usize, usize)> = edt.get_solid_intervals();
+    let degenerates: &Vec<(usize, usize)> = edt.get_degenerate_letters();
+
+    let mut i: usize = 0; // solids_pointer
+    let mut j: usize = 0; // degenerates_pointer
+
+    // let mut n = 0;
+
+    let mut sets: Vec<(usize, usize, Letter, Height)> = Vec::new();
+
+    while i < solids.len() || j < degenerates.len() {
+        // figure out what we are iterating through
+        let set @ (_start, _stop, _letter, _height) = if i < solids.len() && j < degenerates.len() {
+            let (s_s, s_e): (usize, usize) = solids[i];
+            let (d_s, d_e): (usize, usize) = degenerates[j];
+
+            if s_s < d_s {
+                i += 1;
+
+                (s_s, s_e, Letter::Solid, edt.h(s_s))
+            } else {
+                j += 1;
+                (d_s, d_e, Letter::Degenerate, edt.h(d_s))
+            }
+        } else if i >= solids.len() {
+            let (d_s, d_e): (usize, usize) = degenerates[j];
+            j += 1;
+            (d_s, d_e, Letter::Degenerate, edt.h(d_s))
+        } else {
+            let (s_s, s_e): (usize, usize) = solids[i];
+            i += 1;
+
+            (s_s, s_e, Letter::Solid, edt.h(s_s))
+        };
+
+        sets.push(set);
+
+        // n += 1;
+    }
+
+    sets
+}
+
+pub fn set_members(edt: &EDT, edt_sets: &EdtSets, n: usize) -> Vec<String> {
+    let set @ (start, stop, _letter, height) = edt_sets[n];
+    let mut strings = Vec::<String>::with_capacity(height);
+
+    let mut strings = vec![String::new(); height];
+
+    for col in start..stop {
+        for h in 0..height {
+            let ch = edt.base_at([col, h]);
+            if ch != '*' as u8 {
+                strings[h].push(ch as char);
+            }
+        }
+    }
+
+    strings
+}
 
 pub fn build_automaton(edt: EDT) -> Graph<usize, String> {
     let diameter = edt.w();
@@ -306,6 +369,26 @@ pub fn visualize_matrix(matrix: &Array2<i32>, image_name: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_iterate_sets() {
+        let ed_string = "{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA,}";
+
+        let edt = EDT::from_str(ed_string);
+        let sets = iterate_sets(&edt);
+        eprintln!("{:?}", sets);
+    }
+
+    #[test]
+    fn test_set_members() {
+        let ed_string = "{ATC,CGA}{ACGT,GCGC}A{CTA,C,}A{C,GTA,}";
+
+        let edt = EDT::from_str(ed_string);
+        let edt_sets = iterate_sets(&edt);
+        let strs = set_members(&edt, &edt_sets, 5);
+
+        eprintln!("{:?}", strs);
+    }
 
     #[test]
     fn test_build_automaton() {
