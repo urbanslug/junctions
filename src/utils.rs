@@ -14,6 +14,8 @@ use crate::types::{EdtSets, Height, Tree};
 const ADD_Q_0: bool = true;
 const ADD_ACCEPTING_STATE: bool = false;
 
+// return the edt as a vector of properties of each degenerate letters
+// in order from 0 to n
 // iterate from 0..n
 pub fn iterate_sets(edt: &EDT) -> EdtSets {
     let solids: &Vec<(usize, usize)> = edt.get_solid_intervals();
@@ -59,6 +61,8 @@ pub fn iterate_sets(edt: &EDT) -> EdtSets {
     sets
 }
 
+// return the strings in a degenerate letter
+// what about ɛ ?
 pub fn set_members(edt: &EDT, edt_sets: &EdtSets, n: usize) -> Vec<String> {
     let set @ (start, stop, _letter, height) = edt_sets[n];
     let mut strings = Vec::<String>::with_capacity(height);
