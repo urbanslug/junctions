@@ -12,4 +12,8 @@ pub struct Tree<'a> {
 }
 
 pub type Height = usize;
+// start index
+// stop (exclusive) index
+// degenerate or solid letter
+// number of variants
 pub type EdtSets = Vec<(usize, usize, Letter, Height)>;
