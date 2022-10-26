@@ -41,12 +41,11 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
     let properties_w: types::EdtSets = utils::iterate_sets(w);
     let properties_q: types::EdtSets = utils::iterate_sets(q);
 
-    let n = properties_w.len();
     let size_w = w.size(); // N
     let size_q = q.size(); // M
     let m = properties_q.len();
+    let n = properties_w.len();
 
-    let mut q_matrix: Array2<i32> = Array::zeros((n, size_q)); // rows, cols
     let mut w_matrix: Array2<i32> = Array::zeros((m, size_w)); // rows, cols
 
     let mut stop: usize = size_w - 1;
@@ -61,30 +60,7 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
         })
         .collect();
 
-    let mut stop: usize = size_q - 1;
-    let mut prev_len: usize = 0;
-    let accepting_q_cols: Vec<usize> = utils::set_members(q, &properties_q, m - 1)
-        .iter()
-        .rev()
-        .map(|s: &String| {
-            stop = stop - prev_len;
-            prev_len = s.len();
-            stop
-        })
-        .collect();
-
-    eprintln!(
-        "accepting w cols {:?} \naccepting q cols {:?}",
-        accepting_w_cols, accepting_q_cols
-    );
-
-    // TODO: move to utils::iterate_sets
-
-    // let mut i_letter_start = 0;
-
     let properties_w_computed = compute_properties(w, &properties_w);
-    let properties_q_computed = compute_properties(q, &properties_q);
-
     let i_starts = properties_w_computed.starts;
     let i_ends = properties_w_computed.ends;
     eprintln!("i_starts: {:?} i_ends: {:?}", i_starts, i_ends);
@@ -95,7 +71,6 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
         let w_i_strings: Vec<String> = utils::set_members(w, &properties_w, i);
 
         // insert underscores into a string
-        // TODO: rename to underscore_separated_string
         let multi_string = utils::seperate_strings_with_underscores(&w_i_strings);
         let underscore_separated_string: String = multi_string.underscore_separated_string;
         // a rank "bitvector" that counts the number of undscrores in a string so far
@@ -105,6 +80,13 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
 
         // eprintln!("letter start in N: {}", i_letter_start);
 
+        eprintln!("\tw (blue)");
+        for s in w_i_strings.iter() {
+            let p = st.positions(s);
+            eprintln!("\tself spell:");
+            eprintln!("\t\tstring:{s} positions {:?}", p);
+        }
+
         for j in 0..m {
             // TODO: rename q_j_strings
             let q_j_strings: Vec<String> = utils::set_members(q, &properties_q, j);
@@ -112,13 +94,6 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
             eprintln!("(i, j) ({i}, {j})");
             eprintln!("\tunderscores bit vector");
             eprintln!("\t\t{:?}", underscores_count_vec);
-
-            eprintln!("\tw (blue)");
-            for s in w_i_strings.iter() {
-                let p = st.positions(s);
-                eprintln!("\tself spell:");
-                eprintln!("\t\tstring:{s} positions {:?}", p);
-            }
 
             eprintln!("\tq (red)");
             for s in q_j_strings.iter() {
@@ -169,7 +144,7 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
                     // TODO: add condition, check prev col
 
                     // Checks previous row to see if any active prefix can be extended
-                    let any_active_prefix = || {
+                    let any_active_prefix = || -> bool {
                         if i == 0 {
                             return false;
                         }
@@ -192,9 +167,120 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
 
             // let st = build_generalized_suffix_tree(&w_i_strings);
         }
+    }
 
-        // TODO: make clear
-        // i_letter_start = i_ends[i][i_ends[i].len() - 1] + 1;
+    let mut q_matrix: Array2<i32> = Array::zeros((n, size_q)); // rows, cols
+
+    let mut stop: usize = size_q - 1;
+    let mut prev_len: usize = 0;
+    let accepting_q_cols: Vec<usize> = utils::set_members(q, &properties_q, m - 1)
+        .iter()
+        .rev()
+        .map(|s: &String| {
+            stop = stop - prev_len;
+            prev_len = s.len();
+            stop
+        })
+        .collect();
+
+    let properties_q_computed = compute_properties(q, &properties_q);
+    let j_starts = properties_q_computed.starts;
+    let j_ends = properties_q_computed.ends;
+
+    for j in 0..m {
+        // extract the actual strings in the j_th set
+        let q_j_strings: Vec<String> = utils::set_members(q, &properties_q, j);
+
+        // insert underscores into a string
+        let multi_string = utils::seperate_strings_with_underscores(&q_j_strings);
+        let underscore_separated_string: String = multi_string.underscore_separated_string;
+        // a rank "bitvector" that counts the number of undscrores in a string so far
+        let underscores_count_vec: Vec<usize> = multi_string.rank_bit_vector;
+
+        let st = SuffixTable::new(underscore_separated_string.clone());
+
+        eprintln!("\tw (blue)");
+        for s in q_j_strings.iter() {
+            let p = st.positions(s);
+            eprintln!("\tself spell:");
+            eprintln!("\t\tstring:{s} positions {:?}", p);
+        }
+
+        for i in 0..n {
+            // TODO: rename q_j_strings
+            let w_i_strings: Vec<String> = utils::set_members(w, &properties_w, i);
+
+            eprintln!("(i, j) ({i}, {j})");
+            eprintln!("\tunderscores bit vector");
+            eprintln!("\t\t{:?}", underscores_count_vec);
+
+            eprintln!("\tq (red)");
+            for s in w_i_strings.iter() {
+                let positions: &[u32] = st.positions(s);
+                eprintln!(
+                    "\tquery: {} text: {:?} positions {:?}",
+                    s, &underscore_separated_string, positions
+                );
+
+                // all occurences of s
+                for position in positions.iter() {
+                    let start_position = *position as usize;
+                    // let end_position = start_position + s.len();
+
+                    // TODO: what if we are cont in the next degenerate letter?
+                    // either it is at start of letter or
+                    if i == 0
+                        && j == 0
+                        && start_position > 0
+                        && underscore_separated_string.as_bytes()[start_position - 1] as char != '_'
+                    {
+                        continue;
+                    }
+
+                    let j_letter_start = j_starts[i][0];
+
+                    let actual_start = if start_position == 0 {
+                        start_position + j_letter_start
+                    } else {
+                        start_position + j_letter_start - underscores_count_vec[start_position]
+                    };
+
+                    let matrix_col =
+                        if j_letter_start == 0 && underscores_count_vec[start_position] == 0 {
+                            actual_start + s.len()
+                        } else {
+                            actual_start + s.len() - 1
+                        };
+
+                    eprintln!(
+                        "\t\tactual start {} end_position {}",
+                        actual_start, matrix_col
+                    );
+
+                    // TODO: add condition, check prev col
+
+                    // Checks previous row to see if any active prefix can be extended
+                    let any_active_prefix = || -> bool {
+                        if j == 0 {
+                            return false;
+                        }
+                        j_ends[j - 1]
+                            .iter()
+                            .fold(false, |acc, idx| acc || q_matrix[(i - 1, *idx)] == 1)
+                    };
+
+                    if j == 0 && i == 0 {
+                        eprintln!("\t\t({i}, {matrix_col}) <- 1 ");
+                        q_matrix[(i, matrix_col)] = 1;
+                    } else if i > 0 && any_active_prefix() {
+                        eprintln!("\t\t({i}, {matrix_col}) <- 1 ");
+                        q_matrix[(i, matrix_col)] = 1;
+                    } else {
+                        ()
+                    };
+                }
+            }
+        }
     }
 
     if true {
