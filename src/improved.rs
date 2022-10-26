@@ -80,8 +80,12 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
 
     // TODO: move to utils::iterate_sets
 
+    let mut i_letter_start = 0;
     let mut i_start = 0; // within N
     let mut j_start = 0; // within M
+
+    let mut i_ends = Vec::<Vec<usize>>::new();
+    let mut i_starts = Vec::<Vec<usize>>::new();
 
     for i in 0..n {
         let w_i_strings: Vec<String> = utils::set_members(w, &properties_w, i);
@@ -103,23 +107,26 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
             .chars()
             .map(|ch| {
                 if ch == '_' {
-                    x = x + 1;
+                    x += 1;
                 }
                 x
             })
             .collect();
 
-        let i_ends = w_i_strings
-            .iter()
-            .map(|s| {
-                i_start += if i_start == 0 { s.len() - 1 } else { s.len() };
-                i_start
-            })
-            .collect::<Vec<usize>>();
+        i_ends.push(Vec::<usize>::new());
+        i_starts.push(Vec::<usize>::new());
 
-        eprintln!("i_ends: {:?}", i_ends);
+        for s in w_i_strings.iter() {
+            i_starts[i].push(if i_start == 0 { 0 } else { i_start + 1 });
+            i_start += if i_start == 0 { s.len() - 1 } else { s.len() };
+            i_ends[i].push(i_start);
+        }
+
+        eprintln!("i_starts: {:?} i_ends: {:?}", i_starts, i_ends);
 
         let st = SuffixTable::new(w_i_gen_string.clone());
+
+        eprintln!("letter start in N: {}", i_letter_start);
 
         for j in 0..m {
             // TODO: rename q_j_strings
@@ -163,12 +170,17 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
                     }
 
                     let actual_start = if start_position == 0 {
-                        start_position + i_start
+                        start_position + i_letter_start
                     } else {
-                        start_position + i_start - underscores_count_vec[start_position] - 1
+                        start_position + i_letter_start - underscores_count_vec[start_position]
                     };
 
-                    let matrix_col = actual_start + s.len();
+                    let matrix_col =
+                        if i_letter_start == 0 && underscores_count_vec[start_position] == 0 {
+                            actual_start + s.len()
+                        } else {
+                            actual_start + s.len() - 1
+                        };
 
                     eprintln!(
                         "\t\tactual start {} end_position {}",
@@ -178,7 +190,10 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
                     // TODO: add condition, check prev col
 
                     let foo = || {
-                        i_ends
+                        if i == 0 {
+                            return false;
+                        }
+                        i_ends[i - 1]
                             .iter()
                             .fold(false, |acc, idx| acc || w_matrix[(j - 1, *idx)] == 1)
                     };
@@ -198,6 +213,8 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
             // let st = build_generalized_suffix_tree(&w_i_strings);
         }
 
+        // TODO: make clear
+        i_letter_start = i_ends[i][i_ends[i].len() - 1] + 1;
         // furthest_w_char += w_i_strings.iter().fold(0, |acc, s| s.len() + acc);
     }
 
