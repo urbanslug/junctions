@@ -9,6 +9,8 @@ use std::collections::HashSet;
 use ndarray::{Array, Array2};
 use ndarray_to_img::plot::{self, Plottable};
 
+use crate::types::EdtProperties;
+use crate::types::MultiString;
 use crate::types::{EdtSets, Height, Tree};
 
 const ADD_Q_0: bool = true;
@@ -59,6 +61,56 @@ pub fn iterate_sets(edt: &EDT) -> EdtSets {
     }
 
     sets
+}
+
+// insert underscores into a string
+pub fn seperate_strings_with_underscores(strings: &Vec<String>) -> MultiString {
+    let mut underscores_so_far: usize = 0;
+    let mut underscore_separated_string = String::new();
+    let mut underscores_count_vec = Vec::<usize>::new();
+
+    for s in strings.iter() {
+        underscores_count_vec.extend_from_slice(&vec![underscores_so_far; s.len() + 1]);
+        underscore_separated_string.push_str(s);
+        underscore_separated_string.push('_');
+        underscores_so_far += 1;
+    }
+
+    underscores_count_vec.truncate(underscores_count_vec.len() - 1);
+    underscore_separated_string.truncate(underscore_separated_string.len() - 1);
+
+    MultiString {
+        underscore_separated_string,
+        rank_bit_vector: underscores_count_vec,
+    }
+}
+
+pub fn compute_properties(edt: &EDT, edt_sets: &EdtSets) -> EdtProperties {
+    let n = edt_sets.len();
+
+    let mut start = 0; // within N
+
+    let mut ends = Vec::<Vec<usize>>::new();
+    let mut starts = Vec::<Vec<usize>>::new();
+
+    for i in 0..n {
+        let w_strings: Vec<String> = set_members(edt, edt_sets, i);
+
+        ends.push(vec![]);
+        starts.push(vec![]);
+
+        for s in w_strings.iter() {
+            starts[i].push(if start == 0 { 0 } else { start + 1 });
+            start += if start == 0 { s.len() - 1 } else { s.len() };
+            ends[i].push(start);
+        }
+    }
+
+    EdtProperties {
+        edt_sets: edt_sets.clone(),
+        starts,
+        ends,
+    }
 }
 
 // return the strings in a degenerate letter

@@ -1,4 +1,4 @@
-use crate::types;
+use crate::{types, utils::compute_properties};
 use eds::EDT;
 use generalized_suffix_tree::GeneralizedSuffixTree;
 use ndarray::{Array, Array2};
@@ -16,6 +16,24 @@ fn build_generalized_suffix_tree(text: &Vec<String>) {
     tree.pretty_print();
 }
 
+/*
+N
+|-----------------------------|
+|                             |
+|                             |
+|          W_matrix           |
+|                             |
+|-----------------------------|
+m
+M
+|-----------------------------|
+|                             |
+|                             |
+|          Q_matrix           |
+|                             |
+|-----------------------------|
+n
+ */
 pub fn intersect(w: &EDT, q: &EDT) -> bool {
     // TODO: memoize
 
@@ -28,24 +46,6 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
     let size_q = q.size(); // M
     let m = properties_q.len();
 
-    /*
-                                  N
-    |-----------------------------|
-    |                             |
-    |                             |
-    |          W_matrix           |
-    |                             |
-    |-----------------------------|
-    m
-                                  M
-    |-----------------------------|
-    |                             |
-    |                             |
-    |          Q_matrix           |
-    |                             |
-    |-----------------------------|
-    n
-     */
     let mut q_matrix: Array2<i32> = Array::zeros((n, size_q)); // rows, cols
     let mut w_matrix: Array2<i32> = Array::zeros((m, size_w)); // rows, cols
 
@@ -80,57 +80,34 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
 
     // TODO: move to utils::iterate_sets
 
-    let mut i_letter_start = 0;
-    let mut i_start = 0; // within N
-    let mut j_start = 0; // within M
+    // let mut i_letter_start = 0;
 
-    let mut i_ends = Vec::<Vec<usize>>::new();
-    let mut i_starts = Vec::<Vec<usize>>::new();
+    let properties_w_computed = compute_properties(w, &properties_w);
+    let properties_q_computed = compute_properties(q, &properties_q);
 
+    let i_starts = properties_w_computed.starts;
+    let i_ends = properties_w_computed.ends;
+    eprintln!("i_starts: {:?} i_ends: {:?}", i_starts, i_ends);
+
+    // TODO: Continue i+1 from earliest reached  prefix
     for i in 0..n {
+        // extract the actual strings in the ith set
         let w_i_strings: Vec<String> = utils::set_members(w, &properties_w, i);
 
         // insert underscores into a string
-        let w_i_gen_string = w_i_strings
-            .clone()
-            .iter_mut()
-            .map(|s: &mut String| {
-                s.push('_');
-                s.chars()
-            })
-            .flatten()
-            .collect::<String>();
+        // TODO: rename to underscore_separated_string
+        let multi_string = utils::seperate_strings_with_underscores(&w_i_strings);
+        let underscore_separated_string: String = multi_string.underscore_separated_string;
+        // a rank "bitvector" that counts the number of undscrores in a string so far
+        let underscores_count_vec: Vec<usize> = multi_string.rank_bit_vector;
 
-        // a "bitvector" that counts the number of undscrores in a string so far
-        let mut x: usize = 0;
-        let underscores_count_vec: Vec<usize> = w_i_gen_string
-            .chars()
-            .map(|ch| {
-                if ch == '_' {
-                    x += 1;
-                }
-                x
-            })
-            .collect();
+        let st = SuffixTable::new(underscore_separated_string.clone());
 
-        i_ends.push(Vec::<usize>::new());
-        i_starts.push(Vec::<usize>::new());
-
-        for s in w_i_strings.iter() {
-            i_starts[i].push(if i_start == 0 { 0 } else { i_start + 1 });
-            i_start += if i_start == 0 { s.len() - 1 } else { s.len() };
-            i_ends[i].push(i_start);
-        }
-
-        eprintln!("i_starts: {:?} i_ends: {:?}", i_starts, i_ends);
-
-        let st = SuffixTable::new(w_i_gen_string.clone());
-
-        eprintln!("letter start in N: {}", i_letter_start);
+        // eprintln!("letter start in N: {}", i_letter_start);
 
         for j in 0..m {
             // TODO: rename q_j_strings
-            let w_j_strings: Vec<String> = utils::set_members(q, &properties_q, j);
+            let q_j_strings: Vec<String> = utils::set_members(q, &properties_q, j);
 
             eprintln!("(i, j) ({i}, {j})");
             eprintln!("\tunderscores bit vector");
@@ -144,14 +121,14 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
             }
 
             eprintln!("\tq (red)");
-            for s in w_j_strings.iter() {
+            for s in q_j_strings.iter() {
                 //let p: &[u32] = st.positions(s);
                 // let mut s = s.clone();
                 // s.push('_');
                 let positions: &[u32] = st.positions(s);
                 eprintln!(
                     "\tquery: {} text: {:?} positions {:?}",
-                    s, &w_i_gen_string, positions
+                    s, &underscore_separated_string, positions
                 );
 
                 // all occurences of s
@@ -164,10 +141,12 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
                     if i == 0
                         && j == 0
                         && start_position > 0
-                        && w_i_gen_string.as_bytes()[start_position - 1] as char != '_'
+                        && underscore_separated_string.as_bytes()[start_position - 1] as char != '_'
                     {
                         continue;
                     }
+
+                    let i_letter_start = i_starts[i][0];
 
                     let actual_start = if start_position == 0 {
                         start_position + i_letter_start
@@ -189,7 +168,8 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
 
                     // TODO: add condition, check prev col
 
-                    let foo = || {
+                    // Checks previous row to see if any active prefix can be extended
+                    let any_active_prefix = || {
                         if i == 0 {
                             return false;
                         }
@@ -201,7 +181,7 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
                     if j == 0 && i == 0 {
                         eprintln!("\t\t({j}, {matrix_col}) <- 1 ");
                         w_matrix[(j, matrix_col)] = 1;
-                    } else if j > 0 && foo() {
+                    } else if j > 0 && any_active_prefix() {
                         eprintln!("\t\t({j}, {matrix_col}) <- 1 ");
                         w_matrix[(j, matrix_col)] = 1;
                     } else {
@@ -214,8 +194,7 @@ pub fn intersect(w: &EDT, q: &EDT) -> bool {
         }
 
         // TODO: make clear
-        i_letter_start = i_ends[i][i_ends[i].len() - 1] + 1;
-        // furthest_w_char += w_i_strings.iter().fold(0, |acc, s| s.len() + acc);
+        // i_letter_start = i_ends[i][i_ends[i].len() - 1] + 1;
     }
 
     if true {
