@@ -77,12 +77,41 @@ pub extern "C" fn get_ed_string() -> EdString {
     let j = c.as_ptr();
     std::mem::forget(c);
 
-    let o = EdString {
+    EdString {
         data: k,
         metadata: j,
-    };
+    }
+}
 
-    // println!("{:p}", o.data);
+/// For C++ FFI
+#[no_mangle]
+pub extern "C" fn read_ed_string(w_path: *const c_char, w_path_len: size_t) -> EdString {
+    let w_path = unsafe { slice::from_raw_parts(w_path, w_path_len) };
+    let mut w = String::new();
 
-    o
+    for ch in w_path {
+        w.push(*ch as u8 as char)
+    }
+
+    eprintln!("[junctions::lib::read_ed_string]");
+
+    // data
+    let v = vec![
+        "Hello\0".as_ptr(),
+        "World\0".as_ptr(),
+        "Cow\0".as_ptr(),
+        "Chicken\0".as_ptr(),
+    ];
+    let k = v.as_ptr();
+    std::mem::forget(v);
+
+    // metadata
+    let c: Vec<usize> = vec![3, 1];
+    let j = c.as_ptr();
+    std::mem::forget(c);
+
+    EdString {
+        data: k,
+        metadata: j,
+    }
 }
