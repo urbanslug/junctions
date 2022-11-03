@@ -204,6 +204,7 @@ version = "0.0.1"
 dependencies = [
  "eds",
  "generalized_suffix_tree",
+ "libc",
  "ndarray",
  "ndarray-to-img",
  "petgraph",
