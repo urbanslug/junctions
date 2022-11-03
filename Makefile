@@ -7,7 +7,7 @@ else
 endif
 
 all: target/debug/libjunctions.$(EXT)
-	g++ cpp/src/main.cpp -L ./rs/target/debug/ -ljunctions -o build/run
+	g++ ./cpp/src/main.cpp  -L ./rs/target/debug/ -ljunctions -o build/run
 	LD_LIBRARY_PATH=./rs/target/debug/ ./build/run
 
 setup:
@@ -19,5 +19,5 @@ target/debug/libjunctions.$(EXT): rs/src/lib.rs rs/Cargo.toml
 
 clean:
 	rm -rf $(FOLDER_BUILD)
-	rm -rf target
+	rm -rf rs/target
 	rm -rf run

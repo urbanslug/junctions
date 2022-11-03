@@ -1,3 +1,8 @@
+#include <string>
+#include <map>
+#include <cstring>
+using namespace std;
+
 /* Budowa drzewa sufiksowego algorytmem Ukkonena
  * (z przykladem wyszukiwania w nim slow)
  * Zlozonosc: O(n).
@@ -113,16 +118,3 @@ bool Find(const char *s,STvertex *r,const char *x)
   return true;
 }
 
-int main()
-{
-  string x; /* napis dla ktorego budujemy drzewo sufiksowe */
-  int n;
-  x="abcabcaabbcc~"; /* Ta '~' na koncu wazna */
-  n=x.size();
-  STvertex *r=Create_suffix_tree(x.c_str(),n);
-
-  printf("%d %d %d\n", Find("abcaa", r, x.c_str()), Find("abcd", r, x.c_str()), Find("abcabcaabbcc", r, x.c_str()));
-  
-  STDelete(r);
-  return 0;
-}
