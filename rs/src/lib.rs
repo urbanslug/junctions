@@ -65,6 +65,14 @@ pub struct EdString {
     pub metadata: *const size_t,
 }
 
+#[repr(C)]
+#[derive(Debug)]
+pub struct EEdString {
+    pub data: *const *const u8,
+    pub metadata: *const size_t,
+    pub metadata_len: size_t,
+}
+
 #[no_mangle]
 pub extern "C" fn get_ed_string() -> EdString {
     // data
@@ -85,7 +93,7 @@ pub extern "C" fn get_ed_string() -> EdString {
 
 /// For C++ FFI
 #[no_mangle]
-pub extern "C" fn read_ed_string(w_path: *const c_char, w_path_len: size_t) -> EdString {
+pub extern "C" fn read_ed_string(w_path: *const c_char, w_path_len: size_t) -> EEdString {
     let w_path = unsafe { slice::from_raw_parts(w_path, w_path_len) };
     let mut w = String::new();
 
@@ -95,23 +103,37 @@ pub extern "C" fn read_ed_string(w_path: *const c_char, w_path_len: size_t) -> E
 
     eprintln!("[junctions::lib::read_ed_string]");
 
-    // data
-    let v = vec![
+    let strs = vec!["Hw", "mister", "bev"];
+
+    let v: Vec<CString> = strs
+        .iter()
+        .map(|s: &&str| CString::new(*s).unwrap())
+        .collect();
+
+    //
+    let data = vec![
         "Hello\0".as_ptr(),
         "World\0".as_ptr(),
         "Cow\0".as_ptr(),
         "Chicken\0".as_ptr(),
     ];
-    let k = v.as_ptr();
-    std::mem::forget(v);
+
+    let data_ptr = data.as_ptr();
+    std::mem::forget(data);
 
     // metadata
-    let c: Vec<usize> = vec![3, 1];
-    let j = c.as_ptr();
-    std::mem::forget(c);
+    let metadata: Vec<size_t> = Vec::from([2, 1, 1]);
 
-    EdString {
-        data: k,
-        metadata: j,
+    let l = metadata.len();
+
+    let metadata_ptr = metadata.as_ptr();
+    std::mem::forget(metadata);
+
+    // println!("{:p} {:p}", metadata_ptr, data_ptr);
+
+    EEdString {
+        data: data_ptr,
+        metadata: metadata_ptr,
+        metadata_len: l,
     }
 }

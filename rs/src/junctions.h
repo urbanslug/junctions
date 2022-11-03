@@ -21,6 +21,14 @@ struct EdString
   size_t const* metadata;
 };
 
+struct EEdString
+{
+  char const** data;
+  size_t const* metadata;
+  size_t metadata_len;
+};
+
+
 extern "C"  EdString get_ed_string();
 
-extern "C" EdString read_ed_string(char const* file_path, std::size_t w_path_length);
+extern "C" EEdString read_ed_string(char const* file_path, std::size_t w_path_length);
