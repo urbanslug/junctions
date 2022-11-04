@@ -7,8 +7,8 @@ else
 endif
 
 all: target/debug/libjunctions.$(EXT)
-	g++ ./cpp/src/main.cpp  -L ./rs/target/debug/ -ljunctions -o build/run
-	LD_LIBRARY_PATH=./rs/target/debug/ ./build/run
+	g++ ./cpp/src/main.cpp  -L ./rs/target/debug/ -ljunctions -o build/junctions
+	LD_LIBRARY_PATH=./rs/target/debug/ ./build/junctions
 
 setup:
 	@mkdir -p $(FOLDER_BUILD)
