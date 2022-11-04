@@ -5,135 +5,109 @@ mod naive;
 mod types;
 mod utils;
 
+use eds::EDT;
 use std::ffi::CString;
-
+use std::fs::Metadata;
 use std::slice;
 
-/// For C++ FFI
-#[no_mangle]
-pub extern "C" fn adder(nrow: size_t, ncol: size_t) {
-    println!("{}", nrow + ncol)
-}
-
-/// For C++ FFI
-#[no_mangle]
-pub extern "C" fn read_files(
-    w_path: *const c_char,
-    w_path_len: size_t,
-    q_path: *const c_char,
-    q_path_len: size_t,
-) {
-    let w_path = unsafe { slice::from_raw_parts(w_path, w_path_len) };
-    let q_path = unsafe { slice::from_raw_parts(q_path, q_path_len) };
-
-    let mut w = String::new();
-    let mut q = String::new();
-
-    for ch in w_path {
-        w.push(*ch as u8 as char)
-    }
-
-    for ch in q_path {
-        q.push(*ch as u8 as char)
-    }
-
-    println!("{} {}", w, q)
-}
-
-/// For C++ FFI
-#[no_mangle]
-pub extern "C" fn get_str() -> *const c_char {
-    let s = CString::new("ciao").unwrap();
-    let p = s.as_ptr();
-    std::mem::forget(s);
-    p
-}
-
-#[no_mangle]
-pub extern "C" fn get_strs() -> *const *const u8 {
-    let v = vec!["JebusHello\0".as_ptr(), "World\0".as_ptr()];
-    let k = v.as_ptr();
-    std::mem::forget(v);
-    k
-}
-
-/// For C++ FFI
 #[repr(C)]
 #[derive(Debug)]
 pub struct EdString {
-    pub data: *const *const u8,
-    pub metadata: *const size_t,
-}
-
-#[repr(C)]
-#[derive(Debug)]
-pub struct EEdString {
-    pub data: *const *const u8,
+    pub data: *const *const c_char,
     pub metadata: *const size_t,
     pub metadata_len: size_t,
 }
 
+/// For C++ FFI
 #[no_mangle]
-pub extern "C" fn get_ed_string() -> EdString {
-    // data
-    let v = vec!["Hello\0".as_ptr(), "World\0".as_ptr()];
-    let k = v.as_ptr();
-    std::mem::forget(v);
+pub extern "C" fn pass_string() -> *const *mut c_char {
+    let strs = vec!["Hw", "Cow", "mister", "bev"];
+    let strings: Vec<String> = strs.iter().map(|s| String::from(*s)).collect();
 
-    // metadata
-    let c: Vec<usize> = vec![1, 1];
-    let j = c.as_ptr();
-    std::mem::forget(c);
+    let data: Vec<CString> = strings
+        .iter()
+        .map(|s: &String| CString::new(s.as_bytes()).unwrap())
+        .collect();
 
-    EdString {
-        data: k,
-        metadata: j,
-    }
+    let data: Vec<*mut c_char> = data
+        .iter()
+        .map(|s: &CString| s.clone().into_raw())
+        .collect();
+
+    // c_char is i8
+    let data_ptr: *const *mut c_char = data.as_ptr();
+
+    std::mem::forget(data);
+
+    data_ptr
 }
 
 /// For C++ FFI
 #[no_mangle]
-pub extern "C" fn read_ed_string(w_path: *const c_char, w_path_len: size_t) -> EEdString {
-    let w_path = unsafe { slice::from_raw_parts(w_path, w_path_len) };
-    let mut w = String::new();
+pub extern "C" fn read_ed_string(
+    raw_ed_string: *const c_char,
+    raw_ed_string_len: size_t,
+) -> EdString {
+    let raw_ed_string = unsafe { slice::from_raw_parts(raw_ed_string, raw_ed_string_len) };
+    let mut eds_rs = String::new();
 
-    for ch in w_path {
-        w.push(*ch as u8 as char)
+    for ch in raw_ed_string {
+        eds_rs.push(*ch as u8 as char)
     }
+
+    let edt = EDT::from_str(&eds_rs);
+    let properties_edt: types::EdtSets = utils::iterate_sets(&edt);
+
+    let metadata = properties_edt.iter().map(|e| e.3).collect::<Vec<usize>>();
+
+    let metadata_len: size_t = properties_edt.len();
+
+    let data = (0..properties_edt.len())
+        .map(|idx| utils::set_members(&edt, &properties_edt, idx))
+        .flatten()
+        .collect::<Vec<String>>();
 
     eprintln!("[junctions::lib::read_ed_string]");
 
-    let strs = vec!["Hw", "mister", "bev"];
+    eprintln!("\t{:?}\n\t{:?}\n\t{}", data, metadata, metadata_len);
 
-    let v: Vec<CString> = strs
+    let strs = vec!["Hw", "Cow", "mister", "bev"];
+
+    let data: Vec<CString> = strs
         .iter()
         .map(|s: &&str| CString::new(*s).unwrap())
         .collect();
 
-    //
+    let data: Vec<*const c_char> = data.iter().map(|s: &CString| s.as_ptr()).collect();
+
+    // c_char is i8
+    let data_ptr: *const *const c_char = data.as_ptr();
+
+    /*
     let data = vec![
         "Hello\0".as_ptr(),
         "World\0".as_ptr(),
         "Cow\0".as_ptr(),
         "Chicken\0".as_ptr(),
     ];
+    */
 
-    let data_ptr = data.as_ptr();
+    // let data_ptr = data.as_ptr();
     std::mem::forget(data);
 
     // metadata
     let metadata: Vec<size_t> = Vec::from([2, 1, 1]);
 
-    let l = metadata.len();
+    let metadata_len = metadata.len();
 
     let metadata_ptr = metadata.as_ptr();
     std::mem::forget(metadata);
 
     // println!("{:p} {:p}", metadata_ptr, data_ptr);
 
-    EEdString {
+    EdString {
         data: data_ptr,
         metadata: metadata_ptr,
-        metadata_len: l,
+        metadata_len,
     }
 }

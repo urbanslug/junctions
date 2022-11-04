@@ -9,10 +9,24 @@
 void print_str_vec(std::vector<std::string> &degenerate_letter);
 void print_edt(std::vector<std::vector<std::string>> ed_string);
 
-void foo() {
-  std::string strw = "Test string";
+void bar() {
+  const char** data = pass_string();
 
-  const EEdString ed_string = read_ed_string(strw.data(), strw.length() );
+  for (; *data; ++data) {
+    const char *i = *data;
+    std::string str = i;
+
+    std::cout << str << std::endl;
+
+  }
+}
+
+void foo() {
+
+  // ed string in eds format
+  std::string eds = "{AT,TC}{ATC,T}";
+
+  const EdString ed_string = read_ed_string(eds.data(), eds.length() );
   const char** data = ed_string.data;
   const size_t* metadata = ed_string.metadata;
   size_t len = ed_string.metadata_len;
@@ -24,12 +38,11 @@ void foo() {
     const char *i = *data;
     std::string str = i;
 
-    // std::cout << str << std::endl;
+    std::cout << str << std::endl;
 
     data_vec.push_back(str);
   }
 
-  
 
   // printf("%p ", data);
   // printf("%p ", metadata);
@@ -41,7 +54,7 @@ void foo() {
 
     metadata_vec.push_back(str_count);
   }
-  
+
   std::vector<std::vector<std::string>> string_sets;
 
   size_t counter = 0;
@@ -61,13 +74,14 @@ void foo() {
   }
 
   print_edt(string_sets);
-  
 }
 
 
 
 int main() {
-  foo();
+  // foo();
+  bar();
+  return 0;
 }
 
 
@@ -83,10 +97,7 @@ void print_edt(std::vector<std::vector<std::string>> ed_string) {
 }
 
 void print_str_vec(std::vector<std::string> &degenerate_letter) {
-  
     for (auto str = degenerate_letter.begin(); str < degenerate_letter.end(); str++) {
       std::cout << *str << " ";
     }
-    
-  
 }
