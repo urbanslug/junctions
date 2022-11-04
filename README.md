@@ -3,14 +3,14 @@
 Do two elastic degenerate strings have an intersection?
 
 
-## Test
+## Compile and Run
+Compile
+```
+make setup # creates the build/ directory
+make
+```
 
-Example 
+Run
 ```
-cargo test naive::tests::test_contains_intersect -- --nocapture
-```
-
-### Visualize dot
-```
-wl-paste | sed 's/label = \"\\"\\"\"//g' | dot -Tpng > output.png
+LD_LIBRARY_PATH=./rs/target/debug/ ./build/run
 ```
