@@ -4,7 +4,9 @@
 #include <string>
 #include <vector>
 
+#include "./gen_suffix_tree.cpp"
 #include "../../rs/src/junctions.h"
+
 
 void print_str_vec(std::vector<std::string> &degenerate_letter);
 void print_edt(std::vector<std::vector<std::string>> ed_string);
@@ -12,6 +14,7 @@ void print_edt(std::vector<std::vector<std::string>> ed_string);
 
 typedef std::vector<std::vector<std::string>> ed_string_data;
 typedef std::vector<std::vector<bool>> matrix;
+typedef std::vector<string> degenerate_letter; // strictly speaking this should be a set of strings
 
 struct EDS {
   ed_string_data data;
@@ -135,6 +138,15 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
   matrix w_matrix = gen_matrix(len_w, size_q);
   matrix q_matrix = gen_matrix(len_q, size_w);
 
+  for (size_t i=0; i<len_w; i++ ) {
+    degenerate_letter i_letter = eds_w.data[i];
+
+    std::string concat_string;
+
+      for (std::string i: i_letter) {
+        concat_string.append(i);
+      }
+  }
 
   return w_matrix[len_w-1][size_q-1] && q_matrix[len_q-1][size_w-1];
 }
@@ -148,7 +160,13 @@ int main() {
   EDS eds_q = parse_ed_string(ed_string_q);
 
 
-  intersect(eds_w, eds_q);
+  bool found = intersect(eds_w, eds_q);
+
+  if (found) {
+      printf("contains intersect\n");
+    } else {
+    printf("lacks intersect\n");
+  }
 
   return 0;
 }

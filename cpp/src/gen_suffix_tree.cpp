@@ -1,6 +1,8 @@
 #include <string>
 #include <map>
 #include <cstring>
+#include "./tmp.cpp"
+
 using namespace std;
 
 /* Budowa drzewa sufiksowego algorytmem Ukkonena
