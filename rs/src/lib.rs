@@ -13,7 +13,7 @@ use std::slice;
 #[repr(C)]
 #[derive(Debug)]
 pub struct EdString {
-    pub data: *const *const c_char,
+    pub data: *const *mut c_char,
     pub metadata: *const size_t,
     pub metadata_len: size_t,
 }
@@ -48,6 +48,8 @@ pub extern "C" fn read_ed_string(
     raw_ed_string: *const c_char,
     raw_ed_string_len: size_t,
 ) -> EdString {
+    eprintln!("[rs::junctions::lib::read_ed_string]");
+
     let raw_ed_string = unsafe { slice::from_raw_parts(raw_ed_string, raw_ed_string_len) };
     let mut eds_rs = String::new();
 
@@ -62,43 +64,30 @@ pub extern "C" fn read_ed_string(
 
     let metadata_len: size_t = properties_edt.len();
 
-    let data = (0..properties_edt.len())
+    let strings = (0..properties_edt.len())
         .map(|idx| utils::set_members(&edt, &properties_edt, idx))
         .flatten()
         .collect::<Vec<String>>();
 
-    eprintln!("[junctions::lib::read_ed_string]");
-
-    eprintln!("\t{:?}\n\t{:?}\n\t{}", data, metadata, metadata_len);
-
-    let strs = vec!["Hw", "Cow", "mister", "bev"];
-
-    let data: Vec<CString> = strs
+    let data: Vec<CString> = strings
         .iter()
-        .map(|s: &&str| CString::new(*s).unwrap())
+        .map(|s: &String| CString::new(s.as_bytes()).unwrap())
         .collect();
 
-    let data: Vec<*const c_char> = data.iter().map(|s: &CString| s.as_ptr()).collect();
+    let data: Vec<*mut c_char> = data
+        .iter()
+        .map(|s: &CString| s.clone().into_raw())
+        .collect();
 
     // c_char is i8
-    let data_ptr: *const *const c_char = data.as_ptr();
+    let data_ptr: *const *mut c_char = data.as_ptr();
 
-    /*
-    let data = vec![
-        "Hello\0".as_ptr(),
-        "World\0".as_ptr(),
-        "Cow\0".as_ptr(),
-        "Chicken\0".as_ptr(),
-    ];
-    */
-
-    // let data_ptr = data.as_ptr();
     std::mem::forget(data);
 
     // metadata
-    let metadata: Vec<size_t> = Vec::from([2, 1, 1]);
+    // let metadata: Vec<size_t> = Vec::from([2, 1, 1]);
 
-    let metadata_len = metadata.len();
+    // let metadata_len = metadata.len();
 
     let metadata_ptr = metadata.as_ptr();
     std::mem::forget(metadata);

@@ -9,6 +9,14 @@
 void print_str_vec(std::vector<std::string> &degenerate_letter);
 void print_edt(std::vector<std::vector<std::string>> ed_string);
 
+
+typedef std::vector<std::vector<std::string>> ed_string_data;
+
+struct EDS {
+  ed_string_data data;
+};
+
+
 void bar() {
   const char** data = pass_string();
 
@@ -21,10 +29,10 @@ void bar() {
   }
 }
 
-void foo() {
+// offload to rust parser
+EDS parse_ed_string(std::string &eds) {
 
-  // ed string in eds format
-  std::string eds = "{AT,TC}{ATC,T}";
+  printf("[cpp::main::parse_ed_string]\n");
 
   const EdString ed_string = read_ed_string(eds.data(), eds.length() );
   const char** data = ed_string.data;
@@ -38,7 +46,7 @@ void foo() {
     const char *i = *data;
     std::string str = i;
 
-    std::cout << str << std::endl;
+    // std::cout << str << std::endl;
 
     data_vec.push_back(str);
   }
@@ -74,17 +82,22 @@ void foo() {
   }
 
   print_edt(string_sets);
+
+  EDS e;
+  e.data = string_sets;
+
+  return e;
+
 }
-
-
 
 int main() {
-  // foo();
-  bar();
+  // ed string in eds format
+  std::string raw_eds = "{AT,TC}{ATC,T}";
+
+  EDS eds = parse_ed_string(raw_eds);
+  // bar();
   return 0;
 }
-
-
 
 
 void print_edt(std::vector<std::vector<std::string>> ed_string) {
