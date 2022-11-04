@@ -11,9 +11,12 @@ void print_edt(std::vector<std::vector<std::string>> ed_string);
 
 
 typedef std::vector<std::vector<std::string>> ed_string_data;
+typedef std::vector<std::vector<bool>> matrix;
 
 struct EDS {
   ed_string_data data;
+  size_t size;
+  size_t length ;
 };
 
 
@@ -38,6 +41,7 @@ EDS parse_ed_string(std::string &eds) {
   const char** data = ed_string.data;
   const size_t* metadata = ed_string.metadata;
   size_t len = ed_string.metadata_len;
+  size_t size = ed_string.size;
 
   std::vector<std::string> data_vec;
   std::vector<size_t> metadata_vec;
@@ -85,17 +89,67 @@ EDS parse_ed_string(std::string &eds) {
 
   EDS e;
   e.data = string_sets;
+  e.length = len;
+  e.size = size;
 
   return e;
+}
 
+matrix gen_matrix(size_t rows, size_t cols) {
+  printf("[cpp::main::gen_matrix]\n");
+  // rows
+  std::vector<bool> row(cols);
+  fill(row.begin(), row.end(), false);
+
+  // the matrix
+  std::vector<std::vector<bool>> actual_matrix(rows);
+
+  fill(actual_matrix.begin(), actual_matrix.end(), row);
+
+  /*
+   Print matrix
+   matrix m = actual_matrix;
+
+   for (auto row = m.begin(); row < m.end(); row++) {
+   for (bool b: *row )
+   std::cout << "v" << std::endl;
+   std::cout << std::endl;
+   }
+
+   */
+
+  return actual_matrix;
+}
+
+// Is there an intersection between ED string w and ED String q?
+bool intersect(EDS &eds_w, EDS &eds_q) {
+  printf("[cpp::main::intersect]\n");
+  // Gen the matrices for...
+
+  size_t size_w = eds_w.size;
+  size_t size_q = eds_q.size;
+
+  size_t len_w =  eds_w.length;
+  size_t len_q =  eds_q.length;
+
+  matrix w_matrix = gen_matrix(len_w, size_q);
+  matrix q_matrix = gen_matrix(len_q, size_w);
+
+
+  return w_matrix[len_w-1][size_q-1] && q_matrix[len_q-1][size_w-1];
 }
 
 int main() {
   // ed string in eds format
-  std::string raw_eds = "{AT,TC}{ATC,T}";
+  std::string ed_string_w = "{AT,TC}{ATC,T}";
+  std::string ed_string_q = "{TC,G}{CT,T}";
 
-  EDS eds = parse_ed_string(raw_eds);
-  // bar();
+  EDS eds_w = parse_ed_string(ed_string_w);
+  EDS eds_q = parse_ed_string(ed_string_q);
+
+
+  intersect(eds_w, eds_q);
+
   return 0;
 }
 

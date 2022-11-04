@@ -15,6 +15,7 @@ use std::slice;
 pub struct EdString {
     pub data: *const *mut c_char,
     pub metadata: *const size_t,
+    pub size: size_t,
     pub metadata_len: size_t,
 }
 
@@ -58,6 +59,7 @@ pub extern "C" fn read_ed_string(
     }
 
     let edt = EDT::from_str(&eds_rs);
+    let size: size_t = edt.size();
     let properties_edt: types::EdtSets = utils::iterate_sets(&edt);
 
     let metadata = properties_edt.iter().map(|e| e.3).collect::<Vec<usize>>();
@@ -97,6 +99,7 @@ pub extern "C" fn read_ed_string(
     EdString {
         data: data_ptr,
         metadata: metadata_ptr,
+        size,
         metadata_len,
     }
 }
