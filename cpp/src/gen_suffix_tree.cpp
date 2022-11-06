@@ -120,3 +120,34 @@ bool Find(const char *s,STvertex *r,const char *x)
   return true;
 }
 
+int FindEndIndex(const char *query, STvertex *current_vertex, const char *x) {
+  // from the start to end of the query
+  int i = 0, query_len = strlen(query);
+  int end = -1;
+  while (i < query_len) {
+    if (current_vertex->g.find(query[i]) == current_vertex->g.end())
+      return -1;
+    STedge current_edge = current_vertex->g[query[i]];
+
+    // int start = e.l;
+    // int end = e.r;
+
+    // printf("i: %d start %d end %d \n", i, start, end);
+
+    FOR(j, current_edge.l, current_edge.r) {
+      // printf("j %d\n", j);
+      end = j;
+      if (i == query_len) {
+        // printf("j: %d\n", j);
+        // break
+        return j;
+      }
+
+      if (query[i++] != x[j])
+        return -1;
+    }
+    current_vertex = current_edge.v;
+  }
+  // printf("j -> %d\n", end);
+  return end;
+}
