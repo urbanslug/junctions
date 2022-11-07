@@ -145,6 +145,23 @@ matrix gen_matrix(size_t rows, size_t cols) {
   return actual_matrix;
 }
 
+// compute string ends indexes (0 indexed) given an eds and letter
+std::vector<std::size_t> compute_str_ends(EDS &eds, size_t letter) {
+  degenerate_letter final_i_letter = eds.data[letter];
+
+  std::vector<std::size_t> accepting_states;
+  accepting_states.reserve(final_i_letter.size());
+
+  // start of the degenerate letter in N
+  std::size_t tracker = eds.n_offsets[letter].start;
+  for (auto str : final_i_letter) {
+    accepting_states.push_back(tracker + str.length() - 1);
+    tracker += str.length();
+  }
+
+  return accepting_states;
+}
+
 // Is there an intersection between ED string w and ED String q?
 bool intersect(EDS &eds_w, EDS &eds_q) {
   printf("[cpp::main::intersect]\n");
@@ -165,83 +182,67 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
         printf("=> (%lu, %lu)\n", o.start, o.stop);
   }
 
-  for (size_t i=0; i<len_w; i++ ) {
-    degenerate_letter i_letter = eds_w.data[i];
 
-    // concat the strings
-    std::string text;
-    map<size_t, size_t> text_postitions; // end_idx string
-    // std::vector<std::pair<size_t,size_t>> text_lengths(len_w);
+  /*
+    preprocess suffix trees
+    -----------------------
+  */
+  std::vector<STvertex>
+    w_suffix_trees;
+  w_suffix_trees.reserve(len_w);
+  std::vector<STvertex> q_suffix_trees;
+  q_suffix_trees.reserve(len_q);
 
-    size_t prev_len = 0;
-    for (size_t i = 0; i < i_letter.size(); i++) {
-      std::string str = i_letter[i];
-      text.append(str);
+  size_t i = 0; size_t j = 0;
+  while (i < len_q && j < len_w) {
+    if (i < len_q) {
+      degenerate_letter i_letter = eds_w.data[i];
+      std::string text;
+      for (auto i_str : i_letter) { text.append(i_str); } // concat the strings
+      text.push_back('_'); // add a terminator char
 
-      text_postitions[prev_len + str.length() - 1] = i;
-      // text_lengths.push_back(std::make_pair(i, prev_len + str.length() - 1));
-      prev_len = prev_len + str.length();
+      // Create the suffix tree
+      STvertex *root = Create_suffix_tree(text.c_str(), text.length());
+      w_suffix_trees.push_back(*root);
+
+      ++i;
     }
 
-    text.push_back('_');
+    if (j < len_w) {
+      degenerate_letter j_letter = eds_w.data[j];
 
-    printf("text: %s", text.c_str());
-    for (auto t: text_postitions) {
-      printf("\t%lu -> %lu", t.first, t.second);
-    }
+      std::string text;
+      for(auto j_str: j_letter) { text.append(j_str); } // concat the strings
+      text.push_back('_'); // add a terminator char
 
-    printf("\n");
+      // Create the suffix tree
+      STvertex *root = Create_suffix_tree(text.c_str(), text.length());
+      q_suffix_trees.push_back(*root);
 
-    // Create the suffix tree
-    size_t text_length = text.length();
-    STvertex *root = Create_suffix_tree(text.c_str(), text_length);
-
-    // self spell
-    std::vector<size_t> prefixes;
-    for (size_t i = 0; i < i_letter.size(); i++) {
-      std::string str = i_letter[i];
-      size_t pos = FindEndIndex(str.c_str(), root, text.c_str()) - 1;
-
-      if (pos == -1) {
-          continue;
-      }
-
-      auto k = text_postitions.find(pos);
-      if ((k == text_postitions.end()) || ((k->second != i))) {
-          prefixes.push_back(pos);
-          printf("text: %s, str: %s i: %d pos: %d\n", text.c_str(),
-                 str.c_str(), i , pos);
-        }
-    }
-
-    std::size_t start_in_n = eds_w.n_offsets[i].start;
-
-
-    // spell j in i
-    for (size_t j = 0; j < len_q; j++) {
-      //std::string str = j_letter[j];
-      degenerate_letter j_letter = eds_q.data[j];
-
-      for (size_t j_str = 0; j_str < j_letter.size(); j_str++) {
-        std::string str = j_letter[j];
-
-        size_t pos = FindEndIndex(str.c_str(), root, text.c_str()) - 1;
-
-        if (pos == -1) {
-          continue;
-        }
-
-        pos += start_in_n;
-
-        auto k = text_postitions.find(pos);
-        if (j == 0 || w_matrix[j - 1][pos - str.length() - 1] == 1) {
-          w_matrix[j][pos] = 1;
-        }
-      }
+      ++j;
     }
   }
 
-  return w_matrix[len_w-1][size_q-1] && q_matrix[len_q-1][size_w-1];
+  /*
+    Find the intersection
+   */
+  i = j = 0; // reset i and j
+  while (i < len_q && j < len_w) {
+    break;
+  }
+
+  // computing accepting states
+  std::vector<std::size_t> accept_w = compute_str_ends(eds_w, len_w - 1);
+  std::vector<std::size_t> accept_q = compute_str_ends(eds_q, len_q - 1);
+  
+
+  for (auto state_i : accept_w) {
+    for (auto state_j: accept_q) {
+      if (w_matrix[len_q-1][state_i] == 1 && q_matrix[len_w-1][state_j] == 1) { return true; }
+    }
+  }
+
+  return false;
 }
 
 int main() {
