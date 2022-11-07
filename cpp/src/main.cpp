@@ -9,6 +9,7 @@
 #include "./gen_suffix_tree.cpp"
 #include "../../rs/src/junctions.h"
 
+const uint8_t DEBUG_LEVEL = 1;
 
 void print_str_vec(std::vector<std::string> &degenerate_letter);
 void print_edt(std::vector<std::vector<std::string>> ed_string);
@@ -18,9 +19,14 @@ typedef std::vector<std::vector<std::string>> ed_string_data;
 typedef std::vector<std::vector<bool>> matrix;
 typedef std::vector<string> degenerate_letter; // strictly speaking this should be a set of strings
 
+struct span {
+  size_t start;
+  size_t stop;
+};
+
 struct EDS {
   ed_string_data data;
-  std::vector<size_t> n_offsets;
+  std::vector<span> n_offsets; // 
   size_t size;
   size_t length ;
 };
@@ -89,15 +95,19 @@ EDS parse_ed_string(std::string &eds) {
 
   //size_t k = string_sets.size();
 
-  std::vector<size_t> n_offsets;
+  std::vector<span> n_offsets;
   n_offsets.reserve(len);
   size_t index_in_n = 0;
   for (size_t i = 0; i < len; i++) {
 
-    std::vector<std::string> v2 =  string_sets[i];
+    
+    span s;
+    s.start = index_in_n;
+    std::vector<std::string> v2 = string_sets[i];
     for (auto s : v2) { index_in_n += s.length(); }
 
-    n_offsets.push_back(index_in_n - 1);
+    s.stop = index_in_n - 1;
+    n_offsets.push_back(s);
   }
 
   EDS e;
@@ -149,8 +159,12 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
   matrix w_matrix = gen_matrix(len_w, size_q);
   matrix q_matrix = gen_matrix(len_q, size_w);
 
-  // printf("=> %d\n", eds_w.n_offsets.size());
-  
+  if (DEBUG_LEVEL > 3) {
+      // printf("=> %lu\n", eds_w.n_offsets.size());
+      for (auto o : eds_w.n_offsets)
+        printf("=> (%lu, %lu)\n", o.start, o.stop);
+  }
+
   for (size_t i=0; i<len_w; i++ ) {
     degenerate_letter i_letter = eds_w.data[i];
 
@@ -167,14 +181,13 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       text_postitions[prev_len + str.length() - 1] = i;
       // text_lengths.push_back(std::make_pair(i, prev_len + str.length() - 1));
       prev_len = prev_len + str.length();
-
     }
 
     text.push_back('_');
 
     printf("text: %s", text.c_str());
     for (auto t: text_postitions) {
-      printf("\t%d -> %d", t.first, t.second);
+      printf("\t%lu -> %lu", t.first, t.second);
     }
 
     printf("\n");
@@ -201,6 +214,9 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
         }
     }
 
+    std::size_t start_in_n = eds_w.n_offsets[i].start;
+
+
     // spell j in i
     for (size_t j = 0; j < len_q; j++) {
       //std::string str = j_letter[j];
@@ -215,10 +231,12 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
           continue;
         }
 
+        pos += start_in_n;
+
         auto k = text_postitions.find(pos);
         if (j == 0 || w_matrix[j - 1][pos - str.length() - 1] == 1) {
           w_matrix[j][pos] = 1;
-        } 
+        }
       }
     }
   }
@@ -246,6 +264,8 @@ int main() {
   return 0;
 }
 
+
+// utils
 
 void print_edt(std::vector<std::vector<std::string>> ed_string) {
   for (auto degenerate_letter = ed_string.begin(); degenerate_letter < ed_string.end(); degenerate_letter++) {
