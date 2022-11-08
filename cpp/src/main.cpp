@@ -159,7 +159,50 @@ std::vector<std::size_t> compute_str_ends(EDS &eds, size_t letter) {
   return accepting_states;
 }
 
-// Is there an intersection between ED string w and ED String q?
+/*
+  Is there an intersection between ED strings W and Q?
+
+  W matrix: This matrix tracks how far in N we spelled strings in W
+
+
+           0 |<------- i ------>| n
+
+      |-      -| |-    -|     |-      -|
+      | ...... | |   .  |     |   ...  |
+  W = |  ....  | | .... | ... | ...... |
+      | ...... | |  ..  |     |   ..   |
+      |-      -| |-    -|     |-      -|
+
+  0                             N
+  |-----------------------------|
+  |                             |
+  |                             |
+  |          W_matrix           |
+  |                             |
+  |-----------------------------|
+ m
+
+
+    Q matrix: This matrix tracks how far in M we spelled strings in Q
+
+          0 |<-------- j ------->| m
+
+      |-    -| |-      -|     |-       -|
+      |  ..  | |  ....  |     | ....... |
+  Q = | .... | |    .   | ... |   ..    |
+      |  ..  | | ...... |     | ....... |
+      |-    -| |-      -|     |-       -|
+
+
+  0                             M
+  |-----------------------------|
+  |                             |
+  |                             |
+  |          Q_matrix           |
+  |                             |
+  |-----------------------------|
+  n
+*/
 bool intersect(EDS &eds_w, EDS &eds_q) {
   printf("[cpp::main::intersect]\n");
 
@@ -177,7 +220,6 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       for (auto o : eds_w.n_offsets)
         printf("=> (%lu, %lu)\n", o.start, o.stop);
   }
-
 
   /*
     Preprocess suffix trees
