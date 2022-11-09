@@ -28,7 +28,7 @@ struct span {
 
 struct EDS {
   ed_string_data data;
-  std::vector<span> n_offsets; // 
+  std::vector<span> n_offsets;
   size_t size;
   size_t length ;
 };
@@ -225,47 +225,39 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
     Preprocess suffix trees
     -----------------------
   */
+
+  auto gen_suffix_tree = [](EDS &eds, size_t len, std::vector<std::pair<STvertex, std::string>> *w_suffix_trees) {
+    size_t i = 0;
+    while (i < len) {
+      degenerate_letter i_letter = eds.data[i];
+      std::string text;
+      for (auto i_str : i_letter) {
+        text.append(i_str);
+      }                    // concat the strings
+      text.push_back('_'); // add a terminator char
+
+      // Create the suffix tree
+      STvertex *root = Create_suffix_tree(text.c_str(), text.length());
+      w_suffix_trees->push_back(std::make_pair(*root, text));
+
+      ++(i);
+    }
+  };
+
   std::vector<std::pair<STvertex, std::string>> w_suffix_trees;
   w_suffix_trees.reserve(len_w);
   std::vector<std::pair<STvertex, std::string>> q_suffix_trees;
   q_suffix_trees.reserve(len_q);
 
-  size_t i = 0; size_t j = 0;
-  while (i < len_q && j < len_w) {
-    // TODO: offload to lambda
-    if (i < len_q) {
-      degenerate_letter i_letter = eds_w.data[i];
-      std::string text;
-      for (auto i_str : i_letter) { text.append(i_str); } // concat the strings
-      text.push_back('_'); // add a terminator char
-
-      // Create the suffix tree
-      STvertex *root = Create_suffix_tree(text.c_str(), text.length());
-      w_suffix_trees.push_back(std::make_pair(*root, text));
-
-      ++i;
-    }
-
-    if (j < len_w) {
-      degenerate_letter j_letter = eds_q.data[j];
-
-      std::string text;
-      for(auto j_str: j_letter) { text.append(j_str); } // concat the strings
-      text.push_back('_'); // add a terminator char
-
-      // Create the suffix tree
-      STvertex *root = Create_suffix_tree(text.c_str(), text.length());
-      q_suffix_trees.push_back(std::make_pair(*root, text));
-
-      ++j;
-    }
-  }
+  gen_suffix_tree(eds_w, len_w, &w_suffix_trees);
+  gen_suffix_tree(eds_q, len_q, &q_suffix_trees);
 
   /*
     Find the intersection
     ---------------------
    */
-  i = j = 0; // reset i and j
+  size_t i, j;
+  i = j = 0;
   bool inc_i = false, inc_j = false;
   while (i < len_q && j < len_w) {
     printf("i: %lu, j: %lu\n", i, j);
@@ -421,4 +413,3 @@ void test_lacks_intersect() {
 
   IS_TRUE(!intersect(eds_w, eds_q));
 }
-
