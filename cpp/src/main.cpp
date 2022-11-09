@@ -16,6 +16,7 @@ void print_edt(std::vector<std::vector<std::string>> ed_string);
 
 void test_lacks_intersect();
 void test_contains_intersect();
+void test_parse_ed_string();
 
 typedef std::vector<std::vector<std::string>> ed_string_data;
 typedef std::vector<std::vector<bool>> matrix;
@@ -29,13 +30,16 @@ struct span {
 struct EDS {
   ed_string_data data;
   std::vector<span> n_offsets;
+  std::vector<std::vector<span>> str_offsets;
   size_t size;
-  size_t length ;
+  size_t length;
 };
 
 // offload to rust parser
 EDS parse_ed_string(std::string &eds) {
-  printf("[cpp::main::parse_ed_string]\n");
+  if (DEBUG_LEVEL > 3) {
+    printf("[cpp::main::parse_ed_string]\n");
+  }
 
   const EdString ed_string = read_ed_string(eds.data(), eds.length() );
   const char** data = ed_string.data;
@@ -98,17 +102,40 @@ EDS parse_ed_string(std::string &eds) {
     n_offsets.push_back(s);
   }
 
+
+  std::vector<std::vector<span>> str_offsets;
+  size_t index = 0;
+  for (size_t i = 0; i < len; i++) {
+
+    std::vector<span> letter_offsets;
+    std::vector<std::string> i_strings = string_sets[i];
+    span s;
+
+    for (auto str : i_strings) {
+      s.start = index;
+      index += str.length();
+      s.stop = index - 1;
+      letter_offsets.push_back(s);
+    }
+
+    str_offsets.push_back(letter_offsets);
+  }
+
   EDS e;
   e.data = string_sets;
   e.length = len;
   e.size = size;
   e.n_offsets = n_offsets;
+  e.str_offsets = str_offsets;
 
   return e;
 }
 
 matrix gen_matrix(size_t rows, size_t cols) {
-  printf("[cpp::main::gen_matrix]\n");
+  if (DEBUG_LEVEL > 3) {
+    printf("[cpp::main::gen_matrix]\n");
+  }
+
   // rows
   std::vector<bool> row(cols);
   fill(row.begin(), row.end(), false);
@@ -118,45 +145,27 @@ matrix gen_matrix(size_t rows, size_t cols) {
 
   fill(actual_matrix.begin(), actual_matrix.end(), row);
 
-  /*
-   Print matrix
-   matrix m = actual_matrix;
-
-   for (auto row = m.begin(); row < m.end(); row++) {
-   for (bool b: *row )
-   std::cout << "v" << std::endl;
-   std::cout << std::endl;
-   }
-
-   */
-
   return actual_matrix;
 }
 
-// compute string ends indexes (0 indexed) given an eds and letter
-// within N
+/*
+  compute string ends indexes (0 indexed) given an eds and letter
+  within N
+ */
 std::vector<std::size_t> compute_str_ends(EDS &eds, size_t letter) {
-  printf("[cpp::main::compute_str_ends]\n");
-  // printf("letter: %lu", letter);
-  degenerate_letter final_i_letter = eds.data[letter];
+  if (DEBUG_LEVEL > 1) { printf("[cpp::main::compute_str_ends]\n");  }
 
+  std::vector<std::size_t> stops;
+  for (auto s : eds.str_offsets[letter]) { stops.push_back(s.stop); }
+  return stops;
+}
 
+std::vector<std::size_t> compute_str_starts(EDS &eds, size_t letter) {
+  if (DEBUG_LEVEL > 1) { printf("[cpp::main::compute_str_ends]\n"); }
 
-  std::vector<std::size_t> accepting_states;
-  accepting_states.reserve(final_i_letter.size());
-
-  // start of the degenerate letter in N
-  std::size_t tracker = eds.n_offsets[letter].start;
-  for (auto str : final_i_letter) {
-    accepting_states.push_back(tracker + str.length() - 1);
-    tracker += str.length();
-  }
-
-  /*
-  for (auto end : accepting_states)
-    printf("%lu", end);
-  */
-  return accepting_states;
+  std::vector<std::size_t> starts;
+  for (auto s : eds.str_offsets[letter]) { starts.push_back(s.start); }
+  return starts;
 }
 
 /*
@@ -204,28 +213,23 @@ std::vector<std::size_t> compute_str_ends(EDS &eds, size_t letter) {
   n
 */
 bool intersect(EDS &eds_w, EDS &eds_q) {
-  printf("[cpp::main::intersect]\n");
-
-  size_t size_w = eds_w.size;
-  size_t size_q = eds_q.size;
-
-  size_t len_w =  eds_w.length;
-  size_t len_q =  eds_q.length;
-
-  matrix w_matrix = gen_matrix(len_w, size_q);
-  matrix q_matrix = gen_matrix(len_q, size_w);
-
-  if (DEBUG_LEVEL > 3) {
-      // printf("=> %lu\n", eds_w.n_offsets.size());
-      for (auto o : eds_w.n_offsets)
-        printf("=> (%lu, %lu)\n", o.start, o.stop);
+  if (DEBUG_LEVEL > 1) {
+    printf("[cpp::main::intersect]\n");
   }
+
+    size_t size_w = eds_w.size;
+    size_t size_q = eds_q.size;
+
+    size_t len_w = eds_w.length;
+    size_t len_q = eds_q.length;
+
+    matrix w_matrix = gen_matrix(len_w, size_q);
+    matrix q_matrix = gen_matrix(len_q, size_w);
 
   /*
     Preprocess suffix trees
     -----------------------
   */
-
   auto gen_suffix_tree = [](EDS &eds, size_t len, std::vector<std::pair<STvertex, std::string>> *w_suffix_trees) {
     size_t i = 0;
     while (i < len) {
@@ -256,21 +260,65 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
     Find the intersection
     ---------------------
    */
+
+  auto can_extend = [](EDS &eds,
+                       matrix &dp_matrix,
+                       int pos,
+                       std::string &j_str,
+                       size_t curr, // the letter whose chars we are matching in
+                       size_t comp // the letter whose strings we are matching against
+                       ) -> bool {
+
+    // TODO: maybe needlessly reptitive & assignments
+    size_t letter_start_in_n = eds.str_offsets[comp][0].start;
+    size_t start = pos - j_str.length() ;
+    start += letter_start_in_n;
+
+    // TODO: is it better to call  compute_str_starts ?
+    // is start in the start of a degenerate letter?
+    bool check_prev_letter = false;
+    for (auto s : eds.str_offsets[comp]) {
+      if (s.start == start) {
+        check_prev_letter = true;
+        break;
+      }
+    }
+
+    // printf("c start %lu prev : %d\n", start, check_prev_letter);
+
+    if (check_prev_letter) {
+      // check whether any of the previous letter ends are true
+      for (auto s : eds.str_offsets[comp-1]) {
+        if (dp_matrix[curr - 1][s.stop] == 1 || dp_matrix[curr][s.stop] == 1) {
+          return true;
+        }
+      }
+    } else {
+      // we are extending within the same degenerate letter i
+      if (dp_matrix[curr - 1][start - 1] == 1 || dp_matrix[curr][start - 1 ] == 1) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   size_t i, j;
   i = j = 0;
   bool inc_i = false, inc_j = false;
   while (i < len_q && j < len_w) {
-    printf("i: %lu, j: %lu\n", i, j);
+    if (DEBUG_LEVEL > 3)  {
+      printf("\tletter i: %lu, j: %lu\n", i, j);
+    }
 
     inc_i = inc_j = false;
     std::pair<STvertex, std::string> root_text;
-
-
     root_text = q_suffix_trees[j];
-    printf("\ti letter: %lu\n", i);
-    printf("\t\ttext: %s\n", root_text.second.c_str());
+
+    if (DEBUG_LEVEL > 3) { printf("\tj text: %s\n", root_text.second.c_str()); }
+
     for (auto i_str : eds_w.data[i]) {
-      printf("\t\ti_str: %s\n", i_str.c_str());
+      if (DEBUG_LEVEL > 3) { printf("\t\ti_str: %s\n", i_str.c_str()); }
 
       int pos = FindEndIndex(i_str.c_str(), &root_text.first, root_text.second.c_str());
 
@@ -282,32 +330,19 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
         continue;
       }
 
-      // did we get to the end of the previous degenerate letter
-      bool finished_prev = true;
-
-
-      std::vector<std::size_t> prev_ends = compute_str_ends(eds_q, j - 1);
-      for (auto end : prev_ends) {
-        if (q_matrix[i - 1][end] == 1) {
-          finished_prev = true;
-          break;
-        }
-      }
-
-      if (finished_prev) {
-        size_t pos_in_n = eds_q.n_offsets[j].start + pos;
-        printf("\t\ti_str %s  text %s  pos %d  q_matrix pos_in_n: %lu\n",
-               i_str.c_str(), root_text.second.c_str(), pos, pos_in_n);
+      if ((can_extend(eds_q, q_matrix, pos, i_str, i, j))) {
+        size_t pos_in_n = eds_q.str_offsets[j][0].start + pos;
         q_matrix[i][pos_in_n] = 1;
         inc_i = true;
+
+        // if (DEBUG_LEVEL > 4) { printf("\t\ti_str %s  text %s  pos %d  q_matrix pos_in_n: %lu\n", i_str.c_str(), root_text.second.c_str(), pos, pos_in_n); }
       }
     }
 
     root_text = w_suffix_trees[i];
-    printf("\tj letter: %lu\n", j);
-    printf("\t\ttext: %s\n", root_text.second.c_str());
+    if (DEBUG_LEVEL > 3)  { printf("\ti text: %s\n", root_text.second.c_str()); }
     for (auto j_str : eds_q.data[j]) {
-      printf("\t\tj_str: %s\n", j_str.c_str());
+      if (DEBUG_LEVEL > 3) { printf("\t\tj_str: %s\n", j_str.c_str());  }
 
       int pos = FindEndIndex(j_str.c_str(), &root_text.first, root_text.second.c_str());
 
@@ -319,21 +354,12 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
         continue;
       }
 
-      // did we get to the end of the previous degenerate letter
-      bool finished_prev = false;
-      std::vector<std::size_t> prev_ends = compute_str_ends(eds_w, i - 1);
-      for (auto end: prev_ends) {
-        if (w_matrix[j - 1][end] == 1) {
-          finished_prev = true;
-          break;
-        }
-      }
-
-      if (finished_prev) {
-        size_t pos_in_n = eds_w.n_offsets[i].start + pos;
-        printf("\t\tj_str %s \t pos %d \t w_matrix pos_in_n: %lu\n", j_str.c_str(), pos, pos_in_n);
+      if (can_extend(eds_w, w_matrix, pos, j_str, j, i)) {
+        size_t pos_in_n = eds_w.str_offsets[i][0].start + pos;
         w_matrix[j][pos_in_n] = 1;
         inc_j = true;
+
+        // if (DEBUG_LEVEL > 4) { printf("\t\tj_str %s \t pos %d \t w_matrix pos_in_n: %lu\n", j_str.c_str(), pos, pos_in_n); }
       }
     }
 
@@ -356,11 +382,12 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
   }
 
   return false;
-}
+  }
 
 int main() {
   test_contains_intersect();
   // test_lacks_intersect();
+  // test_parse_ed_string();
   return 0;
 }
 
@@ -392,8 +419,24 @@ void print_str_vec(std::vector<std::string> &degenerate_letter) {
 // This check function would be provided by the test framework
 #define IS_TRUE(x) { if (!(x)) std::cout << __FUNCTION__ << " failed on line " << __LINE__ << std::endl;}
 
-// Test for function1()
-// You would need to write these even when using a framework
+
+void test_parse_ed_string() {
+  std::string ed_string = "{AT,TC}{ATC,T}";
+
+  EDS eds = parse_ed_string(ed_string);
+
+  std::vector<std::vector<span>> str_offsets = eds.str_offsets;
+
+  printf("str offsets\n");
+  for (int i = 0; i < eds.length; i++) {
+    std::vector<span> letter_offsets = eds.str_offsets[i];
+    printf("\ti: %d\n", i);
+    for (auto str_offset : letter_offsets) {
+      printf("\t\t(%lu, %lu)\n", str_offset.start, str_offset.stop);
+    }
+  }
+}
+
 void test_contains_intersect() {
   std::string ed_string_w = "{AT,TC}{ATC,T}";
   std::string ed_string_q = "{TC,G}{CT,T}";
