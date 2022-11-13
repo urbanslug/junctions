@@ -17,8 +17,6 @@ void test_lacks_intersect();
 void test_contains_intersect();
 void test_parse_ed_string();
 
-
-
 /*
   Is there an intersection between ED strings W and Q?
 
@@ -113,9 +111,11 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       Find the intersection
       ---------------------
      */
-
     auto can_extend =
-        [](EDS &eds, matrix dp_matrix, int pos, std::string &j_str,
+        [](EDS &eds,
+           matrix dp_matrix,
+           int pos,
+           std::string &j_str,
            size_t curr, // the letter whose chars we are matching in
            size_t comp  // the letter whose strings we are matching against
            ) -> bool {
@@ -182,30 +182,34 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       for (auto i_str : eds_w.data[i]) {
         // if (DEBUG_LEVEL > 3) { printf("\t\ti_str: %s\n", i_str.c_str()); }
 
-        int pos = FindEndIndex(i_str.c_str(), &root_text.first,
-                               root_text.second.c_str()) -
-                  1;
+        vector<int> res = FindEndIndexes(i_str.c_str(), &root_text.first,
+                                         root_text.second.c_str());
 
-        if (DEBUG_LEVEL > 3) {
-          printf("\t\ti_str: %s pos: %d\n", i_str.c_str(), pos);
-        }
-        if (pos < 0) {
+        if (res.empty()) {
           continue;
         } // if pos is not found
 
-        if (i == 0) {
-          q_matrix[i][pos] = true;
-          inc_i = true;
-          continue;
-        }
+        for (int pos: res) {
+          if (DEBUG_LEVEL > 3) {
+            printf("\t\ti_str: %s pos: %d\n", i_str.c_str(), pos);
+          }
 
-        if ((can_extend(eds_q, q_matrix, pos, i_str, i, j))) {
-          size_t pos_in_n = eds_q.str_offsets[j][0].start + pos;
-          q_matrix[i][pos_in_n] = true;
-          inc_i = true;
+          pos = pos + i_str.length() - 1;
 
-          if (DEBUG_LEVEL > 4) {
-            printf("\t\tpos %d  \tpos_in_n: %lu\n", pos, pos_in_n);
+          if (i == 0) {
+            q_matrix[i][pos] = true;
+            inc_i = true;
+            continue;
+          }
+
+          if ((can_extend(eds_q, q_matrix, pos, i_str, i, j))) {
+            size_t pos_in_n = eds_q.str_offsets[j][0].start + pos;
+            q_matrix[i][pos_in_n] = true;
+            inc_i = true;
+
+            if (DEBUG_LEVEL > 4) {
+              printf("\t\tpos %d  \tpos_in_n: %lu\n", pos, pos_in_n);
+            }
           }
         }
       }
@@ -216,30 +220,35 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       }
       for (auto j_str : eds_q.data[j]) {
 
-        int pos = FindEndIndex(j_str.c_str(), &root_text.first,
-                               root_text.second.c_str()) -
-                  1;
-        if (DEBUG_LEVEL > 3) {
-          printf("\t\tj_str: %s pos: %d\n", j_str.c_str(), pos);
-        }
+        vector<int> res = FindEndIndexes(j_str.c_str(), &root_text.first,
+                               root_text.second.c_str());
 
-        if (pos < 0) {
+        if (res.empty()) {
           continue;
         } // if pos is not found
 
-        if (j == 0) {
-          w_matrix[j][pos] = true;
-          inc_j = true;
-          continue;
-        }
+        for (int pos : res) {
+          if (DEBUG_LEVEL > 3) {
+            printf("\t\tj_str: %s pos: %d\n", j_str.c_str(), pos);
+          }
 
-        if (can_extend(eds_w, w_matrix, pos, j_str, j, i)) {
-          size_t pos_in_n = eds_w.str_offsets[i][0].start + pos;
-          w_matrix[j][pos_in_n] = true;
-          inc_j = true;
+          pos = pos + j_str.length() - 1;
 
-          if (DEBUG_LEVEL > 4) {
-            printf("\t\tpos %d \tpos_in_n: %lu new value: %d \n", pos, pos_in_n, w_matrix[j][pos_in_n]);
+          if (j == 0) {
+            w_matrix[j][pos] = true;
+            inc_j = true;
+            continue;
+          }
+
+          if (can_extend(eds_w, w_matrix, pos, j_str, j, i)) {
+            size_t pos_in_n = eds_w.str_offsets[i][0].start + pos;
+            w_matrix[j][pos_in_n] = true;
+            inc_j = true;
+
+            if (DEBUG_LEVEL > 4) {
+              printf("\t\tpos %d \tpos_in_n: %lu new value: %d \n", pos,
+                     pos_in_n, w_matrix[j][pos_in_n]);
+            }
           }
         }
       }
@@ -251,8 +260,6 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       if (inc_j) {
         ++j;
       }
-
-      // printf("\n");
 
       // give up early we cant extend any degenerate letter
       if (!inc_j && !inc_i) {
@@ -282,8 +289,8 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
 
 int main() {
   test_contains_intersect();
-  // test_lacks_intersect();
-  // test_parse_ed_string();
+  test_lacks_intersect();
+  test_parse_ed_string();
   return 0;
 }
 
@@ -324,7 +331,6 @@ void test_contains_intersect() {
 
   EDS eds_w = parse_ed_string(ed_string_w);
   EDS eds_q = parse_ed_string(ed_string_q);
-
 
   IS_TRUE(intersect(eds_w, eds_q));
 }
