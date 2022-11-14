@@ -9,7 +9,7 @@
 
 #include "./utils.cpp"
 #include "./gen_suffix_tree.cpp"
-#include "../../rs/src/junctions.h"
+
 
 
 
@@ -341,7 +341,6 @@ void test_lacks_intersect() {
 
   EDS eds_w = parse_ed_string(ed_string_w);
   EDS eds_q = parse_ed_string(ed_string_q);
-
 
   IS_TRUE(!intersect(eds_w, eds_q));
 }
