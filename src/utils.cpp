@@ -9,18 +9,18 @@
 
 #include "./core.cpp"
 
-void print_degenerate_letter(std::vector<std::string> &degenerate_letter) {
+void print_degenerate_letter(degenerate_letter &d_letter) {
+  std::vector<std::string> degenerate_letter_data = d_letter.data;
   std::cout << "{";
-  for (auto str = degenerate_letter.begin(); str < degenerate_letter.end();) {
-    if (str->empty()) {
-      std::cout << "\u03B5";
-    } else {
-      std::cout << *str;
-    }
-
+  for (auto str = degenerate_letter_data.begin(); str < degenerate_letter_data.end();) {
+    std::cout << *str;
     str++;
 
-    if (str == degenerate_letter.end()) {
+    if (str == degenerate_letter_data.end()) {
+      if (d_letter.has_epsilon) {
+        std::cout << ", \u03B5";
+      }
+
       std::cout << "}";
       continue;
     } else {
@@ -29,9 +29,8 @@ void print_degenerate_letter(std::vector<std::string> &degenerate_letter) {
   }
 }
 
-
-void print_edt_data(ed_string_data &ed_string) {
-  for (auto degenerate_letter : ed_string) {
+void print_edt_data(std::vector<degenerate_letter> &ed_string_data) {
+  for (auto degenerate_letter : ed_string_data) {
     print_degenerate_letter(degenerate_letter);
   }
   std::cout << std::endl;
@@ -74,10 +73,7 @@ void print_matrix(matrix const  &m) {
     }
     printf("\n");
   }
-  
 }
-
-
 
 
 EDS parse_ed_string(std::string &ed_string) {
@@ -85,8 +81,10 @@ EDS parse_ed_string(std::string &ed_string) {
     printf("[cpp::main::parser]\n");
   }
 
-  ed_string_data data;
+  std::vector<std::string> degenerate_letter_data;
+  std::vector<degenerate_letter> ed_string_data;
   degenerate_letter letter;
+  letter.has_epsilon = false;
 
   size_t size, len;
   size = 0;
@@ -100,12 +98,27 @@ EDS parse_ed_string(std::string &ed_string) {
 
     if (ch == '{' || ch == '}') {
       if (str.empty() && prev_char != ',') { continue; }
-      letter.push_back(str);
-      data.push_back(letter);
-      letter.clear();
+
+      if (str.empty() && (prev_char == ',' || prev_char == '{')) {
+        letter.has_epsilon = true;
+      } else {
+        degenerate_letter_data.push_back(str);
+      }
+
+      // degenerate_letter_data.push_back(str);
+      letter.data = degenerate_letter_data;
+      ed_string_data.push_back(letter);
+      degenerate_letter_data.clear();
+      letter.has_epsilon = false;
       str.clear();
     } else if (ch == ',') {
-      letter.push_back(str);
+      if (str.empty()) {
+        letter.has_epsilon = true;
+        continue;
+      } else {
+        degenerate_letter_data.push_back(str);
+      }
+      letter.has_epsilon = false;
       str.clear();
     } else if (ch == 'A' || ch == 'C' || ch == 'T' || ch == 'G') {
       str.push_back(ch);
@@ -118,28 +131,30 @@ EDS parse_ed_string(std::string &ed_string) {
   }
 
   if (!str.empty()) {
-    letter.push_back(str);
-    data.push_back(letter);
+    degenerate_letter_data.push_back(str);
+    letter.data = degenerate_letter_data;
+    ed_string_data.push_back(letter);
   }
-
-  // printf("len %lu\n", data.size());
-
-
-
-  // print_edt(data);
 
   std::vector<std::vector<span>> str_offsets;
   size_t index = 0;
-  for (size_t i = 0; i < data.size(); i++) {
+  for (size_t i = 0; i < ed_string_data.size(); i++) {
 
     std::vector<span> letter_offsets;
-    std::vector<std::string> i_strings = data[i];
+    std::vector<std::string> i_strings = ed_string_data[i].data;
     span s;
 
     for (auto str : i_strings) {
+      // if (str.empty()) {continue;} // unnecessary
       s.start = index;
       index += str.length();
       s.stop = index - 1;
+      letter_offsets.push_back(s);
+    }
+
+    if (ed_string_data[i].has_epsilon) {
+      s.start = index;
+      s.stop = index++;
       letter_offsets.push_back(s);
     }
 
@@ -147,8 +162,8 @@ EDS parse_ed_string(std::string &ed_string) {
   }
 
   EDS e;
-  e.data = data;
-  e.length = data.size();
+  e.data = ed_string_data;
+  e.length = ed_string_data.size();
   e.size = size;
   e.str_offsets = str_offsets;
 

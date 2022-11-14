@@ -9,12 +9,13 @@
 
 const uint8_t DEBUG_LEVEL = 1;
 
-typedef std::vector<std::vector<std::string>> ed_string_data;
+
 typedef std::vector<std::vector<bool>> matrix;
-// strictly speaking this should be a set of strings
-typedef std::vector<std::string> degenerate_letter;
 
-
+struct degenerate_letter {
+  std::vector<std::string> data;
+  bool has_epsilon;
+};
 
 struct span {
   size_t start;
@@ -22,7 +23,7 @@ struct span {
 };
 
 struct EDS {
-  ed_string_data data;
+  std::vector<degenerate_letter> data;
   std::vector<std::vector<span>> str_offsets;
   size_t size;
   size_t length;

@@ -84,7 +84,7 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
            std::vector<std::pair<STvertex, std::string>> *w_suffix_trees) {
           size_t i = 0;
           while (i < len) {
-            degenerate_letter i_letter = eds.data[i];
+            std::vector<std::string> i_letter = eds.data[i].data;
             std::string text;
             for (auto i_str : i_letter) {
               text.append(i_str);
@@ -179,7 +179,7 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
         printf("\tj text: %s\n", root_text.second.c_str());
       }
 
-      for (auto i_str : eds_w.data[i]) {
+      for (auto i_str : eds_w.data[i].data) {
         // if (DEBUG_LEVEL > 3) { printf("\t\ti_str: %s\n", i_str.c_str()); }
 
         vector<int> res = FindEndIndexes(i_str.c_str(), &root_text.first,
@@ -218,7 +218,7 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       if (DEBUG_LEVEL > 3) {
         printf("\ti text: %s\n", root_text.second.c_str());
       }
-      for (auto j_str : eds_q.data[j]) {
+      for (auto j_str : eds_q.data[j].data) {
 
         vector<int> res = FindEndIndexes(j_str.c_str(), &root_text.first,
                                root_text.second.c_str());
@@ -306,21 +306,31 @@ int main() {
 
 void test_parse_ed_string() {
   std::string ed_string;
+  EDS eds;
 
   ed_string = "{AT,TC}{ATC,T}";
-  parse_ed_string(ed_string);
+  eds = parse_ed_string(ed_string);
+  // print_edt(eds);
 
   ed_string = "{AT,TC}{ATC,}";
-  parse_ed_string(ed_string);
+  eds = parse_ed_string(ed_string);
+  // print_edt(eds);
 
-  ed_string = "ACTGAC{AT,,TC}AGG{,ATC,}CT";
-  parse_ed_string(ed_string);
+  ed_string = "ACTGAC{AT,,TC}AGG{,ATC,}CT{AT,TC}A";
+  // ed_string = "ACC{AT,,TC}AGG";
+  eds = parse_ed_string(ed_string);
+  print_edt(eds);
+
+  ed_string = "ACTGACCT";
+  eds = parse_ed_string(ed_string);
+  // print_edt(eds);
 
   ed_string = "{AT,TC}{ATC,T}";
-
-  EDS eds = parse_ed_string(ed_string);
+  eds = parse_ed_string(ed_string);
+  // print_edt(eds);
 
   std::vector<std::vector<span>> str_offsets = eds.str_offsets;
+
   // TODO: confirm size, len etc
 }
 
