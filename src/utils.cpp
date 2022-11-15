@@ -87,7 +87,6 @@ EDS parse_ed_string(std::string &ed_string) {
   letter.has_epsilon = false;
 
   size_t size, len;
-  size = 0;
 
   std::string str;
   char prev_char;
@@ -122,7 +121,6 @@ EDS parse_ed_string(std::string &ed_string) {
       str.clear();
     } else if (ch == 'A' || ch == 'C' || ch == 'T' || ch == 'G') {
       str.push_back(ch);
-      ++size;
     } else {
       printf("error found char %c at pos\n", ch);
     }
@@ -160,6 +158,8 @@ EDS parse_ed_string(std::string &ed_string) {
 
     str_offsets.push_back(letter_offsets);
   }
+
+  size = str_offsets.back().back().stop + 1;
 
   EDS e;
   e.data = ed_string_data;
