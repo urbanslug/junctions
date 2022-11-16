@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-const uint8_t DEBUG_LEVEL = 5;
+const uint8_t DEBUG_LEVEL = 0;
 
 
 typedef std::vector<std::vector<bool>> matrix;

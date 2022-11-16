@@ -18,51 +18,115 @@ void test_handle_epsilon();
 void test_contains_intersect();
 void test_parse_ed_string();
 
-/*
-  Is there an intersection between ED strings W and Q?
+// remove row_idx_range
+// should be within the same
+bool is_letter_matched (EDS &eds, matrix &dp_matrix, int letter_idx,
+                            std::vector<int> &row_idx_range) {
+  std::vector<span> letter_span = eds.str_offsets[letter_idx];
 
-  W matrix: This matrix tracks how far in N we spelled strings in W
+  for (int row_idx : row_idx_range) {
+    for (auto sp : letter_span) {
+      if (dp_matrix[row_idx][sp.stop]) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+bool can_extend(EDS &eds, matrix &dp_matrix, int pos, std::string &j_str,
+                size_t curr, // the letter whose chars we are matching in
+                size_t comp  // the letter whose strings we are matching against
+                ) {
+  if (DEBUG_LEVEL > 4) {
+        printf("\t\t[cpp::main::intersect::can_extend]\n");
+      }
+
+      // printf("\t\t\tpos: %d\n", pos);
+
+      // TODO: maybe needlessly reptitive & assignments
+      size_t letter_start_in_n = eds.str_offsets[comp][0].start;
+      size_t start = pos;
+
+      start += letter_start_in_n;
+
+      // TODO: is it better to call  compute_str_starts ?
+      // is start in the start of a degenerate letter?
+      bool check_prev_letter = false;
+      for (auto sp : eds.str_offsets[comp]) {
+        // printf("(%lu, %lu)", s.start, start);
+        if (sp.start == start) {
+          check_prev_letter = true;
+          break;
+        }
+      }
+
+      // printf("\t\t\tletter start: %lu pos %d curr start %lu prev : %d\n",
+      //       letter_start_in_n, pos, start, check_prev_letter);
+
+      if (check_prev_letter) {
+        // can we extend from the previous degenerate letter?
+        for (auto sp : eds.str_offsets[comp - 1]) {
+          if (dp_matrix[curr][sp.stop]) {
+            return true;
+          }
+        }
+      } else {
+        // can we extend from within this current degenerate letter?
+        if (dp_matrix[curr][start - 1]) {
+          return true;
+        }
+      }
+
+      return false;
+}
+
+    /*
+      Is there an intersection between ED strings W and Q?
+
+      W matrix: This matrix tracks how far in N we spelled strings in W
 
 
-           0 |<------- i ------>| n
+               0 |<------- i ------>| n
 
-      |-      -| |-    -|     |-      -|
-      | ...... | |   .  |     |   ...  |
-  W = |  ....  | | .... | ... | ...... |
-      | ...... | |  ..  |     |   ..   |
-      |-      -| |-    -|     |-      -|
+          |-      -| |-    -|     |-      -|
+          | ...... | |   .  |     |   ...  |
+      W = |  ....  | | .... | ... | ...... |
+          | ...... | |  ..  |     |   ..   |
+          |-      -| |-    -|     |-      -|
 
-  0                             N
-  |-----------------------------|
-  |                             |
-  |                             |
-  |          W_matrix           |
-  |                             |
-  |-----------------------------|
- m
-
-
-    Q matrix: This matrix tracks how far in M we spelled strings in Q
-
-          0 |<-------- j ------->| m
-
-      |-    -| |-      -|     |-       -|
-      |  ..  | |  ....  |     | ....... |
-  Q = | .... | |    .   | ... |   ..    |
-      |  ..  | | ...... |     | ....... |
-      |-    -| |-      -|     |-       -|
+      0                             N
+      |-----------------------------|
+      |                             |
+      |                             |
+      |          W_matrix           |
+      |                             |
+      |-----------------------------|
+     m
 
 
-  0                             M
-  |-----------------------------|
-  |                             |
-  |                             |
-  |          Q_matrix           |
-  |                             |
-  |-----------------------------|
-  n
-*/
-bool intersect(EDS &eds_w, EDS &eds_q) {
+        Q matrix: This matrix tracks how far in M we spelled strings in Q
+
+              0 |<-------- j ------->| m
+
+          |-    -| |-      -|     |-       -|
+          |  ..  | |  ....  |     | ....... |
+      Q = | .... | |    .   | ... |   ..    |
+          |  ..  | | ...... |     | ....... |
+          |-    -| |-      -|     |-       -|
+
+
+      0                             M
+      |-----------------------------|
+      |                             |
+      |                             |
+      |          Q_matrix           |
+      |                             |
+      |-----------------------------|
+      n
+    */
+    bool intersect(EDS &eds_w, EDS &eds_q) {
   if (DEBUG_LEVEL > 1) {
     printf("[cpp::main::intersect]\n");
   }
@@ -76,7 +140,6 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
     matrix w_matrix = gen_matrix(len_q, size_w);
     matrix q_matrix = gen_matrix(len_w, size_q);
 
-    printf("\t\t len_q %d len_w %d\n", len_q, len_w);
 
     /*
       Preprocess suffix trees
@@ -115,76 +178,7 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
       ---------------------
      */
 
-    auto is_letter_matched = [](EDS &eds, matrix dp_matrix, int letter_idx,
-                                std::vector<int> row_idx_range) -> bool {
-      std::vector<span> letter_span = eds.str_offsets[letter_idx];
-
-      for (int row_idx : row_idx_range) {
-        for (auto sp : letter_span) {
-          if (dp_matrix[row_idx][sp.stop]) {
-            return true;
-          }
-        }
-      }
-
-      return false;
-    };
-
-    auto can_extend =
-        [](EDS &eds,
-           matrix dp_matrix,
-           int pos,
-           std::string &j_str,
-           size_t curr, // the letter whose chars we are matching in
-           size_t comp  // the letter whose strings we are matching against
-           ) -> bool {
-      if (DEBUG_LEVEL > 4) {
-        printf("\t\t[cpp::main::intersect::can_extend]\n");
-      }
-
-      // printf("\t\t\tpos: %d\n", pos);
-
-      // TODO: maybe needlessly reptitive & assignments
-      size_t letter_start_in_n = eds.str_offsets[comp][0].start;
-      size_t start = pos;
-
-      start += letter_start_in_n;
-
-      // TODO: is it better to call  compute_str_starts ?
-      // is start in the start of a degenerate letter?
-      bool check_prev_letter = false;
-      for (auto sp : eds.str_offsets[comp]) {
-        // printf("(%lu, %lu)", s.start, start);
-        if (sp.start == start) {
-          check_prev_letter = true;
-          break;
-        }
-      }
-
-      // printf("\t\t\tletter start: %lu pos %d curr start %lu prev : %d\n",
-      //       letter_start_in_n, pos, start, check_prev_letter);
-
-      if (check_prev_letter) {
-        // check whether any of the previous letter ends are true
-        for (auto sp : eds.str_offsets[comp - 1]) {
-          
-          if (dp_matrix[curr][sp.stop]) {
-            return true;
-          }
-          
-          
-        }
-      } else {
-        // we are extending within the same degenerate letter i
-        if (dp_matrix[curr][start - 1]) {
-          return true;
-        }
-      }
-
-      
-
-      return false;
-    };
+    
 
     size_t i, j;
     i = j = 0;
@@ -371,21 +365,17 @@ bool intersect(EDS &eds_w, EDS &eds_q) {
     return false;
   };
 
-  
-
   bool accept_w = foo(w_matrix, w_ends, len_q - 1);
   bool accept_q = foo(q_matrix, q_ends, len_w - 1);
 
-  std::cout << accept_w << " " << accept_q << "\n";
-
   return accept_w && accept_q;
-  }
+}
 
 int main() {
   test_handle_epsilon();
-  // test_contains_intersect();
-  // test_lacks_intersect();
-  // test_parse_ed_string();
+  test_contains_intersect();
+  test_lacks_intersect();
+  test_parse_ed_string();
   return 0;
 }
 
@@ -414,7 +404,7 @@ void test_parse_ed_string() {
   ed_string = "ACTGAC{AT,,TC}AGG{,ATC,}CT{AT,TC}A";
   // ed_string = "ACC{AT,,TC}AGG";
   eds = parse_ed_string(ed_string);
-  print_edt(eds);
+  // print_edt(eds);
 
   ed_string = "ACTGACCT";
   eds = parse_ed_string(ed_string);
