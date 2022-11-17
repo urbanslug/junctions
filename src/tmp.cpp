@@ -1,4 +1,3 @@
-//#include<iostream>
 #include<cstdio>
 #include<cctype>
 #include<cmath>
