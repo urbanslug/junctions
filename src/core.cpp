@@ -226,8 +226,6 @@ EDS parse_ed_string(std::string &ed_string) {
   std::vector<std::string> degenerate_letter_data;
   std::vector<degenerate_letter> ed_string_data;
 
-  std::vector<std::vector<int>> prev_in_n;
-
   degenerate_letter letter;
   letter.has_epsilon = false;
 
@@ -284,7 +282,7 @@ EDS parse_ed_string(std::string &ed_string) {
   for (size_t i = 0; i < ed_string_data.size(); i++) {
     std::vector<span> letter_offsets;
     std::vector<std::string> i_strings = ed_string_data[i].data;
-    span s;   
+    span s;
 
     for (auto str : i_strings) {
       // if (str.empty()) {continue;} // unnecessary
@@ -312,4 +310,93 @@ EDS parse_ed_string(std::string &ed_string) {
   e.str_offsets = str_offsets;
 
   return e;
+}
+
+namespace parser {
+  std::vector<std::vector<int>> foo(EDS &eds) {
+    if (DEBUG_LEVEL > 3) { printf("[utils::parser::foo]\n"); }
+
+    std::vector<std::vector<int>> prev_m;
+    prev_m.reserve(eds.size);
+
+    std::string chars_vec;
+    chars_vec.reserve(eds.size);
+
+    std::vector<int> prev_char;
+    prev_char.reserve(100);
+    for (int k = 0; k < eds.size; k++) {
+      prev_char.push_back(k-1);
+      prev_m.push_back(prev_char);
+      prev_char.clear();
+    }
+
+
+
+    // Handle start
+    for (auto sp : eds.str_offsets.front()) {
+      prev_m[sp.start].clear();
+    }
+
+    degenerate_letter d_letter = eds.data.front();
+    for (auto st : d_letter.data) {
+      chars_vec.insert(chars_vec.end(), st.begin(), st.end());
+    }
+
+    if (d_letter.has_epsilon) {
+      chars_vec.push_back('*');
+    }
+
+    // handle rest
+
+
+    for (int i=1; i< eds.length; i++) {
+      std::vector<span> spans_curr = eds.str_offsets[i];
+      std::vector<span> spans_prev = eds.str_offsets[i-1];
+
+      /*
+      if (eds.data[i-1].has_epsilon) {
+        std::vector<span> spans_prev_prev = eds.str_offsets[i - 2];
+
+        spans_prev.insert(spans_prev.begin(), spans_prev_prev.begin(),
+      spans_prev_prev.end());
+      }*/
+
+      prev_char.clear();
+      for (auto sp_prev : spans_prev) {
+        prev_char.push_back(sp_prev.stop);
+      }
+
+      for (auto sp: spans_curr) {
+
+        int idx = sp.start;
+        prev_m[idx] = prev_char;
+      }
+
+      degenerate_letter d_letter = eds.data[i];
+      for (auto st : d_letter.data) {
+        chars_vec.insert(chars_vec.end(), st.begin(), st.end());
+      }
+
+      if (d_letter.has_epsilon) {
+        chars_vec.push_back('*');
+      }
+    }
+
+    /*
+    printf("%s\n", chars_vec.c_str());
+
+    for (auto i: prev_m) {
+      printf("[");
+      for (auto j: i) {
+        printf("%d , ", j);
+      }
+      printf("], ");
+    }
+    */
+
+    return prev_m;
+  }
+
+
+
 }
