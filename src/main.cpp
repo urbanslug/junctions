@@ -1,3 +1,4 @@
+
 #include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
@@ -64,6 +65,23 @@ bool is_prefix_matched(EDS &eds, //
   size_t letter_start_in_size = eds.str_offsets[comp].front().start;
   size_t match_start_in_size = pos + letter_start_in_size;
   return dp_matrix[row][match_start_in_size - 1];
+}
+
+// filter results from ST
+bool is_match_valid(vector<span> &spans,
+                    int letter_idx,
+                    std::size_t query_length,
+                    int match_position,
+                    int letter_start_in_n
+                    ) {
+  for (auto sp : spans) {
+    int k = match_position;
+    if (sp.stop >= k && (k + query_length - 1) > sp.stop) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
     /*
@@ -176,17 +194,19 @@ bool is_prefix_matched(EDS &eds, //
       std::pair<STvertex, std::string> root_text;
 
       // -------
-      //
+      // match in W
       // -------
 
       q_end_indexes.clear();
       root_text = q_suffix_trees[j];
 
-      if (DEBUG_LEVEL > 3) {
-        printf("\tj text: %s\n", root_text.second.c_str());
-      }
+      if (DEBUG_LEVEL > 3) { printf("\tj text: %s\n", root_text.second.c_str()); }
 
-      if (eds_w.data[i].has_epsilon && (j == 0 || is_letter_matched(eds_w, i - 1, w_matrix, j))) {
+      // handle epsilon
+      if (eds_w.data[i].has_epsilon &&
+          (j == 0 ||
+           is_letter_matched(eds_w, i - 1, w_matrix, j))
+          ) {
         std::vector<span> letter_span = eds_w.str_offsets[i];
         int epsilon_idx = letter_span.back().stop;
 
@@ -203,27 +223,19 @@ bool is_prefix_matched(EDS &eds, //
         // if the string does not match anywhere
         if (res.empty()) { continue; }
 
+        std::vector<span> spans = eds_q.str_offsets[j];
+        int letter_start_in_n = spans.front().start;
+
         for (int pos: res) {
 
           if (DEBUG_LEVEL > 3) { printf("\t\ti_str: %s pos: %d\n", i_str.c_str(), pos); }
 
-          // TODO: offload to lambda
-          // filter results from ST
-          bool invalid_pos = false;
-          int letter_start_in_n = eds_q.str_offsets[j].front().start;
-          for (auto sp : eds_q.str_offsets[j]) {
-            int k = letter_start_in_n + pos;
-            if (sp.stop >= k && (k + i_str.length() - 1) > sp.stop) {
-              invalid_pos = true;
-            }
-          }
+          // if (!is_match_valid(spans, j, i_str.length(), pos, letter_start_in_n)) { continue; }
 
-          if (invalid_pos) { continue; }
-
-
-          if (i == 0 ||
-              is_letter_matched(eds_q, j - 1, q_matrix, i) ||
-              is_prefix_matched(eds_q, q_matrix, pos, i, j)
+          if (is_match_valid(spans, j, i_str.length(), pos, letter_start_in_n) &&
+              (i == 0 ||
+               is_letter_matched(eds_q, j - 1, q_matrix, i) ||
+               is_prefix_matched(eds_q, q_matrix, pos, i, j))
               ) {
             int end_idx = letter_start_in_n + pos + i_str.length() - 1;
             q_matrix[i][end_idx] = true;
@@ -236,17 +248,18 @@ bool is_prefix_matched(EDS &eds, //
       }
 
       // -------
-      //
+      // match in Q
       // -------
 
       w_end_indexes.clear();
       root_text = w_suffix_trees[i];
-      if (DEBUG_LEVEL > 3) {
-        printf("\ti text: %s\n", root_text.second.c_str());
-      }
+      if (DEBUG_LEVEL > 3) { printf("\ti text: %s\n", root_text.second.c_str()); }
 
+      // handle epsilon
       if (eds_q.data[j].has_epsilon &&
-          (i == 0 || is_letter_matched(eds_q, j - 1, q_matrix, i))) {
+          (i == 0 ||
+           is_letter_matched(eds_q, j - 1, q_matrix, i))
+          ) {
         std::vector<span> letter_span = eds_q.str_offsets[j];
         int epsilon_idx = letter_span.back().stop;
 
@@ -266,25 +279,19 @@ bool is_prefix_matched(EDS &eds, //
 
         if (DEBUG_LEVEL > 3) { printf("\t\tj_str: %s\n", j_str.c_str()); }
 
+        std::vector<span> spans = eds_w.str_offsets[i];
+        int letter_start_in_n = spans.front().start;
+
         for (int pos : res) {
 
           if (DEBUG_LEVEL > 3) { printf("\t\t\tpos: %d\n", pos); }
 
-          // filter results from ST
-          bool invalid_pos = false;
-          int letter_start_in_n = eds_w.str_offsets[i].front().start;
-          for (auto sp : eds_w.str_offsets[i]) {
-            int k = letter_start_in_n + pos;
-            if (sp.stop >= k && (k + j_str.length() -1)  > sp.stop) {
-              invalid_pos = true;
-            }
-          }
+          // if (!is_match_valid(spans, i, j_str.length(), pos, letter_start_in_n)) { continue; }
 
-          if (invalid_pos) {continue;}
-
-          if (j == 0 ||
+          if (is_match_valid(spans, i, j_str.length(), pos, letter_start_in_n) &&
+              (j == 0 ||
               is_letter_matched(eds_w, i - 1, w_matrix, j) || // TODO: what if i == 0?
-              is_prefix_matched(eds_w, w_matrix, pos, j, i)
+               is_prefix_matched(eds_w, w_matrix, pos, j, i))
               ) {
             int end_idx = letter_start_in_n +  pos + j_str.length() - 1;
             w_matrix[j][end_idx] = true;
@@ -300,6 +307,7 @@ bool is_prefix_matched(EDS &eds, //
       }
 
 
+      // if allowed, increment the row and copy over the previously matched rows
       auto inc_and_copy = [](matrix &dp_matrix, std::size_t* row, int max_row, std::vector<int> &cols){
         ++(*row);
         if (*row < max_row) {
@@ -345,7 +353,7 @@ bool is_prefix_matched(EDS &eds, //
 }
 
 int main() {
-  test_handle_epsilon();
+  // test_handle_epsilon();
   test_contains_intersect();
   test_lacks_intersect();
   // test_parse_ed_string();
