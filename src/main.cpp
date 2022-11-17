@@ -84,6 +84,14 @@ bool is_match_valid(vector<span> &spans,
   return true;
 }
 
+bool is_pos_at_start(std::vector<span> spans, int pos_in_n) {
+  for(auto sp: spans) {
+    if (sp.start == pos_in_n) { return true;}
+  }
+
+  return false;
+}
+
     /*
       Is there an intersection between ED strings W and Q?
 
@@ -228,16 +236,20 @@ bool is_match_valid(vector<span> &spans,
 
         for (int pos: res) {
 
-          if (DEBUG_LEVEL > 3) { printf("\t\ti_str: %s pos: %d\n", i_str.c_str(), pos); }
+          int pos_in_n = letter_start_in_n + pos;
+
+          if (DEBUG_LEVEL > 3) { printf("\t\ti_str: %s pos: %d pos_in_n: %d\n", i_str.c_str(), pos, pos_in_n); }
 
           // if (!is_match_valid(spans, j, i_str.length(), pos, letter_start_in_n)) { continue; }
 
           if (is_match_valid(spans, j, i_str.length(), pos, letter_start_in_n) &&
               (i == 0 ||
-               is_letter_matched(eds_q, j - 1, q_matrix, i) ||
+               j == 0 || // TODO: is this check robust?
+               (is_pos_at_start(spans, pos_in_n) &&
+                 is_letter_matched(eds_q, j - 1, q_matrix, i)) ||
                is_prefix_matched(eds_q, q_matrix, pos, i, j))
               ) {
-            int end_idx = letter_start_in_n + pos + i_str.length() - 1;
+            int end_idx = pos_in_n + i_str.length() - 1;
             q_matrix[i][end_idx] = true;
             q_end_indexes.push_back(end_idx);
             inc_i = true;
@@ -288,12 +300,17 @@ bool is_match_valid(vector<span> &spans,
 
           // if (!is_match_valid(spans, i, j_str.length(), pos, letter_start_in_n)) { continue; }
 
+          int pos_in_n = letter_start_in_n + pos;
+
           if (is_match_valid(spans, i, j_str.length(), pos, letter_start_in_n) &&
               (j == 0 ||
-              is_letter_matched(eds_w, i - 1, w_matrix, j) || // TODO: what if i == 0?
+               i == 0 || // TODO: is this check robust enough?
+               (is_pos_at_start(spans, pos_in_n) &&
+                is_letter_matched(eds_w, i - 1, w_matrix, j)
+                 ) || // TODO: what if i == 0?
                is_prefix_matched(eds_w, w_matrix, pos, j, i))
               ) {
-            int end_idx = letter_start_in_n +  pos + j_str.length() - 1;
+            int end_idx = pos_in_n + j_str.length() - 1;
             w_matrix[j][end_idx] = true;
 
             w_end_indexes.push_back(end_idx);
@@ -353,10 +370,10 @@ bool is_match_valid(vector<span> &spans,
 }
 
 int main() {
-  // test_handle_epsilon();
+  test_handle_epsilon();
   test_contains_intersect();
   test_lacks_intersect();
-  // test_parse_ed_string();
+  test_parse_ed_string();
   return 0;
 }
 
@@ -373,6 +390,8 @@ int main() {
 void test_parse_ed_string() {
   std::string ed_string;
   EDS eds;
+
+  // TODO: confirm size, len, offsets etc for all
 
   ed_string = "{AT,TC}{ATC,T}";
   eds = parse_ed_string(ed_string);
@@ -395,11 +414,15 @@ void test_parse_ed_string() {
   eds = parse_ed_string(ed_string);
   // print_edt(eds);
 
+  ed_string = "{,G}{CT,T}";
+  eds = parse_ed_string(ed_string);
+  IS_TRUE(eds.data[0].has_epsilon);
+  IS_TRUE(!eds.data[1].has_epsilon);
+  IS_TRUE(eds.length == 2);
+  // print_edt(eds);
+
   std::vector<std::vector<span>> str_offsets = eds.str_offsets;
-
-  // TODO: confirm size, len etc
 }
-
 
 void test_contains_intersect() {
   std::string ed_string_w = "{AT,TC}{ATC,T}";
@@ -421,23 +444,23 @@ void test_handle_epsilon() {
   eds_q = parse_ed_string(ed_string_q);
   IS_TRUE(intersect(eds_w, eds_q));
 
-  ed_string_w = "{AT,TC}{ATC,T}";
-  ed_string_q = "{,G}{CT,T}";
-  eds_w = parse_ed_string(ed_string_w);
-  eds_q = parse_ed_string(ed_string_q);
-  // IS_TRUE(intersect(eds_w, eds_q));
-
   ed_string_w = "{AT,TC}{ATC,}";
   ed_string_q = "{TC,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-  // IS_TRUE(intersect(eds_w, eds_q));
+  IS_TRUE(!intersect(eds_w, eds_q));
+
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "{,G}AT{CT,T}";
+  eds_w = parse_ed_string(ed_string_w);
+  eds_q = parse_ed_string(ed_string_q);
+  IS_TRUE(intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{ATC,A}";
   ed_string_q = "{,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-  // IS_TRUE(!intersect(eds_w, eds_q));
+  IS_TRUE(!intersect(eds_w, eds_q));
 }
 
 void test_lacks_intersect() {
