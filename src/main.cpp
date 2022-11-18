@@ -132,21 +132,19 @@ namespace improved {
       // match in W
       // -------
 
-      q_end_indexes.clear();
+      // q_end_indexes.clear();
       root_text = q_suffix_trees[j];
 
-      if (DEBUG_LEVEL > 3) {
-        printf("\tj text: %s\n", root_text.second.c_str());
-      }
+      if (DEBUG_LEVEL > 3) { printf("\tj text: %s\n", root_text.second.c_str()); }
 
       // handle epsilon
-      if (eds_w.data[i].has_epsilon &&
-          (j == 0 || is_letter_matched(eds_w, i - 1, w_matrix, j))) {
+      if (eds_w.data[i].has_epsilon && (j == 0 || is_letter_matched(eds_w, i - 1, w_matrix, j))) {
         std::vector<span> letter_span = eds_w.str_offsets[i];
         int epsilon_idx = letter_span.back().stop;
 
         w_matrix[j][epsilon_idx] = true;
-        q_end_indexes.push_back(epsilon_idx);
+        w_end_indexes.push_back(epsilon_idx);
+
         inc_i = true;
       }
 
@@ -168,11 +166,9 @@ namespace improved {
 
           int pos_in_n = letter_start_in_n + pos;
 
-          if (DEBUG_LEVEL > 3) {
-            printf("\t\ti_str: %s pos: %d pos_in_n: %d\n", i_str.c_str(), pos,
-                   pos_in_n);
-          }
+          if (DEBUG_LEVEL > 3) { printf("\t\t\tpos: %d\n", pos); }
 
+          
           // if (!is_match_valid(spans, j, i_str.length(), pos,
           // letter_start_in_n)) { continue; }
 
@@ -183,13 +179,13 @@ namespace improved {
                 is_letter_matched(eds_q, j - 1, q_matrix, i)) ||
                is_prefix_matched(eds_q, q_matrix, pos, i, j))) {
             int end_idx = pos_in_n + i_str.length() - 1;
+
             q_matrix[i][end_idx] = true;
             q_end_indexes.push_back(end_idx);
+
             inc_i = true;
 
-            if (DEBUG_LEVEL > 4) {
-              printf("\t\tpos %d  \tpos_in_n: %d\n", pos, end_idx);
-            }
+            if (DEBUG_LEVEL > 4) { printf("\t\t\tset i %lu \tpos_in_n: %d\n", i, end_idx); }
           }
         }
       }
@@ -198,7 +194,7 @@ namespace improved {
       // match in Q
       // -------
 
-      w_end_indexes.clear();
+      // w_end_indexes.clear();
       root_text = w_suffix_trees[i];
       if (DEBUG_LEVEL > 3) {
         printf("\ti text: %s\n", root_text.second.c_str());
@@ -211,7 +207,8 @@ namespace improved {
         int epsilon_idx = letter_span.back().stop;
 
         q_matrix[i][epsilon_idx] = true;
-        w_end_indexes.push_back(epsilon_idx);
+        q_end_indexes.push_back(epsilon_idx);
+
         inc_j = true;
       }
 
@@ -253,42 +250,53 @@ namespace improved {
                                   j)) || // TODO: what if i == 0?
                is_prefix_matched(eds_w, w_matrix, pos, j, i))) {
             int end_idx = pos_in_n + j_str.length() - 1;
-            w_matrix[j][end_idx] = true;
 
+            w_matrix[j][end_idx] = true;
             w_end_indexes.push_back(end_idx);
+
             inc_j = true;
 
-            if (DEBUG_LEVEL > 4) {
-              printf("\t\t\tset j %lu \tpos_in_n: %d\n", j, end_idx);
-            }
+            if (DEBUG_LEVEL > 4) { printf("\t\t\tset j %lu \tpos_in_n: %d\n", j, end_idx); }
           }
         }
       }
 
       // if allowed, increment the row and copy over the previously matched rows
       auto inc_and_copy = [](matrix &dp_matrix, std::size_t *row, int max_row,
-                             std::vector<int> &cols) {
+                             std::size_t cols) {
         ++(*row);
         if (*row < max_row) {
-          for (int k : cols) {
+          for (int k=0; k < cols ; k++) {
             dp_matrix[*row][k] = dp_matrix[*row - 1][k];
           }
         }
       };
 
       if (inc_i) {
-        inc_and_copy(q_matrix, &i, len_w, q_end_indexes);
+        inc_and_copy(q_matrix, &i, len_w, size_q);
+      } else {
+        q_end_indexes.clear();
       }
 
       if (inc_j) {
-        inc_and_copy(w_matrix, &j, len_q, w_end_indexes);
+        inc_and_copy(w_matrix, &j, len_q, size_w);
+      }else {
+        w_end_indexes.clear();
       }
+
+      // printf("-------------W----------\n");
+      // print_matrix(w_matrix);
+      // printf("-------------Q----------\n");
+      // print_matrix(q_matrix);
+      // printf("\n\n");
 
       // give up early because we can not extend any degenerate letter
       if (!inc_j && !inc_i) {
         return false;
       }
     }
+
+
 
     // computing accepting states
     std::vector<std::size_t> w_ends = compute_str_ends(eds_w, len_w - 1);
@@ -307,6 +315,8 @@ namespace improved {
 
     bool accept_w = foo(w_matrix, w_ends, len_q - 1);
     bool accept_q = foo(q_matrix, q_ends, len_w - 1);
+
+    // std::cout << "w: " << accept_w << " q: " << accept_q << std::endl;
 
     return accept_w && accept_q;
   }
@@ -348,7 +358,7 @@ namespace naive {
       std::vector<int> prev_q = linear_q.prev_chars[col];
 
       // TODO: what if only one is empty?
-      if (prev_w.empty() && prev_q.empty() ) { return true; }
+      if (prev_w.empty() || prev_q.empty() ) { return true; }
 
       // std::cout << row << " " << col << "\n";
 
@@ -413,11 +423,10 @@ namespace naive {
 }
 
 int main() {
-  // test_handle_epsilon();
+  test_handle_epsilon();
   test_contains_intersect();
   test_lacks_intersect();
   test_parse_ed_string();
-  
   return 0;
 }
 
@@ -493,38 +502,45 @@ void test_handle_epsilon() {
             << " improved: " << improved::intersect(eds_w, eds_q)
             << std::endl;
             */
-  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
+  IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{ATC,}";
   ed_string_q = "{TC,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
   // IS_TRUE(!improved::intersect(eds_w, eds_q));
-  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
+  IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "{,G}AT{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-  // IS_TRUE(improved::intersect(eds_w, eds_q));
-  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
+  IS_TRUE(improved::intersect(eds_w, eds_q));
+  /*
+  std::cout << "naive: "     << naive::intersect(eds_w, eds_q)
+            << " improved: " << improved::intersect(eds_w, eds_q)
+            << std::endl;
+  */
+  IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{ATC,A}";
   ed_string_q = "{,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
   // IS_TRUE(!improved::intersect(eds_w, eds_q));
-  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
+  IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
   ed_string_q = "{TC,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-
+  // improved::intersect(eds_w, eds_q);
+  /*
   std::cout << "naive: "     << naive::intersect(eds_w, eds_q)
             << " improved: " << improved::intersect(eds_w, eds_q)
             << std::endl;
-  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
+            */
+  IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 }
 
 void test_lacks_intersect() {
