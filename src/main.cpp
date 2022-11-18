@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <iostream>
+#include <ostream>
 #include <stdlib.h>
 #include <string>
 #include <vector>
@@ -13,11 +14,9 @@
 
 
 void test_lacks_intersect();
-void test_compare_lacks_intersect();
-void test_handle_epsilon();
 void test_contains_intersect();
 void test_parse_ed_string();
-void test_naive();
+void test_handle_epsilon();
 
 namespace improved {
   /*
@@ -341,15 +340,19 @@ namespace naive {
     size_t last_col = linear_q.str.length();
 
     boolean_matrix dp_matrix = gen_matrix(last_row, last_col);
+    // boolean_matrix q_dp_matrix = gen_matrix(last_row, last_col);
 
-    auto prev_matched = [&dp_matrix, &linear_w, &linear_q] (int row, int col) -> bool {
-
-      if (row == 0 || col == 0) { return true; }
-
+    auto prev_matched =
+      [&dp_matrix, &linear_w, &linear_q](int row, int col) -> bool {
       std::vector<int> prev_w = linear_w.prev_chars[row];
       std::vector<int> prev_q = linear_q.prev_chars[col];
 
-      for(int prev_row_idx: prev_w) {
+      // TODO: what if only one is empty?
+      if (prev_w.empty() && prev_q.empty() ) { return true; }
+
+      // std::cout << row << " " << col << "\n";
+
+      for (int prev_row_idx : prev_w) {
         for (int prev_col_idx: prev_q) {
           if (dp_matrix[prev_row_idx][prev_col_idx]) { return true; }
         }
@@ -359,17 +362,37 @@ namespace naive {
     };
 
     auto chars_match = [ &linear_w, &linear_q](int row_idx, int col_idx) -> bool {
-      return linear_w.str[row_idx] == '*' ||
-        linear_q.str[col_idx] == '*' ||
-        linear_w.str[row_idx] == linear_q.str[col_idx];
+      return linear_w.str[row_idx] == linear_q.str[col_idx];
     };
-
 
     for (size_t row_idx = 0; row_idx < last_row; row_idx++) {
       for (size_t col_idx = 0; col_idx < last_col; col_idx++) {
-
         if (chars_match(row_idx, col_idx) && prev_matched(row_idx, col_idx)) {
-          dp_matrix[row_idx][col_idx] = true;
+            dp_matrix[row_idx][col_idx] = true;
+        }
+
+        if (linear_w.str[row_idx] == '*') {
+          int_vec prev_w = linear_w.prev_chars[row_idx];
+
+          for (int r : prev_w) {
+            for (int c = 0; c <= col_idx; c++) {
+              if (dp_matrix[r][c]) {
+                dp_matrix[row_idx][c] = true;
+              }
+            }
+          }
+        }
+
+        if (linear_q.str[col_idx] == '*') {
+
+          int_vec prev_q = linear_q.prev_chars[col_idx];
+          for (int c : prev_q) {
+            for (int r = 0; r <= row_idx; r++ ) {
+              if (dp_matrix[r][c]) {
+                dp_matrix[r][col_idx] = true;
+              }
+            }
+          }
         }
       }
     }
@@ -379,7 +402,9 @@ namespace naive {
 
     for(int row: accept_w) {
       for (int col: accept_q) {
-        if (dp_matrix[row][col]) { return true; }
+        if (dp_matrix[row][col]) {
+          return true;
+        }
       }
     }
 
@@ -389,11 +414,10 @@ namespace naive {
 
 int main() {
   // test_handle_epsilon();
-  // test_contains_intersect();
-  // test_lacks_intersect();
-  // test_parse_ed_string();
-  test_naive();
-  test_compare_lacks_intersect();
+  test_contains_intersect();
+  test_lacks_intersect();
+  test_parse_ed_string();
+  
   return 0;
 }
 
@@ -451,36 +475,56 @@ void test_contains_intersect() {
   EDS eds_w = parse_ed_string(ed_string_w);
   EDS eds_q = parse_ed_string(ed_string_q);
 
-  IS_TRUE(improved::intersect(eds_w, eds_q));
+  // IS_TRUE(improved::intersect(eds_w, eds_q));
+  IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 }
 
 void test_handle_epsilon() {
   std::string ed_string_w, ed_string_q;
   EDS eds_w, eds_q;
 
-  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_w = "{AT,TC}{TC,T}";
   ed_string_q = "TC{,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-  IS_TRUE(improved::intersect(eds_w, eds_q));
+  // IS_TRUE(improved::intersect(eds_w, eds_q));
+  /*
+  std::cout << "naive: "     << naive::intersect(eds_w, eds_q)
+            << " improved: " << improved::intersect(eds_w, eds_q)
+            << std::endl;
+            */
+  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{ATC,}";
   ed_string_q = "{TC,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-  IS_TRUE(!improved::intersect(eds_w, eds_q));
+  // IS_TRUE(!improved::intersect(eds_w, eds_q));
+  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "{,G}AT{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-  IS_TRUE(improved::intersect(eds_w, eds_q));
+  // IS_TRUE(improved::intersect(eds_w, eds_q));
+  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 
   ed_string_w = "{AT,TC}{ATC,A}";
   ed_string_q = "{,G}{CT,T}";
   eds_w = parse_ed_string(ed_string_w);
   eds_q = parse_ed_string(ed_string_q);
-  IS_TRUE(!improved::intersect(eds_w, eds_q));
+  // IS_TRUE(!improved::intersect(eds_w, eds_q));
+  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
+
+  ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
+  ed_string_q = "{TC,G}{CT,T}";
+  eds_w = parse_ed_string(ed_string_w);
+  eds_q = parse_ed_string(ed_string_q);
+
+  std::cout << "naive: "     << naive::intersect(eds_w, eds_q)
+            << " improved: " << improved::intersect(eds_w, eds_q)
+            << std::endl;
+  // IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 }
 
 void test_lacks_intersect() {
@@ -490,26 +534,7 @@ void test_lacks_intersect() {
   EDS eds_w = parse_ed_string(ed_string_w);
   EDS eds_q = parse_ed_string(ed_string_q);
 
-  IS_TRUE(!improved::intersect(eds_w, eds_q));
-}
-
-void test_compare_lacks_intersect() {
-  std::string ed_string_w = "{AT,TC}{ATC,T}";
-  std::string ed_string_q = "{TC,G}{CG,G}";
-
-  EDS eds_w = parse_ed_string(ed_string_w);
-  EDS eds_q = parse_ed_string(ed_string_q);
-
+  // IS_TRUE(!improved::intersect(eds_w, eds_q));
   IS_TRUE(naive::intersect(eds_w, eds_q) == improved::intersect(eds_w, eds_q));
 }
 
-
-void test_naive() {
-  std::string ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
-  std::string ed_string_q = "{TC,G}{CT,T}";
-
-  EDS eds_w = parse_ed_string(ed_string_w);
-  EDS eds_q = parse_ed_string(ed_string_q);
-
-  IS_TRUE(naive::intersect(eds_w, eds_q));
-}

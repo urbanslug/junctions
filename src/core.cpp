@@ -18,7 +18,7 @@ typedef std::vector<std::vector<bool>> boolean_matrix;
 typedef std::vector<std::vector<int>> int_matrix;
 typedef std::vector<std::size_t> size_t_vec;
 typedef std::vector<std::string> string_vec;
-
+typedef std::vector<int> int_vec;
 
 struct degenerate_letter {
   std::vector<std::string> data;
@@ -104,7 +104,7 @@ void print_vec(std::vector<std::size_t> const &v) {
   }
 }
 
-void print_matrix(matrix const  &m) {
+void print_matrix(boolean_matrix const  &m) {
   for (auto row : m) {
     for (auto col: row) {
       std::cout << col;
@@ -401,6 +401,7 @@ namespace parser {
         for (auto j : i) { printf("%d , ", j); }
         printf("], ");
       }
+      printf("\n");
     }
 
     LinearizedEDS l;
