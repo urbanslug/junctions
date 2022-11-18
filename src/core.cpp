@@ -11,10 +11,14 @@
   Types
   ----
 */
-
 const uint8_t DEBUG_LEVEL = 0;
 
-typedef std::vector<std::vector<bool>> matrix;
+typedef std::vector<std::vector<bool>> matrix; // TODO: remove
+typedef std::vector<std::vector<bool>> boolean_matrix;
+typedef std::vector<std::vector<int>> int_matrix;
+typedef std::vector<std::size_t> size_t_vec;
+typedef std::vector<std::string> string_vec;
+
 
 struct degenerate_letter {
   std::vector<std::string> data;
@@ -31,6 +35,11 @@ struct EDS {
   std::vector<std::vector<span>> str_offsets;
   size_t size;
   size_t length;
+};
+
+struct LinearizedEDS {
+  std::string str;
+  std::vector<std::vector<int>> prev_chars;
 };
 
 
@@ -105,7 +114,7 @@ void print_matrix(matrix const  &m) {
   }
 }
 
-std::vector<std::vector<bool>> gen_matrix(size_t rows, size_t cols) {
+boolean_matrix gen_matrix(size_t rows, size_t cols) {
   if (DEBUG_LEVEL > 3) {
     printf("[cpp::main::gen_matrix]\n");
   }
@@ -133,6 +142,12 @@ std::vector<std::size_t> compute_str_ends(EDS &eds, size_t letter) {
   std::vector<std::size_t> stops;
   for (auto s : eds.str_offsets[letter]) { stops.push_back(s.stop); }
   return stops;
+}
+
+// compute the accepting state indexes
+// the ends of the strings in the last degenerate letter
+std::vector<std::size_t> compute_accepting_states(EDS &eds) {
+  return compute_str_ends(eds, eds.length -1);
 }
 
 std::vector<std::size_t> compute_str_starts(EDS &eds, size_t letter) {
@@ -313,7 +328,7 @@ EDS parse_ed_string(std::string &ed_string) {
 }
 
 namespace parser {
-  std::vector<std::vector<int>> foo(EDS &eds) {
+  LinearizedEDS linearize(EDS &eds) {
     if (DEBUG_LEVEL > 3) { printf("[utils::parser::foo]\n"); }
 
     std::vector<std::vector<int>> prev_m;
@@ -330,9 +345,7 @@ namespace parser {
       prev_char.clear();
     }
 
-
-
-    // Handle start
+    // Handle the first D letter
     for (auto sp : eds.str_offsets.front()) {
       prev_m[sp.start].clear();
     }
@@ -346,10 +359,8 @@ namespace parser {
       chars_vec.push_back('*');
     }
 
-    // handle rest
-
-
-    for (int i=1; i< eds.length; i++) {
+    // Handle the rest of the EDT
+    for (size_t i=1; i < eds.length; i++) {
       std::vector<span> spans_curr = eds.str_offsets[i];
       std::vector<span> spans_prev = eds.str_offsets[i-1];
 
@@ -382,21 +393,20 @@ namespace parser {
       }
     }
 
-    /*
-    printf("%s\n", chars_vec.c_str());
+    if (false) {
+      printf("%s\n", chars_vec.c_str());
 
-    for (auto i: prev_m) {
-      printf("[");
-      for (auto j: i) {
-        printf("%d , ", j);
+      for (auto i : prev_m) {
+        printf("[");
+        for (auto j : i) { printf("%d , ", j); }
+        printf("], ");
       }
-      printf("], ");
     }
-    */
 
-    return prev_m;
+    LinearizedEDS l;
+    l.prev_chars = prev_m;
+    l.str = chars_vec;
+
+    return l;
   }
-
-
-
 }
