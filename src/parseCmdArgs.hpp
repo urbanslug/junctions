@@ -15,6 +15,17 @@
 
 namespace cli
 {
+/**
+ * @brief   parameters for cli args
+ */
+
+struct Parameters {
+  bool naive;
+  int verbosity;
+  std::string refSequences;   // reference sequence(s)
+  std::string querySequences; // query sequence(s)
+};
+
   /**
    * @brief           Initialize the command line argument parser 
    * @param[out] cmd  command line parser object
