@@ -49,9 +49,9 @@ enum file_format {
 struct Parameters {
   bool naive;
   int verbosity;
-  std::string refSequences;   // reference sequence(s)
+  std::string w_file_path;   // reference sequence(s)
   file_format w_format;
-  std::string querySequences; // query sequence(s)
+  std::string q_file_path; // query sequence(s)
   file_format q_format;
 };
 
@@ -95,12 +95,12 @@ $ junctions -w foo.msa -q bar.msa");
   void printCmdOptions(cli::Parameters &parameters)
   {
     // core params
-    std::cerr << "w = " << parameters.refSequences
+    std::cerr << "w = " << parameters.w_file_path
               << " (format: "
               << (parameters.w_format == 0 ? "msa" : "eds")
               << ")" << std::endl;
 
-    std::cerr << "q = " << parameters.querySequences
+    std::cerr << "q = " << parameters.q_file_path
               << " (format: "
               << (parameters.q_format == 0 ? "msa" : "eds")
               << ")" << std::endl;
@@ -157,7 +157,7 @@ $ junctions -w foo.msa -q bar.msa");
 
       parameters.w_format = extract_extension(ref);
 
-      parameters.refSequences = ref;
+      parameters.w_file_path = ref;
     }
     str.clear();
 
@@ -171,7 +171,7 @@ $ junctions -w foo.msa -q bar.msa");
 
       parameters.q_format = extract_extension(query);
 
-      parameters.querySequences = query;
+      parameters.q_file_path = query;
     }
     str.clear();
 

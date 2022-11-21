@@ -13,7 +13,7 @@
 #include "./gen_suffix_tree.cpp"
 #include "./argvparser.hpp"
 #include "./parseCmdArgs.hpp"
-
+#include "./files.cpp"
 
 
 void test_lacks_intersect();
@@ -438,6 +438,36 @@ int main(int argc, char **argv) {
 
   cli::parseandSave(argc, argv, cmd, parameters);
 
+  std::string eds_string;
+  std::vector<std::string> msa_data;
+  EDS w, q;
+  // TODO: offload to lambda
+  if (parameters.q_format == cli::file_format::eds) {
+    eds_string = files::read_eds(parameters.q_file_path);
+    q = parse_ed_string(eds_string);
+  } else {
+    msa_data = files::read_msa(parameters.q_file_path);
+    std::vector<std::set<std::string>> raw_edt =  parser::msa_to_eds(msa_data);
+  }
+
+  if (parameters.w_format == cli::file_format::eds) {
+    eds_string = files::read_eds(parameters.w_file_path);
+    w = parse_ed_string(eds_string);
+  } else {
+    msa_data = files::read_msa(parameters.w_file_path);
+    std::vector<std::set<std::string>> raw_edt = parser::msa_to_eds(msa_data);
+  }
+
+  bool result;
+
+  if (parameters.naive) {
+    result = naive::intersect(w, q);
+  } else {
+    result = improved::intersect(w, q);
+  }
+
+  std::cout << (result ? "intersection exists" : "no intersection")
+            << std::endl;
 
   return 0;
 }
