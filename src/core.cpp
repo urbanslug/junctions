@@ -438,173 +438,169 @@ namespace parser {
     return l;
   }
 
-  void msa_to_eds(string_vec &msa) {
-    std::size_t length= msa.front().length();
-    int sequence_count = msa.size();
+  std::vector<std::set<std::string>> msa_to_eds(string_vec &msa) {
+    int last_col_idx = msa.front().length(); // rename to col count
+    int last_row_idx = msa.size();           // rename to row count
 
-    int_vec similar_cols;
-    std::vector<span> spans;
+    // printf("last row idx: %d last col idx: %d\n", last_row_idx,
+    // last_col_idx);
 
-    span sp;
-    sp.start = 0;
-    bool variable_region = false;
+    // find similar regions
+    bool variable_region = true;
+    std::pair<int, int> span;
+    std::vector<std::pair<int, int>> spans;
 
-    for (std::size_t col = 0; col < length; col++) {
-      for (int row = 0; row < sequence_count-1; row++ ) {
+    for (int col_idx = 0; col_idx < last_col_idx; col_idx++) {
+      // printf("col idx: %d\n", col_idx);
+      for (int row_idx = 0; row_idx < last_row_idx - 1; row_idx++) {
+        // printf("\trow idx: %d ", row_idx);
+        // printf("%c %c ", msa[row_idx][col_idx] , msa[row_idx+1][col_idx]);
+        // printf("variable region: %d\n", variable_region);
 
-        if (msa[row][col] == msa[row+1][col] ) {
-          if (row+1 == sequence_count-1 && variable_region) {
-            sp.start = col;
-            variable_region = false;
-          }
-        }
-
-        if (!variable_region && msa[row][col] != msa[row+1][col]) {
+        if (msa[row_idx][col_idx] != msa[row_idx + 1][col_idx] &&
+            !variable_region) {
           variable_region = true;
-          sp.stop = col-1;
-          spans.push_back(sp);
+          span = std::make_pair(span.first, col_idx - 1);
+          spans.push_back(span);
           break;
         }
 
-        if (col == length-1 && row+1 == sequence_count-1 && !variable_region) {
-          sp.stop = col-1;
-          spans.push_back(sp);
+        // could be combined with above
+        if (col_idx == last_col_idx - 1) {
+          span = std::make_pair(span.first, col_idx);
+          spans.push_back(span);
+          break;
+        }
+
+        if (row_idx == last_row_idx - 2 &&
+            msa[row_idx][col_idx] == msa[row_idx + 1][col_idx] &&
+            variable_region) {
+          variable_region = false;
+          span = std::make_pair(col_idx, -1);
+          // span.a = col_idx;
         }
       }
     }
 
-    for(auto sp: spans) { printf("(%d, %d)\n", sp.start, sp.stop); }
+    if (false) {
+      printf("Spans: [");
+      for (auto span : spans) {
+        printf("(%d, %d), ", span.first, span.second);
+      }
+      printf("]\n");
+    }
 
-    string_matrix ed_strings;
-    string_vec d_letter; // TODO: make this a set
+    // -----
+    //
+    // -----
+    std::vector<std::set<std::string>> raw_edt;
+    std::set<std::string> d_letter;
     std::string s;
+
     int spans_idx = 0;
-    span current_span = spans[spans_idx];
-    span previous_span;
-    bool can_continue;
+    bool increment_spans_idx;
+    for (int col_idx = 0; col_idx < last_col_idx; col_idx++) {
+      // printf("col idx: %d, spans idx %d \n", col_idx, spans_idx);
+      increment_spans_idx = false;
 
-    for (int col = 0; col < length; col++) {
-      can_continue = false;
-      printf("(%d, %d) %d\n", current_span.start, current_span.stop, col);
+      // start in variable region
+      if (col_idx == 0 && spans[spans_idx].first > 0) {
+        int len = spans[spans_idx].first;
 
-      if (spans_idx > 0 && col == current_span.start) {
-        //if (spans_idx == 0) { continue; }
-        previous_span = spans[spans_idx - 1];
-
-        size_t len = current_span.start - previous_span.stop + 1;
-
-        for (int row = 0; row < sequence_count; row++) {
-          s = msa[row].substr(previous_span.stop +1, len);
-          d_letter.push_back(s);
+        for (int row_idx = 0; row_idx < last_row_idx; row_idx++) {
+          for (char ch : msa[row_idx].substr(0, len)) {
+            if (ch != '-') {
+              s.push_back(ch);
+            }
+          }
+          d_letter.insert(s);
+          s.clear();
         }
-
-        ed_strings.push_back(d_letter);
+        raw_edt.push_back(d_letter);
         d_letter.clear();
-
-        // can_continue = true;
       }
 
-      if (col == current_span.stop) {
+      // variable region
+      if (spans_idx > 0 && col_idx == spans[spans_idx].first) {
         // if (spans_idx == 0) { continue; }
 
+        int len = ((spans[spans_idx].first - 1) - spans[spans_idx - 1].second);
 
-        size_t len = (current_span.stop + 1) - current_span.start;
-        s = msa.front().substr(current_span.start, len);
-
-        printf("(%d, %d) %d %s\n", current_span.start, current_span.stop, len, s.c_str());
-
-        d_letter.push_back(s);
-        ed_strings.push_back(d_letter);
-        d_letter.clear();
-
-        can_continue = true;
-      }
-
-      // printf("can continue: %d\n", can_continue);
-
-      if (can_continue) {
-        ++spans_idx;
-        current_span = spans[spans_idx];
-      }
-    }
-    /*
-    for (int spans_idx = 0; spans_idx < spans.size();) {
-      span current_span = spans[spans_idx];
-
-      for (int col = 0; col < length; col++) {
-
-
-        if (col == current_span.stop) {
-          size_t len = current_span.stop - current_span.start + 1;
-          s = msa.front().substr(current_span.start, len);
-
-          d_letter.push_back(s);
-          ed_strings.push_back(d_letter);
-          d_letter.clear();
-        }
-
-        if (col == current_span.start) {
-          if (spans_idx == 0 ) { continue; }
-          size_t len = spans[spans_idx - 1].stop - current_span.start + 1;
-
-          for (int row = 0; row < sequence_count; row++) {
-            s = msa[row].substr(spans[spans_idx - 1].stop, len);
-            d_letter.push_back(s);
+        for (int row_idx = 0; row_idx < last_row_idx; row_idx++) {
+          for (char ch :
+               msa[row_idx].substr(spans[spans_idx - 1].second + 1, len)) {
+            if (ch != '-') {
+              s.push_back(ch);
+            }
           }
+          d_letter.insert(s);
+          s.clear();
+        }
+        raw_edt.push_back(d_letter);
+        d_letter.clear();
+        increment_spans_idx = true;
+      }
 
-          ed_strings.push_back(d_letter);
-          d_letter.clear();
+      // collapsible region
+      if (col_idx == spans[spans_idx].first) {
+        int len = (spans[spans_idx].second - spans[spans_idx].first) + 1;
+        for (char ch : msa.front().substr(spans[spans_idx].first, len)) {
+          if (ch != '-') {
+            s.push_back(ch);
+          }
+        }
+        d_letter.insert(s);
+        raw_edt.push_back(d_letter);
+        s.clear();
+        d_letter.clear();
+        increment_spans_idx = true;
+      }
+
+      // end in variable region
+      if (col_idx == (last_col_idx - 1) && spans.back().second < col_idx) {
+        // printf("spans idx sc %d \n", spans.back().second);
+        for (int row_idx = 0; row_idx < last_row_idx; row_idx++) {
+          for (char ch : msa[row_idx].substr(spans.back().second + 1)) {
+            if (ch != '-') {
+              s.push_back(ch);
+            }
+          }
+          d_letter.insert(s);
+          s.clear();
+        }
+        raw_edt.push_back(d_letter);
+        d_letter.clear();
+      }
+
+      if (increment_spans_idx) {
+        ++spans_idx;
+      }
+    }
+
+    if (true) {
+      printf("raw_edt: ");
+      for (auto d_letter : raw_edt) {
+        if (d_letter.size() < 2) {
+          printf("%s", d_letter.begin()->c_str());
+        } else {
+          printf("{");
+          for (auto str = d_letter.begin(); str != d_letter.end(); str++) {
+            if (str->length() > 0) {
+              printf("%s", str->c_str());
+            } else {
+              // printf("e,");
+            }
+            if (std::next(str) != d_letter.end()) {
+              printf(",");
+            }
+          }
+          printf("}");
         }
       }
-
-      ++spans_idx;
-    }
-    */
-
-    printf("\nspans idx: %d\n", spans_idx);
-
-    printf("\n");
-    for (auto v: ed_strings) {
-      if (v.size() > 1) {
-        printf("{");
-        print_d_letter(v);
-        printf("}");
-      } else {
-        print_str_vec(v);
-      }
-    }
-    printf("\n");
-
-    // TODO: merge with above
-    std::set<std::string> d_letter_set;
-    std::vector<std::set<std::string>> edd;
-
-    for (auto d: ed_strings) {
-
-      for (auto s: d) {
-        std::string a;
-        for (auto c: s) {
-          if (c != '-') { a.push_back(c); }
-        }
-        d_letter_set.insert(a);
-        a.clear();
-      }
-
-      edd.push_back(d_letter_set);
-      d_letter_set.clear();
+      printf("\n");
     }
 
-    for (auto v: edd) {
-      if (v.size() > 1) {
-        printf("{");
-        print_d_letter(v);
-        printf("}");
-      } else {
-        print_str_vec(v);
-      }
-    }
-    printf("\n");
-
+    return raw_edt;
   }
 }
 

@@ -6,7 +6,7 @@
 
 
 
-void foo(std::vector<std::string>& msa) {
+void feo(std::vector<std::string>& msa) {
   int last_col_idx = msa.front().length(); // rename to col count
   int last_row_idx = msa.size() ; // rename to row count
 

@@ -1,4 +1,3 @@
-
 #include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
@@ -9,8 +8,13 @@
 #include <vector>
 #include <utility>
 
+// Own includes
 #include "./core.cpp"
 #include "./gen_suffix_tree.cpp"
+#include "./parameters.hpp"
+#include "./argvparser.hpp"
+#include "./parseCmdArgs.hpp"
+
 
 
 void test_lacks_intersect();
@@ -423,12 +427,22 @@ namespace naive {
   }
 }
 
-int main() {
-  // test_handle_epsilon();
-  // test_contains_intersect();
-  // test_lacks_intersect();
-  // test_parse_ed_string();
-  test_msa_to_eds();
+
+
+int main(int argc, char **argv) {
+
+  CommandLineProcessing::ArgvParser cmd;
+
+  // Setup command line options
+  cli::initCmdParser(cmd);
+
+  // Parse command line arguments
+  cli::Parameters parameters; // sketching and mapping parameters
+
+  cli::parseandSave(argc, argv, cmd, parameters);
+
+
+
   return 0;
 }
 
@@ -443,11 +457,20 @@ int main() {
 
 void test_msa_to_eds() {
   string_vec msa;
-  msa.push_back("ACGTGTACA-GTTGAC");
-  msa.push_back("A-G-GTACACGTT-AC");
-  msa.push_back("A-GTGT-CACGTTGAC");
-  msa.push_back("ACGTGTACA--TTGAC");
+  msa = {
+    "ACGTGTACA-GTTGAC",
+    "A-G-GTACACGTT-AC",
+    "A-GTGT-CACGTTGAC",
+    "ACGTGTACA--TTGAC"
+  };
+  parser::msa_to_eds(msa);
 
+  msa = {
+    "CGTGTACA-GTTGACG",
+    "-G-GTACACGTT-ACC",
+    "-GTGTTCACGTTGACC",
+    "CGTGTACA--TTGACC"
+  };
   parser::msa_to_eds(msa);
 }
 
