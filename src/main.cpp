@@ -11,7 +11,6 @@
 // Own includes
 #include "./core.cpp"
 #include "./gen_suffix_tree.cpp"
-#include "./parameters.hpp"
 #include "./argvparser.hpp"
 #include "./parseCmdArgs.hpp"
 
@@ -427,8 +426,6 @@ namespace naive {
   }
 }
 
-
-
 int main(int argc, char **argv) {
 
   CommandLineProcessing::ArgvParser cmd;
@@ -440,7 +437,6 @@ int main(int argc, char **argv) {
   cli::Parameters parameters; // sketching and mapping parameters
 
   cli::parseandSave(argc, argv, cmd, parameters);
-
 
 
   return 0;
