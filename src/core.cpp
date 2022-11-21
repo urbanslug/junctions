@@ -2,10 +2,12 @@
 #include <cstddef>
 #include <cstdio>
 #include <iostream>
+#include <set>
 #include <stdlib.h>
 #include <string>
 #include <utility>
 #include <vector>
+#include <iterator> 
 
 /*
   Types
@@ -16,6 +18,7 @@ const uint8_t DEBUG_LEVEL = 0;
 typedef std::vector<std::vector<bool>> matrix; // TODO: remove
 typedef std::vector<std::vector<bool>> boolean_matrix;
 typedef std::vector<std::vector<int>> int_matrix;
+typedef std::vector<std::vector<std::string>> string_matrix;
 typedef std::vector<std::size_t> size_t_vec;
 typedef std::vector<std::string> string_vec;
 typedef std::vector<int> int_vec;
@@ -47,7 +50,6 @@ struct LinearizedEDS {
   Utils
   -----
  */
-
 void print_degenerate_letter(degenerate_letter &d_letter) {
   std::vector<std::string> degenerate_letter_data = d_letter.data;
   std::cout << "{";
@@ -97,6 +99,31 @@ void print_str_vec(std::vector<std::string> &degenerate_letter) {
       std::cout << *str << " ";
     }
 }
+
+void print_str_vec(std::set<std::string> &degenerate_letter) {
+  for (auto str : degenerate_letter) {
+    std::cout << str;
+  }
+}
+
+
+// TODO: remove
+void print_d_letter(std::vector<std::string> &degenerate_letter) {
+  for (auto str : degenerate_letter) {
+    std::cout << str << ",";
+  }
+}
+
+// TODO: remove
+void print_d_letter(std::set<std::string> &degenerate_letter) {
+  for (auto str = degenerate_letter.begin(); str != degenerate_letter.end(); str++) {
+    std::cout << *str;
+    if (std::next(str) != degenerate_letter.end() || str->empty() ) {
+      std::cout << ",";
+    }
+  }
+}
+
 
 void print_vec(std::vector<std::size_t> const &v) {
   for (auto str = v.begin(); str < v.end(); str++) {
@@ -183,7 +210,7 @@ bool is_prev_letter_matched(
                             int letter_idx,    // has any string in this d letter been matched
                             matrix &dp_matrix, // matrix that tracks matches in the eds
                             int row_idx        // row in dp_matrix
-                            ){
+                            ) {
 
   if (row_idx == 0) {
     return true;
@@ -410,4 +437,175 @@ namespace parser {
 
     return l;
   }
+
+  void msa_to_eds(string_vec &msa) {
+    std::size_t length= msa.front().length();
+    int sequence_count = msa.size();
+
+    int_vec similar_cols;
+    std::vector<span> spans;
+
+    span sp;
+    sp.start = 0;
+    bool variable_region = false;
+
+    for (std::size_t col = 0; col < length; col++) {
+      for (int row = 0; row < sequence_count-1; row++ ) {
+
+        if (msa[row][col] == msa[row+1][col] ) {
+          if (row+1 == sequence_count-1 && variable_region) {
+            sp.start = col;
+            variable_region = false;
+          }
+        }
+
+        if (!variable_region && msa[row][col] != msa[row+1][col]) {
+          variable_region = true;
+          sp.stop = col-1;
+          spans.push_back(sp);
+          break;
+        }
+
+        if (col == length-1 && row+1 == sequence_count-1 && !variable_region) {
+          sp.stop = col-1;
+          spans.push_back(sp);
+        }
+      }
+    }
+
+    for(auto sp: spans) { printf("(%d, %d)\n", sp.start, sp.stop); }
+
+    string_matrix ed_strings;
+    string_vec d_letter; // TODO: make this a set
+    std::string s;
+    int spans_idx = 0;
+    span current_span = spans[spans_idx];
+    span previous_span;
+    bool can_continue;
+
+    for (int col = 0; col < length; col++) {
+      can_continue = false;
+      printf("(%d, %d) %d\n", current_span.start, current_span.stop, col);
+
+      if (spans_idx > 0 && col == current_span.start) {
+        //if (spans_idx == 0) { continue; }
+        previous_span = spans[spans_idx - 1];
+
+        size_t len = current_span.start - previous_span.stop + 1;
+
+        for (int row = 0; row < sequence_count; row++) {
+          s = msa[row].substr(previous_span.stop +1, len);
+          d_letter.push_back(s);
+        }
+
+        ed_strings.push_back(d_letter);
+        d_letter.clear();
+
+        // can_continue = true;
+      }
+
+      if (col == current_span.stop) {
+        // if (spans_idx == 0) { continue; }
+
+
+        size_t len = (current_span.stop + 1) - current_span.start;
+        s = msa.front().substr(current_span.start, len);
+
+        printf("(%d, %d) %d %s\n", current_span.start, current_span.stop, len, s.c_str());
+
+        d_letter.push_back(s);
+        ed_strings.push_back(d_letter);
+        d_letter.clear();
+
+        can_continue = true;
+      }
+
+      // printf("can continue: %d\n", can_continue);
+
+      if (can_continue) {
+        ++spans_idx;
+        current_span = spans[spans_idx];
+      }
+    }
+    /*
+    for (int spans_idx = 0; spans_idx < spans.size();) {
+      span current_span = spans[spans_idx];
+
+      for (int col = 0; col < length; col++) {
+
+
+        if (col == current_span.stop) {
+          size_t len = current_span.stop - current_span.start + 1;
+          s = msa.front().substr(current_span.start, len);
+
+          d_letter.push_back(s);
+          ed_strings.push_back(d_letter);
+          d_letter.clear();
+        }
+
+        if (col == current_span.start) {
+          if (spans_idx == 0 ) { continue; }
+          size_t len = spans[spans_idx - 1].stop - current_span.start + 1;
+
+          for (int row = 0; row < sequence_count; row++) {
+            s = msa[row].substr(spans[spans_idx - 1].stop, len);
+            d_letter.push_back(s);
+          }
+
+          ed_strings.push_back(d_letter);
+          d_letter.clear();
+        }
+      }
+
+      ++spans_idx;
+    }
+    */
+
+    printf("\nspans idx: %d\n", spans_idx);
+
+    printf("\n");
+    for (auto v: ed_strings) {
+      if (v.size() > 1) {
+        printf("{");
+        print_d_letter(v);
+        printf("}");
+      } else {
+        print_str_vec(v);
+      }
+    }
+    printf("\n");
+
+    // TODO: merge with above
+    std::set<std::string> d_letter_set;
+    std::vector<std::set<std::string>> edd;
+
+    for (auto d: ed_strings) {
+
+      for (auto s: d) {
+        std::string a;
+        for (auto c: s) {
+          if (c != '-') { a.push_back(c); }
+        }
+        d_letter_set.insert(a);
+        a.clear();
+      }
+
+      edd.push_back(d_letter_set);
+      d_letter_set.clear();
+    }
+
+    for (auto v: edd) {
+      if (v.size() > 1) {
+        printf("{");
+        print_d_letter(v);
+        printf("}");
+      } else {
+        print_str_vec(v);
+      }
+    }
+    printf("\n");
+
+  }
 }
+
+

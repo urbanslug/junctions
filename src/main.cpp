@@ -17,6 +17,7 @@ void test_lacks_intersect();
 void test_contains_intersect();
 void test_parse_ed_string();
 void test_handle_epsilon();
+void test_msa_to_eds();
 
 namespace improved {
   /*
@@ -423,10 +424,11 @@ namespace naive {
 }
 
 int main() {
-  test_handle_epsilon();
-  test_contains_intersect();
-  test_lacks_intersect();
-  test_parse_ed_string();
+  // test_handle_epsilon();
+  // test_contains_intersect();
+  // test_lacks_intersect();
+  // test_parse_ed_string();
+  test_msa_to_eds();
   return 0;
 }
 
@@ -439,6 +441,15 @@ int main() {
 // This check function would be provided by the test framework
 #define IS_TRUE(x) { if (!(x)) std::cout << __FUNCTION__ << " failed on line " << __LINE__ << std::endl;}
 
+void test_msa_to_eds() {
+  string_vec msa;
+  msa.push_back("ACGTGTACA-GTTGAC");
+  msa.push_back("A-G-GTACACGTT-AC");
+  msa.push_back("A-GTGT-CACGTTGAC");
+  msa.push_back("ACGTGTACA--TTGAC");
+
+  parser::msa_to_eds(msa);
+}
 
 void test_parse_ed_string() {
   std::string ed_string;
