@@ -103,8 +103,9 @@ int main(int argc, char **argv) {
               << timeRefRead.count() << " sec" << std::endl;
 
     if (result_naive != result_improved) {
-      std::cerr << "[junctions::main] results not same. Please report as a bug."
-                << std::endl;
+      std::cerr << "[junctions::main] incompatible results " << "(naive "
+				<< result_naive << " improved " << result_improved
+				<< "). Please report as a bug." << std::endl;
       exit(1);
     }
 

@@ -71,7 +71,7 @@ struct Parameters {
 Compute the intersection of Elastic Degenerate Strings\n\
 \n\
 Example usage: \n\
-$ ./build/junctions -a=2 -w data/first.msa -q data/second.msa");
+$ ./build/junctions -a=2 -w data/x.eds -q data/y.eds");
 
     cmd.setHelpOption("h", "help", "Print this help page");
 
