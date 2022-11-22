@@ -5,12 +5,13 @@ Do two elastic degenerate strings have a non-empty intersection?
 ## Compile and Run
 Compile
 ```
+git clone https://github.com/urbanslug/junctions.git && cd junctions
 make
 ```
 
 Run
 ```
-./build/junctions -h
+$ ./build/junctions -h
 -----------------
 Compute the intersection of Elastic Degenerate Strings
 Example usage:
