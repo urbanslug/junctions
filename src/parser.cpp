@@ -381,7 +381,7 @@ EDS parse_ed_string(std::string &ed_string) {
   std::string ed_string;
 
   if (true) {
-    printf("raw_edt: ");
+    // printf("raw_edt: ");
     for (auto d_letter : raw_edt) {
       if (d_letter.size() < 2) {
         ed_string.append(*d_letter.begin());
