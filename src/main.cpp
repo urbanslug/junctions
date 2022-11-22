@@ -12,6 +12,7 @@
 # include "./compute_intersect.cpp"
 #include "./argvparser.hpp"
 #include "./parseCmdArgs.hpp"
+#include "core.hpp"
 
 
 void test_lacks_intersect();
@@ -67,13 +68,39 @@ int main(int argc, char **argv) {
   // --------------------
 
   bool result;
+
+  auto t0 = Time::now();
+  std::chrono::duration<double> timeRefRead;
+
   if (parameters.algo == cli::algorithm::naive) {
+
     result = naive::intersect(w, q);
-  } else if (parameters.algo == cli::algorithm::improved) {
+
+    timeRefRead = Time::now() - t0;
+    std::cerr << "INFO, [junctions::main] Time spent by naive algorithm: "
+              << timeRefRead.count() << " sec" << std::endl;
+  }
+  else if (parameters.algo == cli::algorithm::improved) {
     result = improved::intersect(w, q);
-  } else if (parameters.algo == cli::algorithm::both) {
+
+    timeRefRead = Time::now() - t0;
+    std::cerr << "INFO, [junctions::main] Time spent by improved algorithm:"
+              << timeRefRead.count() << " sec" << std::endl;
+  }
+  else if (parameters.algo == cli::algorithm::both) {
+
     bool result_naive = naive::intersect(w, q);
+
+    timeRefRead = Time::now() - t0;
+    std::cerr << "INFO, [junctions::main] Time spent by naive algorithm: "
+              << timeRefRead.count() << " sec" << std::endl;
+
+    t0 = Time::now();
+
     bool result_improved = improved::intersect(w, q);
+    timeRefRead = Time::now() - t0;
+    std::cerr << "INFO, [junctions::main] Time spent by improved algorithm: "
+              << timeRefRead.count() << " sec" << std::endl;
 
     if (result_naive != result_improved) {
       std::cerr << "[junctions::main] results not same. Please report as a bug."
@@ -82,12 +109,14 @@ int main(int argc, char **argv) {
     }
 
     result = result_improved;
-  } else {
+  }
+  else {
     std::cerr << "[junctions::main] could not determine algorithm to use" << std::endl;
     exit(1);
   }
 
-  std::cout << (result ? "intersection exists" : "no intersection")
+  std::cout << "INFO, [junctions::main] "
+            << (result ? "intersection exists" : "no intersection")
             << std::endl;
 
   return 0;

@@ -14,7 +14,7 @@ Run
 -----------------
 Compute the intersection of Elastic Degenerate Strings
 Example usage:
-$ junctions -a=2 -w x.eds -q y.eds
+$ ./build/junctions -a=2 -w data/x.eds -q data/y.eds
 
 Available options
 -----------------

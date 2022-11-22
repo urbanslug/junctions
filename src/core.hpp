@@ -83,6 +83,9 @@ int los(int m) { return (int)((double)m * (rand() / (RAND_MAX + 1.0))); }
 // own
 // ----
 
+// C++ timer
+typedef std::chrono::high_resolution_clock Time;
+
 const uint8_t DEBUG_LEVEL = 0; // TODO: replace with verbosity in params
 
 typedef std::vector<std::vector<bool>> matrix; // TODO: remove

@@ -62,7 +62,7 @@ struct Parameters {
 };
 
   /**
-   * @brief           Initialize the command line argument parser 
+   * @brief           Initialize the command line argument parser
    * @param[out] cmd  command line parser object
    */
   void initCmdParser(CommandLineProcessing::ArgvParser &cmd)
@@ -71,18 +71,18 @@ struct Parameters {
 Compute the intersection of Elastic Degenerate Strings\n\
 \n\
 Example usage: \n\
-$ junctions -a=2 -w x.eds -q y.eds");
+$ ./build/junctions -a=2 -w data/x.eds -q data/y.eds");
 
     cmd.setHelpOption("h", "help", "Print this help page");
 
     cmd.defineOption(
         "w",
-        "a file containing an msa (in RC-MSA format) or ED-String in .eds format",
+        "a file containing an msa (in RC-MSA format) or ED-String (in .eds format)",
         ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("q",
                      "a file containing an msa (in RC-MSA format) or ED-String "
-                     "in .eds format",
+                     "(in .eds format)",
                      ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("algorithm", "algorithm to use:\n\
@@ -115,7 +115,6 @@ both = 2\n\
               << ")" << std::endl;
 
     // rest
-    std::cerr << std::endl;
     std::cerr << "algorithm = " << parameters.algo << std::endl;
 
     std::cerr << "verbosity = " << parameters.verbosity << std::endl;
@@ -126,8 +125,8 @@ both = 2\n\
    * @param[in]   cmd
    * @param[out]  parameters  alignment parameters are saved here
    */
-  void parseandSave(int argc, char** argv, 
-      CommandLineProcessing::ArgvParser &cmd, 
+  void parseandSave(int argc, char** argv,
+      CommandLineProcessing::ArgvParser &cmd,
       cli::Parameters &parameters)
   {
     int result = cmd.parse(argc, argv);
