@@ -1,10 +1,11 @@
-#include "./tmp.cpp"
 #include <cstdio>
 #include <cstring>
 #include <map>
 #include <set>
 #include <stack>
 #include <string>
+
+#include "./core.hpp"
 
 using namespace std;
 
