@@ -23,8 +23,10 @@ namespace parser {
       eds_string.append(line);
     }
     myfile.close();
-  } else
+  } else {
     std::cerr << "[files::read_eds] Error parsing: " << file_path << std::endl;
+    exit(1);
+  }
 
   return eds_string;
 }
@@ -34,23 +36,30 @@ std::vector<std::string> read_msa(std::string &file_path) {
   std::vector<std::string> msa_data;
   bool has_header = false;
 
+  int line_number = 0;
+
   std::ifstream myfile(file_path);
   if (myfile.is_open()) {
     while (getline(myfile, line)) {
-      if (!has_header && msa_data.empty()) {
-        if (line[0] == '>') {
-          has_header = true;
-          continue;
-        } else {
-          std::cerr << "[files::read_msa] no header file" << file_path
-                    << std::endl;
+      if (line_number % 2 == 0) {
+        if (line[0] != '>') {
+          std::cerr << "[files::read_msa] no header file " << file_path
+                    << " in line " << line_number << std::endl;
+          exit(1);
         }
+
+        ++line_number;
+        continue;
       }
+
+      ++line_number;
       msa_data.push_back(line);
     }
     myfile.close();
-  } else
+  } else {
     std::cerr << "[files::read_msa] Error parsing: " << file_path << std::endl;
+    exit(1);
+  }
 
   return msa_data;
 }

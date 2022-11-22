@@ -77,11 +77,12 @@ $ junctions -a=2 -w x.eds -q y.eds");
 
     cmd.defineOption(
         "w",
-        "a file containing an msa (in PIR format) or ED-String in .eds format",
+        "a file containing an msa (in RC-MSA format) or ED-String in .eds format",
         ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("q",
-                     "a file containing an msa (in PIR format) or ED-String in .eds format",
+                     "a file containing an msa (in RC-MSA format) or ED-String "
+                     "in .eds format",
                      ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("algorithm", "algorithm to use:\n\
