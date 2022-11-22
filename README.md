@@ -10,5 +10,5 @@ make
 
 Run
 ```
-./build/junctions
+./build/junctions -a=2 -w data/x.eds -q data/y.eds
 ```
