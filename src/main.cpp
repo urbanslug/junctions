@@ -447,7 +447,8 @@ int main(int argc, char **argv) {
     q = parse_ed_string(eds_string);
   } else {
     msa_data = files::read_msa(parameters.q_file_path);
-    std::vector<std::set<std::string>> raw_edt =  parser::msa_to_eds(msa_data);
+    eds_string = parser::msa_to_eds(msa_data);
+    q = parse_ed_string(eds_string);
   }
 
   if (parameters.w_format == cli::file_format::eds) {
@@ -455,15 +456,29 @@ int main(int argc, char **argv) {
     w = parse_ed_string(eds_string);
   } else {
     msa_data = files::read_msa(parameters.w_file_path);
-    std::vector<std::set<std::string>> raw_edt = parser::msa_to_eds(msa_data);
+    eds_string = parser::msa_to_eds(msa_data);
+    w = parse_ed_string(eds_string);
   }
 
   bool result;
-
-  if (parameters.naive) {
+  if (parameters.algo == cli::algorithm::naive) {
     result = naive::intersect(w, q);
-  } else {
+  } else if (parameters.algo == cli::algorithm::improved) {
     result = improved::intersect(w, q);
+  } else if (parameters.algo == cli::algorithm::both) {
+    bool result_naive = naive::intersect(w, q);
+    bool result_improved = improved::intersect(w, q);
+
+    if (result_naive != result_improved) {
+      std::cerr << "[junctions::main] results not same. Please report as a bug."
+                << std::endl;
+      exit(1);
+    }
+
+    result = result_improved;
+  } else {
+    std::cerr << "[junctions::main] could not determine algorithm to use" << std::endl;
+    exit(1);
   }
 
   std::cout << (result ? "intersection exists" : "no intersection")

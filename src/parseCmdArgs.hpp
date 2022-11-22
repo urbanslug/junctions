@@ -20,6 +20,12 @@ enum file_format {
   unknown
 };
 
+  enum algorithm {
+    naive,
+    improved,
+    both
+  };
+
   file_format extract_extension(std::string file_path) {
     auto const pos = file_path.find_last_of('.');
     file_format f;
@@ -47,7 +53,7 @@ enum file_format {
  * @brief   parameters for cli args
  */
 struct Parameters {
-  bool naive;
+  algorithm algo;
   int verbosity;
   std::string w_file_path;   // reference sequence(s)
   file_format w_format;
@@ -65,7 +71,7 @@ struct Parameters {
 Compute the intersection of Elastic Degenerate Strings\n\
 \n\
 Example usage: \n\
-$ junctions -w foo.msa -q bar.msa");
+$ junctions -a=2 -w x.eds -q y.eds");
 
     cmd.setHelpOption("h", "help", "Print this help page");
 
@@ -78,14 +84,16 @@ $ junctions -w foo.msa -q bar.msa");
                      "a file containing an msa (in PIR format) or ED-String in .eds format",
                      ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("verbosity",
-                     "count of threads for parallel execution [default : 0]",
+    cmd.defineOption("algorithm", "algorithm to use:\n\
+improved = 0\n\
+naive = 1\n\
+both = 2\n\
+[default: 0]");
+    cmd.defineOptionAlternative("algorithm", "a");
+
+    cmd.defineOption("verbosity", "amount of debug information [default : 0]",
                      ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("verbosity", "v");
-
-    cmd.defineOption("naive",
-                     "use the naive implementation [disabled by default]");
-    cmd.defineOptionAlternative("naive", "n");
   }
 
   /**
@@ -107,9 +115,7 @@ $ junctions -w foo.msa -q bar.msa");
 
     // rest
     std::cerr << std::endl;
-    std::cerr << (parameters.naive ? "using naive implementation"
-                                   : "using improved implementation")
-              << std::endl;
+    std::cerr << "algorithm = " << parameters.algo << std::endl;
 
     std::cerr << "verbosity = " << parameters.verbosity << std::endl;
   }
@@ -175,10 +181,25 @@ $ junctions -w foo.msa -q bar.msa");
     }
     str.clear();
 
-    if (cmd.foundOption("naive")) {
-      parameters.naive = false;
+
+    if (cmd.foundOption("algorithm")) {
+      str << cmd.optionValue("algorithm");
+
+      std::string algo_str_arg;
+      str >> algo_str_arg;
+
+      if (algo_str_arg == "0") {
+        parameters.algo = improved;
+      } else if (algo_str_arg == "1") {
+        parameters.algo = naive;
+      } else if (algo_str_arg == "2") {
+        parameters.algo = both;
+      } else {
+        parameters.algo = improved;
+      }
     } else
-      parameters.naive = true;
+      parameters.algo = improved;
+    str.clear();
 
     if (cmd.foundOption("verbosity")) {
       str << cmd.optionValue("verbosity");

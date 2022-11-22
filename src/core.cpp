@@ -13,7 +13,7 @@
   Types
   ----
 */
-const uint8_t DEBUG_LEVEL = 0;
+const uint8_t DEBUG_LEVEL = 0; // TODO: replace with verbosity in params
 
 typedef std::vector<std::vector<bool>> matrix; // TODO: remove
 typedef std::vector<std::vector<bool>> boolean_matrix;
@@ -438,7 +438,7 @@ namespace parser {
     return l;
   }
 
-  std::vector<std::set<std::string>> msa_to_eds(string_vec &msa)  {
+  std::string msa_to_eds(string_vec &msa)  {
   int last_col_idx = msa.front().length(); // rename to col count
   int last_row_idx = msa.size() ; // rename to row count
 
@@ -576,30 +576,38 @@ namespace parser {
     }
   }
 
+  std::string ed_string;
+
   if (true) {
     printf("raw_edt: ");
     for (auto d_letter : raw_edt) {
       if (d_letter.size() < 2) {
-        printf("%s", d_letter.begin()->c_str());
+        ed_string.append(*d_letter.begin());
+        // printf("%s", d_letter.begin()->c_str());
       } else {
-        printf("{");
+        ed_string.push_back('{');
+        //printf("{");
         for (auto str = d_letter.begin(); str != d_letter.end(); str++) {
           if (str->length() > 0 ) {
-            printf("%s", str->c_str());
+            ed_string.append(*str);
+            // printf("%s", str->c_str());
           } else {
             // printf("e,");
           }
           if (std::next(str) != d_letter.end()) {
-            printf(",");
+            ed_string.push_back(',');
+            //printf(",");
           }
         }
-        printf("}");
+        ed_string.push_back('}');
+        //printf("}");
       }
     }
-    printf("\n");
+    // printf("\n");
   }
 
-  return raw_edt;
+  // return raw_edt;
+  return ed_string;
 }
 
 }
