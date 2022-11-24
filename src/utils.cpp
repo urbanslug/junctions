@@ -55,6 +55,12 @@ void print_edt(EDS &ed_string) {
   print_edt_data(ed_string.data);
 }
 
+  void print_edt_range(EDS &eds, int start, int stop) {
+    for(int i=start; i<=stop; i++ ) {
+      print_degenerate_letter(eds.data[i]);
+    }
+  }
+
 // TODO: remove
 void print_str_vec(std::vector<std::string> &degenerate_letter) {
     for (auto str = degenerate_letter.begin(); str < degenerate_letter.end(); str++) {

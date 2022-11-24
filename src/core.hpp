@@ -118,4 +118,31 @@ struct LinearizedEDS {
   std::vector<std::vector<int>> prev_chars;
 };
 
+// ----
+// CLI
+// ----
+
+namespace core {
+enum file_format {
+  msa, // msa in PIR format
+  eds, // eds file
+  unknown
+};
+
+enum algorithm { naive, improved, both };
+
+/**
+ * @brief   parameters for cli args
+ */
+struct Parameters {
+  algorithm algo;
+  int verbosity;
+  std::string w_file_path; // reference sequence(s)
+  file_format w_format;
+  std::string q_file_path; // query sequence(s)
+  file_format q_format;
+};
+}
+
+
 #endif
