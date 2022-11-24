@@ -55,6 +55,10 @@ int main(int argc, char **argv) {
     w = parser::parse_ed_string(eds_string, parameters);
   }
 
+  utils::print_edt(w);
+  std::cerr << std::endl;
+  utils::print_edt(q);
+
   if (parameters.verbosity > 2) {
     std::cerr << "INFO, [junctions::main]"
               << " N: " << w.size << " n: " << w.length
@@ -93,6 +97,17 @@ int main(int argc, char **argv) {
     }
   } else if (parameters.algo == core::algorithm::both) {
 
+
+    //t0 = Time::now();
+    bool result_naive = naive::intersect(w, q, parameters);
+    timeRefRead = Time::now() - t0;
+
+    if (parameters.verbosity > 0) {
+      std::cerr << "INFO, [junctions::main] Time spent by naive algorithm: "
+                << timeRefRead.count() << " sec" << std::endl;
+    }
+
+    t0 = Time::now();
     bool result_improved = improved::intersect(w, q, parameters);
     timeRefRead = Time::now() - t0;
 
@@ -101,24 +116,13 @@ int main(int argc, char **argv) {
                 << timeRefRead.count() << " sec" << std::endl;
     }
 
-    bool result_naive = naive::intersect(w, q, parameters);
-
-    timeRefRead = Time::now() - t0;
-    if (parameters.verbosity > 0) {
-      std::cerr << "INFO, [junctions::main] Time spent by naive algorithm: "
-                << timeRefRead.count() << " sec" << std::endl;
+    if (result_naive != result_improved) {
+      std::cerr << "[junctions::main] incompatible results "
+                << "(naive " << result_naive << " improved "
+                << result_improved << "). Please report as a bug."
+                << std::endl;
+      exit(1);
     }
-
-    t0 = Time::now();
-
-
-      if (result_naive != result_improved) {
-        std::cerr << "[junctions::main] incompatible results "
-                  << "(naive " << result_naive << " improved "
-                  << result_improved << "). Please report as a bug."
-                  << std::endl;
-        exit(1);
-      }
 
       result = result_improved;
     } else {

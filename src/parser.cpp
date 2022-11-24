@@ -64,7 +64,7 @@ std::vector<std::string> read_msa(std::string &file_path) {
 }
 
 EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
-  if (parameters.verbosity > 1) { printf("[cpp::parser::parse_ed_string]\n"); }
+  if (parameters.verbosity > 1) { printf("INFO, [parser::parse_ed_string]\n"); }
 
   std::vector<std::string> degenerate_letter_data;
   std::vector<degenerate_letter> ed_string_data;

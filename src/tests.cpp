@@ -44,7 +44,7 @@ int main() {
 
 core::Parameters init_tests() {
   core::Parameters test_params;
-  test_params.verbosity = 0;
+  test_params.verbosity = 5;
 
   return test_params;
 };
@@ -144,12 +144,33 @@ void test_handle_epsilon() {
 
   auto params = init_tests();
 
+  ed_string_w = "{A,GTC}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}{A}{TC,}{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}{G,}{CA}{AGC,}{GGGAGCG}{TTA,}{GTC}{G,T}{A}{AG,}{TATTGCG}{C,}{CA}{CA,T}{ATGCGCAGG}{AGC,}{G}{TA,}{ATTCAGTCT}{G,}{TG}{C,}{GCCGC}{A,}{AACAA}{T,}{GC}{G,}{GT}{CTT,GGC}{GT}{A,}{C}{GCT,TTA}{CCGGCA}{G,}{GGCTGGGACAT}{TG,}{TGTGTC}{AG,GA}{CCGCAG}{C,}{T}{CC,TT}{ACAGGC}{G,}{GT}{CCT,TGG}{G}{C,T}{C}{GG,}{AGCAGTGGCT}{GGA,}{GGAAGCCCACT}{G,}{GG}{C,G}{GT}{CA,}{ACTCTGACACCGAC}{T,}{GAA}{GT,}{TTTACCC}{A,}{G}{A,G}{TT}{TG,}{CAGGAG}{A,}{GGCACAATGAGCCAGCA}{AG,}{TTTACCT}{C,}{G}{GCT,TTA}{T}{C,G}{TG}{C,}{CCGCACAGCC}{A,}{C}{A,}{GGCATCT}{C,GG}{AT}{C,}{G}{TAA,}{GCAGAAAAACTGTCAGAATTA}{C,}{C}{CTC,TAG}{CC}{C,G}{CT}{G,}{GC}{GGAG,TCGC}{C}{A,G}{TG}{G,T}{GCGCAT}{C,}{T}{A,CCT}{CGTTGAGTTAACCGC}{C,GAGG}{AGA}{G,}{GTTGA}{C,}{TTCAC}{ATT,CC}{AC}{T,}{TG}{A,}{GCCCGCGCGGTGGT}{CC,T}{GCC}{T,}{G}{T,}{AC}{T,}{AC}{A,}{G}{C,}{C}{A,C}{A}{CG,TA}{GCA}{G,}{GATAC}";
+
+  ed_string_q =
+      "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}{A}{"
+      "TC,}{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AACCACTTTTCCATGAC}{A,}{AGGA}{G,}{TT}{"
+      "A,}{GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}{GATGATCGCAGGGAGCGTT}{AG,T}{T}{AC,"
+      "CG}{ATATTGCG}{CCA,}{CAATGCGCAGG}{A,G}{GC}{GT,}{AATTCAGTCTGTGGCCGCAACAA}{"
+      "GCG,}{T}{G,}{GCGTCTTACCGGCA}{G,}{GGCTGGGACATTGTGTGTC}{AG,GA}{CCGCAG}{"
+      "CTTT,TCAC}{ACAGGC}{G,}{GT}{CCT,TGG}{G}{C,T}{C}{GG,}{"
+      "AGCAGTGGCTGGAAGCCCACT}{G,}{GG}{C,G}{GT}{CA,}{ACTCTGACACCGAC}{T,}{GAA}{"
+      "GT,}{TTTACCC}{AG,GA}{T}{G,T}{CAGG}{A,}{GAGGCACAATGAGCCAGCA}{AG,}{"
+      "TTTACCT}{G,}{TT}{AT,G}{GT}{CG,GC}{CCGCACAGCC}{A,}{C}{A,}{GGCATCT}{G,}{"
+      "GGATGGCAG}{A,}{AAAACTGTCAGAATTAC}{CCT,TAG}{CCGC}{CT,TGC}{GGAGC}{T,}{GT}{"
+      "G,}{GGCGCAT}{C,}{T}{A,CCT}{CGTTGAGTTAACCG}{CC,G}{AGA}{G,}{GTTGA}{C,}{"
+      "TTC}{A,GC}{CATT}{AC,}{ACTGGCCCGCGCGGTGG}{T,}{T}{AT,CC}{GCC}{G,}{GACTA}{"
+      "G,}{CGCA}{AT,}{AGCAGATACGC}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+  exit(1);
+
   ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
   ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
   IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
-  // exit(1);
+  
 
   ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}";
   ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}{A,C}{G}{C,G}{TT}";
