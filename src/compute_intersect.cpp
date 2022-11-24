@@ -499,7 +499,7 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
             std::cerr << "INFO, [improved::intersect] quit early" << std::endl;
           }
 
-          if (true) {
+          if (false) {
             std::cerr << std::endl;
             utils::print_edt_range(eds_w, 0, i);
             std::cerr << std::endl;
