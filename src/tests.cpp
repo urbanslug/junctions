@@ -44,7 +44,7 @@ int main() {
 
 core::Parameters init_tests() {
   core::Parameters test_params;
-  test_params.verbosity = 5;
+  test_params.verbosity = 0;
 
   return test_params;
 };
@@ -148,9 +148,8 @@ void test_handle_epsilon() {
   ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
-  improved::intersect(eds_w, eds_q, params);
-  // IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
-  exit(1);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+  // exit(1);
 
   ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}";
   ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}{A,C}{G}{C,G}{TT}";
@@ -195,6 +194,7 @@ void test_handle_epsilon() {
   eds_q = parser::parse_ed_string(ed_string_q, params);
   // IS_TRUE(!improved::intersect(eds_w, eds_q));
   IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+  
 
   ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
   ed_string_q = "{TC,G}{CT,T}";
@@ -207,6 +207,7 @@ void test_handle_epsilon() {
             << std::endl;
             */
   IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+  
 }
 
 void test_lacks_intersect() {

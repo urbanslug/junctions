@@ -14,6 +14,12 @@
 
 namespace improved {
 
+  struct suffix {
+    size_t letter_idx;
+    int str_idx;
+    int start_idx;
+  };
+
 /*
 
 Is there an intersection between ED strings W and Q?
@@ -74,9 +80,7 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
   matrix w_matrix = utils::gen_matrix(len_q, size_w);
   matrix q_matrix = utils::gen_matrix(len_w, size_q);
 
-  std::cerr << "stops" << std::endl;
-  for (auto x: eds_w.stops) { std::cerr << x << " "; }
-  std::cerr << std::endl;
+
 
   /*
     Preprocess suffix trees
@@ -107,15 +111,30 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
   std::vector<std::pair<STvertex, std::string>> q_suffix_trees;
   q_suffix_trees.reserve(len_q);
 
+  auto t0 = Time::now();
+  std::chrono::duration<double> timeRefRead;
+
+  if (parameters.verbosity > 1) {
+    std::cerr << "INFO, [improved::intersect] Generating suffix trees"<< std::endl;
+  }
+
   gen_suffix_tree(eds_w, len_w, &w_suffix_trees);
   gen_suffix_tree(eds_q, len_q, &q_suffix_trees);
+
+  timeRefRead = Time::now() - t0;
+
+  if (parameters.verbosity > 1) {
+    std::cerr << "INFO, [improved::intersect] Time spent generating suffix trees: "
+              << timeRefRead.count() << " sec" << std::endl;
+  }
 
   /*
     Find the intersection
     ---------------------
   */
 
-  std::vector<int> q_end_indexes, w_end_indexes; // TODO: allocate one large one
+
+  // std::vector<int> q_end_indexes, w_end_indexes; // TODO: allocate one large one
   size_t i, j;
   i = j = 0;
   bool inc_i = false, inc_j = false;
@@ -126,22 +145,31 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
   inc_i_epsilon = inc_j_epsilon = inc_i_explicit = inc_j_explicit = inc_i_implicit = inc_j_implicit = false;
 
   // the starts of these suffixes
-  std::vector<std::pair<int, int>> i_valid_suffixes,
-    j_valid_suffixes, next_i_valid_suffixes, next_j_valid_suffixes;
+  // std::vector<std::pair<int, int>> j_valid_suffixes, next_j_valid_suffixes;
+  // std::vector<std::pair<int, int>> i_valid_suffixes, j_valid_suffixes, next_i_valid_suffixes, next_j_valid_suffixes;
+
+  std::vector<suffix> i_extendable_suffixes, j_extendable_suffixes, next_i_extendable_suffixes, next_j_extendable_suffixes;
 
   std::vector<span> j_offsets = eds_q.str_offsets[j];
   for (int str_idx = 0; str_idx < j_offsets.size(); str_idx++) {
     if (eds_q.data[j].has_epsilon && str_idx == j_offsets.size() -1) { break; }
     int internal_start = j_offsets[str_idx].start - j_offsets.front().start;
-    j_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+    // j_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+
+    suffix s{.letter_idx = j, .str_idx = str_idx, .start_idx = 0};
+    j_extendable_suffixes.push_back(s);
   }
 
   std::vector<span> i_offsets = eds_w.str_offsets[i];
   for (int str_idx = 0; str_idx < i_offsets.size(); str_idx++) {
     if (eds_w.data[i].has_epsilon && str_idx == i_offsets.size() - 1) { break; }
     int internal_start = i_offsets[str_idx].start - i_offsets.front().start;
-    i_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+    //i_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+
+    suffix s{.letter_idx = i, .str_idx = str_idx, .start_idx = 0};
+    i_extendable_suffixes.push_back(s);
   }
+
 
   while (i < len_w && j < len_q) {
     if (parameters.verbosity > 3) {
@@ -152,16 +180,16 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
     }
 
     // reset
-    next_i_valid_suffixes.clear();
-    next_j_valid_suffixes.clear();
+    next_i_extendable_suffixes.clear();
+    next_j_extendable_suffixes.clear();
     inc_i = inc_j = false;
     inc_i_epsilon = inc_j_epsilon = inc_i_explicit = inc_j_explicit = inc_i_implicit = inc_j_implicit = false;
 
     std::pair<STvertex, std::string> root_text;
 
-    // -------
+    // ----------
     // match in W
-    // -------
+    // ----------
 
     // q_end_indexes.clear();
     root_text = q_suffix_trees[j];
@@ -179,18 +207,18 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
       int epsilon_idx = letter_span.back().stop;
 
       w_matrix[j][epsilon_idx] = true;
-      w_end_indexes.push_back(epsilon_idx);
+      // w_end_indexes.push_back(epsilon_idx);
 
       inc_i = true;
       inc_i_epsilon = true;
     }
 
-    for (auto suff : i_valid_suffixes) {
+    for (auto suff : i_extendable_suffixes) {
       // if (parameters.verbosity > 3) { printf("\t\ti_str: %s\n", i_str.c_str()); }
       // std::cerr << "fir " << suff.first << " sec " << suff.second << std::endl;
       // std::cerr << "full str " << eds_w.data[i].data[suff.first] << std::endl;
 
-      std::string i_str = eds_w.data[i].data[suff.first].substr(suff.second);
+      std::string i_str = eds_w.data[suff.letter_idx].data[suff.str_idx].substr(suff.start_idx);
 
       vector<int> res = FindEndIndexes(i_str.c_str(), &root_text.first, root_text.second.c_str());
 
@@ -220,13 +248,15 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
           int end_idx = pos_in_n + i_str.length() - 1;
 
           q_matrix[i][end_idx] = true;
-          q_end_indexes.push_back(end_idx);
+          // q_end_indexes.push_back(end_idx);
 
           inc_i = true;
 
           if (parameters.verbosity > 4) { printf("\t\t\tset i %lu \tpos_in_M: %d\n", i, end_idx); }
 
-          if (eds_w.stops.find(end_idx) != eds_w.stops.end()) { inc_i_explicit = true; }
+
+
+          if (eds_q.stops.find(end_idx) != eds_q.stops.end()) { inc_i_explicit = true; }
 
           if (eds_q.stops.find(end_idx) == eds_q.stops.end()) {
             // found an implicit node
@@ -234,11 +264,17 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
             for (int e = 0; e < spans.size(); e++) {
               if (spans[e].stop >= end_idx) {
                 int u = (end_idx - spans[e].start) + 1;
-                next_j_valid_suffixes.push_back(std::make_pair(e, u));
+
+                suffix s{.letter_idx = j, .str_idx = e, .start_idx = u};
+                next_j_extendable_suffixes.push_back(s);
+
+                // next_j_valid_suffixes.push_back(std::make_pair(e, u));
 
                 if (parameters.verbosity > 4 ) {
-                  std::cerr << "\t\t\tImplicit match at: " << pos
-                            << "saving: " << e << " , "<< u << std::endl;
+                  std::cerr << "\t\t\tImplicit match in j at: " << pos
+                            << " letter " << j
+                            << " str  " << e
+                            << " start " << u << std::endl;
                 }
 
                 break;
@@ -246,15 +282,16 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
             }
           }
 
-          int y = eds_w.str_offsets[i][suff.first].stop;
+          inc_i_explicit = true;
+          int y = eds_w.str_offsets[i][suff.str_idx].stop;
           w_matrix[j][y] = true;
         }
       }
     }
 
-    // -------
+    // -----------
     // match in Q
-    // -------
+    // -----------
 
     // w_end_indexes.clear();
     root_text = w_suffix_trees[i];
@@ -267,13 +304,12 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
     }
 
     // handle epsilon
-    if (eds_q.data[j].has_epsilon &&
-        (i == 0 || utils::is_letter_matched(eds_q, j - 1, q_matrix, i))) {
+    if (eds_q.data[j].has_epsilon && (i == 0 || utils::is_letter_matched(eds_q, j - 1, q_matrix, i))) {
       std::vector<span> letter_span = eds_q.str_offsets[j];
       int epsilon_idx = letter_span.back().stop;
 
       q_matrix[i][epsilon_idx] = true;
-      q_end_indexes.push_back(epsilon_idx);
+      // q_end_indexes.push_back(epsilon_idx);
 
       inc_j = true;
       inc_j_epsilon = true;
@@ -281,13 +317,15 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
 
     std::vector<std::string> j_strings = eds_q.data[j].data;
 
-    for (auto suff : j_valid_suffixes) {
+    for (auto suff : j_extendable_suffixes) {
 
       // std::cerr << "fir " << suff.first << " sec " << suff.second << std::endl;
       // std::cerr << "full str " << eds_q.data[j].data[suff.first] << std::endl;
 
+      // std::string i_str =
+      // eds_w.data[suff.letter_idx].data[suff.str_idx].substr(suff.start_idx);
 
-      std::string j_str = eds_q.data[j].data[suff.first].substr(suff.second);
+      std::string j_str = eds_q.data[suff.letter_idx].data[suff.str_idx].substr(suff.start_idx);
 
       vector<int> res = FindEndIndexes(j_str.c_str(), &root_text.first, root_text.second.c_str());
 
@@ -322,15 +360,13 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
             int end_idx = pos_in_n + j_str.length() - 1;
 
             w_matrix[j][end_idx] = true;
-            w_end_indexes.push_back(end_idx);
+            // w_end_indexes.push_back(end_idx);
 
             inc_j = true;
 
-            if (parameters.verbosity > 4) {
-              printf("\t\t\tset j %lu \tpos_in_n: %d\n", j, end_idx);
-            }
+            if (parameters.verbosity > 4) { printf("\t\t\tset j %lu \tpos_in_N: %d\n", j, end_idx); }
 
-            if (eds_q.stops.find(end_idx) != eds_q.stops.end())  { inc_j_explicit = true; }
+            if (eds_w.stops.find(end_idx) != eds_w.stops.end())  { inc_j_explicit = true; }
 
             if (eds_w.stops.find(end_idx) == eds_w.stops.end())  {
                 // found an implicit node
@@ -339,11 +375,18 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
                 for (int d = 0; d < spans.size(); d++) {
                   if (spans[d].stop >= end_idx) {
                     int u = (end_idx - spans[d].start) + 1;
-                    next_i_valid_suffixes.push_back(std::make_pair(d, u));
+
+                    suffix s{.letter_idx = i, .str_idx = d, .start_idx = u};
+                    next_i_extendable_suffixes.push_back(s);
+
+                    // next_i_valid_suffixes.push_back(std::make_pair(d, u));
 
                     if (parameters.verbosity > 4) {
-                      std::cerr << "\t\t\tImplicit match at: " << pos
-                                << "saving: " << d << " , " << u << std::endl;
+                      std::cerr << "\t\t\tImplicit match in i at: " << pos
+                                << " letter " << i
+                                << " str " << d
+                                << " start " << u
+                                << std::endl;
                     }
 
                     break;
@@ -351,8 +394,9 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
                 }
               }
 
-            int y = eds_q.str_offsets[j][suff.first].stop;
-            q_matrix[i][y] = true;
+              inc_j_explicit = true;
+              int y = eds_q.str_offsets[j][suff.str_idx].stop;
+              q_matrix[i][y] = true;
           }
         }
       }
@@ -364,8 +408,7 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
     }
 
     // increment the row and copy over the previously matched rows
-    auto inc_and_copy = [](matrix &dp_matrix, std::size_t *row,
-                           int max_row, std::size_t cols) {
+    auto inc_and_copy = [](matrix &dp_matrix, std::size_t *row, int max_row, std::size_t cols) {
       ++(*row);
       if (*row < max_row) {
         for (int k = 0; k < cols; k++) {
@@ -376,75 +419,97 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
 
       // std::cerr << "\tinc i " << inc_i << "inc j " << inc_j << std::endl;
 
-      if (inc_i) {
+    if (!inc_i_epsilon && !inc_i_explicit && !inc_i_implicit) {
+    } else if (inc_i_explicit || (inc_i_epsilon && !inc_i_implicit)) {
         inc_and_copy(q_matrix, &i, len_w, size_q);
 
         if (i < len_w) {
-          i_valid_suffixes.clear();
-          std::vector<span> i_offsets = eds_w.str_offsets[i];
+
+          i_extendable_suffixes.clear();
+          for (auto n : next_i_extendable_suffixes) {
+            i_extendable_suffixes.push_back(n);
+          }
+
+          i_offsets = eds_w.str_offsets[i];
           for (int str_idx = 0; str_idx < i_offsets.size(); str_idx++) {
             if (eds_w.data[i].has_epsilon && str_idx == i_offsets.size() - 1) {
               break;
             }
             int internal_start =
                 i_offsets[str_idx].start - i_offsets.front().start;
-            i_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+            // i_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+
+            suffix s{.letter_idx = i, .str_idx = str_idx, .start_idx = 0};
+            i_extendable_suffixes.push_back(s);
           }
         }
-    } else {
+      } else {
 
-      q_end_indexes.clear();
+        i_extendable_suffixes.clear();
 
-      for (auto n: next_i_valid_suffixes) {
-        i_valid_suffixes.push_back(n);
-      }
-    }
-
-    if (inc_j) {
-      inc_and_copy(w_matrix, &j, len_q, size_w);
-
-      if (j < len_q) {
-        j_valid_suffixes.clear();
-        std::vector<span> j_offsets = eds_q.str_offsets[j];
-        for (int str_idx = 0; str_idx < j_offsets.size(); str_idx++) {
-          if (eds_q.data[j].has_epsilon && str_idx == j_offsets.size() - 1) {
-            break;
-          }
-          int internal_start =
-              j_offsets[str_idx].start - j_offsets.front().start;
-          j_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+        for (auto n : next_i_extendable_suffixes) {
+          i_extendable_suffixes.push_back(n);
         }
       }
-    } else {
-      w_end_indexes.clear();
+    if (!inc_j_epsilon && !inc_j_explicit && !inc_j_implicit) {
+    } else if (inc_j_explicit || (inc_j_epsilon && !inc_j_implicit)) {
+          inc_and_copy(w_matrix, &j, len_q, size_w);
 
-      for (auto n : next_j_valid_suffixes) {
-        j_valid_suffixes.push_back(n);
+          if (j < len_q) {
+
+            j_extendable_suffixes.clear();
+            for (auto n : next_j_extendable_suffixes) {
+              j_extendable_suffixes.push_back(n);
+            }
+
+            j_offsets = eds_q.str_offsets[j];
+            for (int str_idx = 0; str_idx < j_offsets.size(); str_idx++) {
+              if (eds_q.data[j].has_epsilon &&
+                  str_idx == j_offsets.size() - 1) {
+                break;
+              }
+              int internal_start =
+                  j_offsets[str_idx].start - j_offsets.front().start;
+              // i_valid_suffixes.push_back(std::make_pair(str_idx, 0));
+
+              // suffix s{.letter_idx = j, .str_idx = str_idx, .start_idx = 0};
+              j_extendable_suffixes.push_back(
+                  suffix{.letter_idx = j, .str_idx = str_idx, .start_idx = 0});
+            }
+          }
+        }
+        else {
+          // w_end_indexes.clear();
+          j_extendable_suffixes.clear();
+
+          for (auto n : next_j_extendable_suffixes) {
+            j_extendable_suffixes.push_back(n);
+          }
+        }
+
+        // printf("-------------W----------\n");
+        // print_matrix(w_matrix);
+        // printf("-------------Q----------\n");
+        // print_matrix(q_matrix);
+        // printf("\n\n");
+
+        // give up early because we can not extend any degenerate letter
+        if (!inc_j && !inc_i) {
+          if (parameters.verbosity > 2) {
+            std::cerr << "INFO, [improved::intersect] quit early" << std::endl;
+          }
+
+          if (true) {
+            std::cerr << std::endl;
+            utils::print_edt_range(eds_w, 0, i);
+            std::cerr << std::endl;
+            utils::print_edt_range(eds_q, 0, j);
+            std::cerr << std::endl;
+          }
+
+          return false;
+        }
       }
-
-    }
-
-    // printf("-------------W----------\n");
-    // print_matrix(w_matrix);
-    // printf("-------------Q----------\n");
-    // print_matrix(q_matrix);
-    // printf("\n\n");
-
-    // give up early because we can not extend any degenerate letter
-    if (!inc_j && !inc_i) {
-      if (parameters.verbosity > 2) { std::cerr << "INFO, [improved::intersect] quit early" << std::endl; }
-
-      if (true) {
-        std::cerr << std::endl;
-        utils::print_edt_range(eds_w, 0, i);
-        std::cerr << std::endl;
-        utils::print_edt_range(eds_q, 0, j);
-        std::cerr << std::endl;
-      }
-
-      return false;
-    }
-  }
 
   // computing accepting states
   std::vector<std::size_t> w_ends = utils::compute_str_ends(eds_w, len_w - 1);
