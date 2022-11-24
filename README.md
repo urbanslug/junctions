@@ -4,18 +4,18 @@ Do two elastic degenerate strings have a non-empty intersection?
 
 ## Compile and Run
 Compile
-```
-git clone https://github.com/urbanslug/junctions.git && cd junctions
+```sh
+git clone https://github.com/urbanslug/junctions && cd junctions
 make
 ```
 
 Run
-```
-$ ./build/junctions -h
+```sh
+$ ./bin/junctions -h
 -----------------
 Compute the intersection of Elastic Degenerate Strings
 Example usage:
-$ ./build/junctions -a=2 -w data/x.eds -q data/y.eds
+$ ./bin/junctions -a=2 -w data/x.eds -q data/y.eds
 
 Available options
 -----------------
@@ -37,4 +37,15 @@ Available options
 
 -v <value>, --verbosity <value>
     amount of debug information [default : 0]
+```
+
+## Test and Debug
+```sh
+make test
+./bin/test
+```
+
+```sh
+make debug
+gdb bin/test_debug
 ```

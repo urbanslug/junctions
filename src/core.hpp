@@ -55,29 +55,15 @@ typedef pair<int, int> PII;
 typedef long long ll;
 typedef vector<string> VS;
 
-ll nwd(ll a, ll b) { return !b ? a : nwd(b, a % b); }
-template <class T> inline T sqr(const T &a) { return a * a; }
+ll nwd(ll a, ll b);
 
-VS parse(string s) {
-  string a;
-  VS wyn;
-  REP(i, (int)s.size())
-  if (s[i] != ' ')
-    a += s[i];
-  else if (!a.empty()) {
-    wyn.PB(a);
-    a = "";
-  }
-  if (!a.empty())
-    wyn.PB(a);
-  return wyn;
-}
+VS parse(string s);
 
-int toi(char ch) { return int(ch) - int('0'); }
+int toi(char ch);
 
-int chg(char ch) { return int(ch) - int('a'); }
+int chg(char ch);
 
-int los(int m) { return (int)((double)m * (rand() / (RAND_MAX + 1.0))); }
+int los(int m);
 
 // ---
 // own
@@ -109,6 +95,8 @@ struct span {
 struct EDS {
   std::vector<degenerate_letter> data;
   std::vector<std::vector<span>> str_offsets;
+  std::set<size_t> stops;
+  std::set<size_t> starts;
   size_t size;
   size_t length;
 };
@@ -117,5 +105,78 @@ struct LinearizedEDS {
   std::string str;
   std::vector<std::vector<int>> prev_chars;
 };
+
+
+struct cell {
+  int j;
+  int i;
+};
+
+bool operator<(const cell &lhs, const cell &rhs);
+
+std::ostream &operator<<(std::ostream &os, const cell &value);
+
+struct suffix {
+  int query_letter_idx;
+  int str_idx;
+  int start_idx;
+
+  std::string to_string() const {
+    return "{ qry_ltr_idx " + std::to_string(query_letter_idx) +
+      ", str_idx " + std::to_string(str_idx) +
+      ", start_idx " + std::to_string(start_idx) +
+      " }";
+  }
+};
+
+
+std::ostream &operator<<(std::ostream &os, const suffix &value);
+
+bool operator<(const suffix &lhs, const suffix &rhs);
+
+struct spread {
+  int start;
+  int len;
+};
+
+std::ostream &operator<<(std::ostream &os, const spread &value);
+
+struct match_info {
+  int str_idx;
+  int start_idx;
+};
+
+std::ostream &operator<<(std::ostream &os, const match_info &value);
+
+// ----
+// CLI
+// ----
+
+namespace core {
+enum file_format {
+  msa, // msa in PIR format
+  eds, // eds file
+  unknown
+};
+
+enum ed_string { w, q };
+
+std::ostream &operator<<(std::ostream &os, const core::ed_string &value);
+
+enum algorithm { naive, improved, both };
+
+/**
+ * @brief   parameters for cli args
+ */
+struct Parameters {
+  algorithm algo;
+  int verbosity;
+  std::string w_file_path; // reference sequence(s)
+  file_format w_format;
+  std::string q_file_path; // query sequence(s)
+  file_format q_format;
+};
+}
+
 
 #endif

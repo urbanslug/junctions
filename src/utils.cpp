@@ -12,7 +12,15 @@
 #include "./core.hpp"
 
 namespace utils {
-  void print_degenerate_letter(degenerate_letter &d_letter) {
+std::string indent(int level) {
+  std::string repeat;
+  for (int i = 0; i < level; i++) {
+    repeat += "\t";
+  }
+  return repeat;
+}
+
+void print_degenerate_letter(degenerate_letter &d_letter) {
   std::vector<std::string> degenerate_letter_data = d_letter.data;
   std::cout << "{";
   for (auto str = degenerate_letter_data.begin(); str < degenerate_letter_data.end();) {
@@ -55,25 +63,21 @@ void print_edt(EDS &ed_string) {
   print_edt_data(ed_string.data);
 }
 
-// TODO: remove
+void print_edt_range(EDS &eds, int start, int stop) {
+  for(int i=start; i<=stop; i++ ) { print_degenerate_letter(eds.data[i]); }
+}
+
 void print_str_vec(std::vector<std::string> &degenerate_letter) {
-    for (auto str = degenerate_letter.begin(); str < degenerate_letter.end(); str++) {
-      std::cout << *str << " ";
-    }
+  for (auto str : degenerate_letter) { std::cout << str << " "; }
 }
 
 void print_str_vec(std::set<std::string> &degenerate_letter) {
-  for (auto str : degenerate_letter) {
-    std::cout << str;
-  }
+  for (auto str : degenerate_letter) { std::cout << str; }
 }
-
 
 // TODO: remove
 void print_d_letter(std::vector<std::string> &degenerate_letter) {
-  for (auto str : degenerate_letter) {
-    std::cout << str << ",";
-  }
+  for (auto str : degenerate_letter) { std::cout << str << ","; }
 }
 
 // TODO: remove
@@ -86,11 +90,8 @@ void print_d_letter(std::set<std::string> &degenerate_letter) {
   }
 }
 
-
 void print_vec(std::vector<std::size_t> const &v) {
-  for (auto str = v.begin(); str < v.end(); str++) {
-    std::cout << *str << " ";
-  }
+  for (auto str = v.begin(); str < v.end(); str++) { std::cout << *str << " "; }
 }
 
 void print_matrix(boolean_matrix const  &m) {
@@ -157,9 +158,7 @@ bool is_letter_matched(EDS &eds, // the eds we are checking
   std::vector<span> &letter_span = eds.str_offsets[letter_idx];
 
   for (auto sp : letter_span) {
-    if (dp_matrix[row_idx][sp.stop]) {
-      return true;
-    }
+    if (dp_matrix[row_idx][sp.stop]) { return true; }
   }
 
   return false;
@@ -167,16 +166,12 @@ bool is_letter_matched(EDS &eds, // the eds we are checking
 
 // is at least one the strings in the letter_idx index of the eds given matched?
 // it is matched is at least one of its indexes is true in the dp matrix
-bool is_prev_letter_matched(
-                            EDS &eds,          // the eds we are checking
+bool is_prev_letter_matched(EDS &eds,          // the eds we are checking
                             int letter_idx,    // has any string in this d letter been matched
                             matrix &dp_matrix, // matrix that tracks matches in the eds
                             int row_idx        // row in dp_matrix
                             ) {
-
-  if (row_idx == 0) {
-    return true;
-  }
+  if (row_idx == 0) { return true; }
 
   return is_letter_matched(eds, letter_idx, dp_matrix, row_idx-1);
 };

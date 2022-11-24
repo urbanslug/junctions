@@ -13,8 +13,7 @@
 #include "./utils.cpp"
 
 namespace parser {
-
-  std::string read_eds(std::string &file_path) {
+std::string read_eds(std::string &file_path) {
   std::string line, eds_string;
 
   std::ifstream myfile(file_path);
@@ -64,8 +63,8 @@ std::vector<std::string> read_msa(std::string &file_path) {
   return msa_data;
 }
 
-EDS parse_ed_string(std::string &ed_string) {
-  if (DEBUG_LEVEL > 3) { printf("[cpp::main::parser]\n"); }
+EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
+  if (parameters.verbosity > 1) { printf("INFO, [parser::parse_ed_string]\n"); }
 
   std::vector<std::string> degenerate_letter_data;
   std::vector<degenerate_letter> ed_string_data;
@@ -76,7 +75,7 @@ EDS parse_ed_string(std::string &ed_string) {
   size_t len;
 
   std::string str;
-  char prev_char;
+  char prev_char = '\0'; // TODO: is this the best way to initialize?
 
 
   for (auto ch : ed_string) {
@@ -121,8 +120,10 @@ EDS parse_ed_string(std::string &ed_string) {
     ed_string_data.push_back(letter);
   }
 
-  std::vector<std::vector<span>> str_offsets;
   size_t index = 0;
+  std::set<size_t> stops, starts;
+  std::vector<std::vector<span>> str_offsets;
+
   for (size_t i = 0; i < ed_string_data.size(); i++) {
     std::vector<span> letter_offsets;
     std::vector<std::string> i_strings = ed_string_data[i].data;
@@ -131,14 +132,18 @@ EDS parse_ed_string(std::string &ed_string) {
     for (auto str : i_strings) {
       // if (str.empty()) {continue;} // unnecessary
       s.start = index;
+      starts.insert(s.start);
       index += str.length();
       s.stop = index - 1;
+      stops.insert(s.stop);
       letter_offsets.push_back(s);
     }
 
     if (ed_string_data[i].has_epsilon) {
       s.start = index;
       s.stop = index++;
+      starts.insert(s.start);
+      stops.insert(s.stop);
       letter_offsets.push_back(s);
     }
 
@@ -152,34 +157,68 @@ EDS parse_ed_string(std::string &ed_string) {
   e.length = ed_string_data.size();
   e.size = size;
   e.str_offsets = str_offsets;
+  e.starts = starts;
+  e.stops = stops;
 
   return e;
 }
 
+LinearizedEDS linearize(EDS &eds) {
+  if (DEBUG_LEVEL > 3) { printf("[utils::parser::foo]\n"); }
 
-  LinearizedEDS linearize(EDS &eds) {
-    if (DEBUG_LEVEL > 3) { printf("[utils::parser::foo]\n"); }
+  std::vector<std::vector<int>> prev_m;
+  prev_m.reserve(eds.size);
 
-    std::vector<std::vector<int>> prev_m;
-    prev_m.reserve(eds.size);
+  std::string chars_vec;
+  chars_vec.reserve(eds.size);
 
-    std::string chars_vec;
-    chars_vec.reserve(eds.size);
+  std::vector<int> prev_char;
+  prev_char.reserve(100);
+  for (int k = 0; k < eds.size; k++) {
+    prev_char.push_back(k-1);
+    prev_m.push_back(prev_char);
+    prev_char.clear();
+  }
 
-    std::vector<int> prev_char;
-    prev_char.reserve(100);
-    for (int k = 0; k < eds.size; k++) {
-      prev_char.push_back(k-1);
-      prev_m.push_back(prev_char);
-      prev_char.clear();
+  // Handle the first D letter
+  for (auto sp : eds.str_offsets.front()) {
+    prev_m[sp.start].clear();
+  }
+
+  degenerate_letter d_letter = eds.data.front();
+  for (auto st : d_letter.data) {
+    chars_vec.insert(chars_vec.end(), st.begin(), st.end());
+  }
+
+  if (d_letter.has_epsilon) {
+    chars_vec.push_back('*');
+  }
+
+  // Handle the rest of the EDT
+  for (size_t i=1; i < eds.length; i++) {
+    std::vector<span> spans_curr = eds.str_offsets[i];
+    std::vector<span> spans_prev = eds.str_offsets[i-1];
+
+    /*
+      if (eds.data[i-1].has_epsilon) {
+      std::vector<span> spans_prev_prev = eds.str_offsets[i - 2];
+
+      spans_prev.insert(spans_prev.begin(), spans_prev_prev.begin(),
+      spans_prev_prev.end());
+      }*/
+
+    prev_char.clear();
+    for (auto sp_prev : spans_prev) {
+      prev_char.push_back(sp_prev.stop);
     }
 
-    // Handle the first D letter
-    for (auto sp : eds.str_offsets.front()) {
-      prev_m[sp.start].clear();
+    for (auto sp: spans_curr) {
+
+      int idx = sp.start;
+      prev_m[idx] = prev_char;
     }
 
-    degenerate_letter d_letter = eds.data.front();
+    degenerate_letter d_letter = eds.data[i];
     for (auto st : d_letter.data) {
       chars_vec.insert(chars_vec.end(), st.begin(), st.end());
     }
@@ -187,60 +226,27 @@ EDS parse_ed_string(std::string &ed_string) {
     if (d_letter.has_epsilon) {
       chars_vec.push_back('*');
     }
-
-    // Handle the rest of the EDT
-    for (size_t i=1; i < eds.length; i++) {
-      std::vector<span> spans_curr = eds.str_offsets[i];
-      std::vector<span> spans_prev = eds.str_offsets[i-1];
-
-      /*
-      if (eds.data[i-1].has_epsilon) {
-        std::vector<span> spans_prev_prev = eds.str_offsets[i - 2];
-
-        spans_prev.insert(spans_prev.begin(), spans_prev_prev.begin(),
-      spans_prev_prev.end());
-      }*/
-
-      prev_char.clear();
-      for (auto sp_prev : spans_prev) {
-        prev_char.push_back(sp_prev.stop);
-      }
-
-      for (auto sp: spans_curr) {
-
-        int idx = sp.start;
-        prev_m[idx] = prev_char;
-      }
-
-      degenerate_letter d_letter = eds.data[i];
-      for (auto st : d_letter.data) {
-        chars_vec.insert(chars_vec.end(), st.begin(), st.end());
-      }
-
-      if (d_letter.has_epsilon) {
-        chars_vec.push_back('*');
-      }
-    }
-
-    if (false) {
-      printf("%s\n", chars_vec.c_str());
-
-      for (auto i : prev_m) {
-        printf("[");
-        for (auto j : i) { printf("%d , ", j); }
-        printf("], ");
-      }
-      printf("\n");
-    }
-
-    LinearizedEDS l;
-    l.prev_chars = prev_m;
-    l.str = chars_vec;
-
-    return l;
   }
 
-  std::string msa_to_eds(string_vec &msa)  {
+  if (false) {
+    printf("%s\n", chars_vec.c_str());
+
+    for (auto i : prev_m) {
+      printf("[");
+      for (auto j : i) { printf("%d , ", j); }
+      printf("], ");
+    }
+    printf("\n");
+  }
+
+  LinearizedEDS l;
+  l.prev_chars = prev_m;
+  l.str = chars_vec;
+
+  return l;
+}
+
+std::string msa_to_eds(string_vec &msa)  {
   int last_col_idx = msa.front().length(); // rename to col count
   int last_row_idx = msa.size() ; // rename to row count
 
@@ -316,7 +322,10 @@ EDS parse_ed_string(std::string &ed_string) {
         d_letter.insert(s);
         s.clear();
       }
-      raw_edt.push_back(d_letter);
+      if (!d_letter.empty()) {
+        raw_edt.push_back(d_letter);
+      }
+
       d_letter.clear();
     }
 
@@ -335,7 +344,9 @@ EDS parse_ed_string(std::string &ed_string) {
         d_letter.insert(s);
         s.clear();
       }
-      raw_edt.push_back(d_letter);
+      if (!d_letter.empty()) {
+        raw_edt.push_back(d_letter);
+      }
       d_letter.clear();
       increment_spans_idx = true;
     }
@@ -349,7 +360,9 @@ EDS parse_ed_string(std::string &ed_string) {
         }
       }
       d_letter.insert(s);
-      raw_edt.push_back(d_letter);
+      if (!d_letter.empty()) {
+        raw_edt.push_back(d_letter);
+      }
       s.clear();
       d_letter.clear();
       increment_spans_idx = true;
@@ -368,7 +381,9 @@ EDS parse_ed_string(std::string &ed_string) {
         d_letter.insert(s);
         s.clear();
       }
-      raw_edt.push_back(d_letter);
+      if (!d_letter.empty()) {
+        raw_edt.push_back(d_letter);
+      }
       d_letter.clear();
     }
 
@@ -388,7 +403,7 @@ EDS parse_ed_string(std::string &ed_string) {
         // printf("%s", d_letter.begin()->c_str());
       } else {
         ed_string.push_back('{');
-        //printf("{");
+        // printf("{");
         for (auto str = d_letter.begin(); str != d_letter.end(); str++) {
           if (str->length() > 0 ) {
             ed_string.append(*str);
@@ -398,11 +413,11 @@ EDS parse_ed_string(std::string &ed_string) {
           }
           if (std::next(str) != d_letter.end()) {
             ed_string.push_back(',');
-            //printf(",");
+            // printf(",");
           }
         }
         ed_string.push_back('}');
-        //printf("}");
+        // printf("}");
       }
     }
     // printf("\n");
@@ -411,5 +426,4 @@ EDS parse_ed_string(std::string &ed_string) {
   // return raw_edt;
   return ed_string;
 }
-
 }

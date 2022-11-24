@@ -1,4 +1,7 @@
-rs/target
 *.dot
 *.png
+
+bin/
 build/
+target/
+rs/target
