@@ -66,6 +66,13 @@ int main(int argc, char **argv) {
     w = parser::parse_ed_string(eds_string, parameters);
   }
 
+  if (parameters.verbosity > 2) {
+    std::cerr << "INFO, [junctions::main]"
+              << " N: " << w.size << " n: " << w.length
+              << " M: " << q.size << " m: " << q.length
+              << std::endl;
+  }
+
   // --------------------
   // Compute intersection
   // --------------------
