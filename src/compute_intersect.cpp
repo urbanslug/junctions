@@ -136,8 +136,9 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
 
   while (i < len_w && j < len_q) {
     if (parameters.verbosity > 3) {
-      printf("\tletter i: %lu, j: %lu\n", i, j);
-      printf("\t----------------\n");
+      std::cerr << std::endl
+                << "\tletter j: " << j << ", i: " << i << std::endl
+                << "\t------------------" << std::endl;
     }
 
     next_i_valid_suffixes.clear();
@@ -153,8 +154,7 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
     root_text = q_suffix_trees[j];
 
     if (parameters.verbosity > 3) {
-      printf("\tj text: %s\n", root_text.second.c_str());
-
+      std::cerr << "\tj text: " << root_text.second << "\t ";
       for (std::string str : eds_q.data[j].data) { std::cerr << str << "."; }
       if (eds_q.data[j].has_epsilon) { std::cerr << "."; }
       std::cerr << std::endl;
@@ -239,8 +239,7 @@ bool intersect(EDS & eds_w, EDS & eds_q, core::Parameters parameters) {
     root_text = w_suffix_trees[i];
 
     if (parameters.verbosity > 3) {
-      printf("\ti text: %s\n", root_text.second.c_str());
-
+      std::cerr << "\ti text: " << root_text.second << "\t ";
       for (std::string str : eds_w.data[i].data) { std::cerr << str << "."; }
       if (eds_w.data[i].has_epsilon) { std::cerr << "."; }
       std::cerr << std::endl;
