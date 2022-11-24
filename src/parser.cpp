@@ -120,8 +120,10 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     ed_string_data.push_back(letter);
   }
 
-  std::vector<std::vector<span>> str_offsets;
   size_t index = 0;
+  std::set<size_t> stops, starts;
+  std::vector<std::vector<span>> str_offsets;
+
   for (size_t i = 0; i < ed_string_data.size(); i++) {
     std::vector<span> letter_offsets;
     std::vector<std::string> i_strings = ed_string_data[i].data;
@@ -130,14 +132,18 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     for (auto str : i_strings) {
       // if (str.empty()) {continue;} // unnecessary
       s.start = index;
+      starts.insert(s.start);
       index += str.length();
       s.stop = index - 1;
+      starts.insert(s.stop);
       letter_offsets.push_back(s);
     }
 
     if (ed_string_data[i].has_epsilon) {
       s.start = index;
       s.stop = index++;
+      starts.insert(s.start);
+      starts.insert(s.stop);
       letter_offsets.push_back(s);
     }
 
@@ -151,6 +157,8 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   e.length = ed_string_data.size();
   e.size = size;
   e.str_offsets = str_offsets;
+  e.starts = starts;
+  e.stops = stops;
 
   return e;
 }

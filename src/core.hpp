@@ -109,6 +109,8 @@ struct span {
 struct EDS {
   std::vector<degenerate_letter> data;
   std::vector<std::vector<span>> str_offsets;
+  std::set<size_t> stops;
+  std::set<size_t> starts;
   size_t size;
   size_t length;
 };
