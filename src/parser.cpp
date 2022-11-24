@@ -135,7 +135,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
       starts.insert(s.start);
       index += str.length();
       s.stop = index - 1;
-      starts.insert(s.stop);
+      stops.insert(s.stop);
       letter_offsets.push_back(s);
     }
 
@@ -143,7 +143,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
       s.start = index;
       s.stop = index++;
       starts.insert(s.start);
-      starts.insert(s.stop);
+      stops.insert(s.stop);
       letter_offsets.push_back(s);
     }
 

@@ -4,7 +4,7 @@ all:
 	@mkdir -p $(BUILD_DIR)
 	g++ src/main.cpp -o build/junctions
 
-tests:
+test:
 	@mkdir -p $(BUILD_DIR)
 	g++ src/tests.cpp -o build/test
 

@@ -41,7 +41,7 @@ Available options
 
 ## Test and Debug
 ```sh
-make tests
+make test
 ./build/test
 ```
 
