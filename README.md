@@ -4,13 +4,13 @@ Do two elastic degenerate strings have a non-empty intersection?
 
 ## Compile and Run
 Compile
-```
+```sh
 git clone https://github.com/urbanslug/junctions.git && cd junctions
 make
 ```
 
 Run
-```
+```sh
 $ ./build/junctions -h
 -----------------
 Compute the intersection of Elastic Degenerate Strings
@@ -37,4 +37,16 @@ Available options
 
 -v <value>, --verbosity <value>
     amount of debug information [default : 0]
+```
+
+## Test and Debug
+```sh
+make tests
+./build/test
+```
+
+
+```sh
+make debug
+gdb build/test_debug
 ```
