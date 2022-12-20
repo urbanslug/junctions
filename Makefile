@@ -7,7 +7,8 @@ all:
 
 test:
 	@mkdir -p $(BUILD_DIR)
-	g++ src/tests.cpp -o $(BUILD_DIR)/test
+	g++ -c src/core.cpp -o bin/core.o
+	g++ bin/core.o src/tests.cpp -o $(BUILD_DIR)/test
 
 debug:
 	@mkdir -p $(BUILD_DIR)

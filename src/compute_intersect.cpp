@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <ostream>
 #include <set>
@@ -46,7 +47,7 @@ match_info compute_match_info(vector<spread> const &txt_spans, //
   if (false) {
     std::cerr << utils::indent(4)
               << "suffix " << suff
-              << " pos: " << match_position
+              << " match_pos: " << match_position
               << std::endl;
   }
 
@@ -72,8 +73,8 @@ match_info compute_match_info(vector<spread> const &txt_spans, //
               << std::endl;
   }
 
-  // Find the string in which the match occured
-  // if we go out of the string in which the match occured, set match_str_idx to -1
+  // Find the string in which the match occurred
+  // Set match_str_idx to -1, if we go out of the string in which the match occurred
   spread s;
   int end, match_end;
   for (int span_idx = 0; span_idx < str_count; span_idx++) {
@@ -82,7 +83,7 @@ match_info compute_match_info(vector<spread> const &txt_spans, //
     match_end = match_position + qlen;
 
     if (match_position == s.start) {
-      if (is_qry_active_suffix || qlen <= s.len) {
+      if ((is_qry_active_suffix && qlen <= s.len) || qlen <= s.len) {
         match_str_idx = span_idx;
         break;
       } else {
@@ -458,7 +459,11 @@ void match(matrix *txt_matrix, //
       int tlen = txt_spans[m_info.str_idx].len;
 
       // if greater then we have a problem in compute_match_info
-      if ((m_info.start_idx + qlen) > tlen) {} // TODO: panic
+      if ((m_info.start_idx + qlen) > tlen) {
+        std::cerr << "INFO, [improved::match] Error in match" << std::endl;
+        exit(1);
+      }
+
       bool reaches_end = (m_info.start_idx + qlen) == tlen;
 
       bool matches_entirely = m_info.start_idx == 0 && tlen == qlen;
@@ -511,12 +516,8 @@ void match(matrix *txt_matrix, //
       txt_active_suffixes->insert(s);
 
       if (false) {
-        std::cerr << utils::indent(2) << "Created active suffix: "
-                  << "{ qry ltr idx: " << qry_letter_idx
-                  << ", str idx: " << m_info.str_idx
-                  << ", start idx: " << m_info.start_idx + qlen
-                  << " }"
-                  << std::endl;
+        std::cerr << utils::indent(2)
+                  << "Created active suffix: " << s << std::endl;
       }
     }
   }
@@ -613,7 +614,7 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
     Find the intersection
     ---------------------
   */
- 
+
   std::vector<std::set<suffix>> w_active_suffixes(len_w, std::set<suffix>());
   std::vector<std::set<suffix>> q_active_suffixes(len_q, std::set<suffix>());
 
@@ -781,7 +782,7 @@ namespace naive {
 */
 
 bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
-  if (parameters.verbosity > 1) { printf("INFO, [naive::intersect]\n"); }
+  if (parameters.verbosity > 1) { printf("DEBUG, [naive::intersect]\n"); }
 
   LinearizedEDS linear_w = parser::linearize(eds_w);
   LinearizedEDS linear_q = parser::linearize(eds_q);
@@ -830,7 +831,7 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
       }
     }
 
-    
+
 
     for (int prev_row_idx : prev_w) {
       for (int prev_col_idx : prev_q) {
