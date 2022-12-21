@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     w = parser::parse_ed_string(eds_string, parameters);
   }
 
-  if (parameters.verbosity > 1) {
+  if (parameters.verbosity > 0) {
     std::cerr << "INFO, [junctions::main]"
               << " N: " << w.size << " n: " << w.length
               << " M: " << q.size << " m: " << q.length
