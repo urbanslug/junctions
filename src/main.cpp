@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   cli::initCmdParser(cmd);
 
   // Parse command line arguments
-  core::Parameters parameters; 
+  core::Parameters parameters;
 
   cli::parseandSave(argc, argv, cmd, parameters);
 
@@ -55,10 +55,12 @@ int main(int argc, char **argv) {
 
   if (parameters.verbosity > 0) {
     std::cerr << "INFO, [junctions::main]"
-              << " N: " << w.size << " n: " << w.length
-              << " M: " << q.size << " m: " << q.length
+              << " N: " << w.size << " n: " << w.m
+              << " M: " << q.size << " m: " << q.m
               << std::endl;
   }
+
+  // utils::print_edt_data(w.data);
 
   // --------------------
   // Compute intersection
@@ -99,7 +101,6 @@ int main(int argc, char **argv) {
                 << timeRefRead.count() << " sec" << std::endl;
     }
 
-    
     t0 = Time::now();
     bool result_naive = naive::intersect(w, q, parameters);
     timeRefRead = Time::now() - t0;

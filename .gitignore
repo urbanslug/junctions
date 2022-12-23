@@ -1,5 +1,6 @@
 *.dot
 *.png
+out
 
 bin/
 build/

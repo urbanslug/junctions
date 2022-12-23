@@ -98,6 +98,7 @@ struct EDS {
   std::set<size_t> stops;
   std::set<size_t> starts;
   size_t size;
+  size_t m; // number of strings
   size_t length;
 };
 
