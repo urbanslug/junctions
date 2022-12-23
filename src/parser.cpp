@@ -77,11 +77,13 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   std::string str;
   char prev_char = '\0'; // TODO: is this the best way to initialize?
 
-
+  size_t size = 0;
   for (auto ch : ed_string) {
     // printf("prev char %c ch %c\n", prev_char, ch);
 
-    if (ch == '{' || ch == '}') {
+    if (ch == '{' &&  prev_char == '{') {
+      continue;
+    } else if (ch == '{' || ch == '}') {
       if (str.empty() && prev_char != ',') { continue; }
 
       if (str.empty() && (prev_char == ',' || prev_char == '{')) {
@@ -103,9 +105,10 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
       } else {
         degenerate_letter_data.push_back(str);
       }
-      letter.has_epsilon = false;
+      //letter.has_epsilon = false;
       str.clear();
     } else if (ch == 'A' || ch == 'C' || ch == 'T' || ch == 'G') {
+      ++size;
       str.push_back(ch);
     } else {
       printf("error found char %c at pos\n", ch);
@@ -114,22 +117,31 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     prev_char = ch;
   }
 
-  if (!str.empty()) {
+  if (!str.empty()) { 
     degenerate_letter_data.push_back(str);
     letter.data = degenerate_letter_data;
     ed_string_data.push_back(letter);
   }
 
-  size_t index = 0;
+  size_t index;
   std::set<size_t> stops, starts;
   std::vector<std::vector<span>> str_offsets;
+
+  int solids = 0;
+  int eps_count = 0;
+  int strs = 0;
 
   for (size_t i = 0; i < ed_string_data.size(); i++) {
     std::vector<span> letter_offsets;
     std::vector<std::string> i_strings = ed_string_data[i].data;
     span s;
 
+    if (i_strings.size() == 1) {
+        ++solids;
+      }
+
     for (auto str : i_strings) {
+      ++strs;
       // if (str.empty()) {continue;} // unnecessary
       s.start = index;
       starts.insert(s.start);
@@ -140,6 +152,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     }
 
     if (ed_string_data[i].has_epsilon) {
+      ++eps_count;
       s.start = index;
       s.stop = index++;
       starts.insert(s.start);
@@ -150,12 +163,16 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     str_offsets.push_back(letter_offsets);
   }
 
-  size_t size = str_offsets.back().back().stop + 1;
+  std::cerr << "eps_count-> " << eps_count
+            << " solids-> " << solids
+            << " strs -> " << strs
+            << std::endl;
 
   EDS e;
   e.data = ed_string_data;
   e.length = ed_string_data.size();
   e.size = size;
+  e.m = starts.size();
   e.str_offsets = str_offsets;
   e.starts = starts;
   e.stops = stops;

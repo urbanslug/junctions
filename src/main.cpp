@@ -55,10 +55,13 @@ int main(int argc, char **argv) {
 
   if (parameters.verbosity > 1) {
     std::cerr << "INFO, [junctions::main]"
-              << " N: " << w.size << " n: " << w.length
-              << " M: " << q.size << " m: " << q.length
+              << " N: " << w.size << " n: " << w.m
+              << " M: " << q.size << " m: " << q.m
               << std::endl;
   }
+
+  // utils::print_edt_data(w.data);
+  
 
   // --------------------
   // Compute intersection
