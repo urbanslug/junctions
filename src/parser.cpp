@@ -86,9 +86,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   for (auto ch : ed_string) {
     // printf("prev char %c ch %c\n", prev_char, ch);
 
-    if (ch == '{' &&  prev_char == '{') {
-      continue;
-    } else if (ch == '{' || ch == '}') {
+     if (ch == '{' || ch == '}') {
       if (str.empty() && prev_char != ',') { continue; }
 
       if (str.empty() && (prev_char == ',' || prev_char == '{')) {
