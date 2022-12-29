@@ -564,7 +564,7 @@ Is there an intersection between ED strings W and Q?
 */
 
 bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
-  if (parameters.verbosity > 1) { std::cerr << "DEBUG, [improved::intersect]\n" << std::endl; }
+  if (parameters.verbosity > 1) { std::cerr << "DEBUG, [improved::intersect]" << std::endl; }
 
   // size_t size_w = eds_w.size;
   // size_t size_q = eds_q.size;
@@ -623,8 +623,6 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
 
   bool diagonal, above, left;
   std::set<cell> q_reachable_epsilons, w_reachable_epsilons;
-
-  std::cerr << std::endl << std::endl;
 
   for (int i = 0; i < len_w; i++) {
     for (int j = 0; j < len_q; j++) {
@@ -782,10 +780,12 @@ namespace naive {
 */
 
 bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
-  if (parameters.verbosity > 1) { printf("DEBUG, [naive::intersect]\n"); }
+  if (parameters.verbosity > 1) { std::cerr << "DEBUG, [naive::intersect]" << std::endl; }
 
   LinearizedEDS linear_w = parser::linearize(eds_w);
   LinearizedEDS linear_q = parser::linearize(eds_q);
+
+
 
   size_t last_row = linear_w.str.length();
   size_t last_col = linear_q.str.length();
@@ -793,8 +793,8 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
   boolean_matrix dp_matrix = utils::gen_matrix(last_row, last_col);
   // boolean_matrix q_dp_matrix = utils::gen_matrix(last_row, last_col);
 
-  auto prev_matched = [&dp_matrix, &linear_w, &linear_q, &eds_w,
-                       &eds_q](int row, int col) -> bool {
+  auto prev_matched =
+    [&dp_matrix, &linear_w, &linear_q, &eds_w, &eds_q](int row, int col) -> bool {
     // std::cout << row << " " << col << "\n";
     std::vector<int> prev_w = linear_w.prev_chars[row];
     std::vector<int> prev_q = linear_q.prev_chars[col];
@@ -849,8 +849,10 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
     return linear_w.str[row_idx] == linear_q.str[col_idx];
   };
 
+
   for (size_t row_idx = 0; row_idx < last_row; row_idx++) {
     for (size_t col_idx = 0; col_idx < last_col; col_idx++) {
+
       if (chars_match(row_idx, col_idx) && prev_matched(row_idx, col_idx)) {
         dp_matrix[row_idx][col_idx] = true;
       }
@@ -868,8 +870,8 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
       }
 
       if (linear_q.str[col_idx] == '*') {
-
         int_vec prev_q = linear_q.prev_chars[col_idx];
+
         for (int c : prev_q) {
           for (int r = 0; r <= row_idx; r++) {
             if (dp_matrix[r][c]) {

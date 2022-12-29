@@ -126,12 +126,10 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     ed_string_data.push_back(letter);
   }
 
-  size_t index;
+  size_t index = 0;
   std::set<size_t> stops, starts;
   std::vector<std::vector<span>> str_offsets;
 
-  int solids = 0;
-  int degenerates = 0;
   int eps_count = 0;
   int strs = 0;
 
@@ -140,17 +138,8 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     std::vector<std::string> i_strings = ed_string_data[i].data;
     span s;
 
-    if (i_strings.size() > 1) {
-      degenerates += 1;
-    }
-
-    if (i_strings.size() == 1) {
-        solids += 1;
-      }
-
     for (auto str : i_strings) {
       ++strs;
-      // if (str.empty()) {continue;} // unnecessary
       s.start = index;
       starts.insert(s.start);
       index += str.length();
@@ -171,7 +160,8 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
     str_offsets.push_back(letter_offsets);
   }
 
-
+  // TODO: not counting epsilons in size breaks linearize
+  // size = str_offsets.back().back().stop + 1;
 
   EDS e;
   e.data = ed_string_data;
@@ -186,17 +176,19 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
 }
 
 LinearizedEDS linearize(EDS &eds) {
-  if (DEBUG_LEVEL > 3) { printf("[utils::parser::foo]\n"); }
+  if (DEBUG_LEVEL > 3) { std::cerr << "[utils::parser::foo]" << std::endl; }
+
+  size_t size = eds.str_offsets.back().back().stop + 1;
 
   std::vector<std::vector<int>> prev_m;
-  prev_m.reserve(eds.size);
+  prev_m.reserve(size);
 
   std::string chars_vec;
-  chars_vec.reserve(eds.size);
+  chars_vec.reserve(size);
 
   std::vector<int> prev_char;
   prev_char.reserve(100);
-  for (int k = 0; k < eds.size; k++) {
+  for (int k = 0; k < size; k++) {
     prev_char.push_back(k-1);
     prev_m.push_back(prev_char);
     prev_char.clear();
@@ -221,21 +213,12 @@ LinearizedEDS linearize(EDS &eds) {
     std::vector<span> spans_curr = eds.str_offsets[i];
     std::vector<span> spans_prev = eds.str_offsets[i-1];
 
-    /*
-      if (eds.data[i-1].has_epsilon) {
-      std::vector<span> spans_prev_prev = eds.str_offsets[i - 2];
-
-      spans_prev.insert(spans_prev.begin(), spans_prev_prev.begin(),
-      spans_prev_prev.end());
-      }*/
-
     prev_char.clear();
     for (auto sp_prev : spans_prev) {
       prev_char.push_back(sp_prev.stop);
     }
 
     for (auto sp: spans_curr) {
-
       int idx = sp.start;
       prev_m[idx] = prev_char;
     }
