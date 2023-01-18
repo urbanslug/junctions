@@ -5,6 +5,11 @@ all:
 	g++ -c src/core.cpp -o bin/core.o
 	g++ -Wall -pipe -O2 -std=c++11 bin/core.o src/main.cpp -o $(BUILD_DIR)/junctions
 
+perf:
+	@mkdir -p $(BUILD_DIR)
+	g++ -c src/core.cpp -o bin/core.o
+	g++ -g -Wall -pipe -std=c++11 bin/core.o src/main.cpp -o $(BUILD_DIR)/junctions
+
 test:
 	@mkdir -p $(BUILD_DIR)
 	g++ -c src/core.cpp -o bin/core.o

@@ -78,13 +78,13 @@ both = 2\n\
    */
   void printCmdOptions(core::Parameters &parameters) {
 
-    auto algo_string =[](int algo) -> std::string {
+    auto algo_string =[](core::algorithm algo) -> std::string {
       switch (algo) {
-      case 0:
+      case core::algorithm::improved:
         return "improved";
-      case 1:
+      case core::algorithm::naive:
         return "naive";
-      case 2:
+      case core::algorithm::both:
         return "both";
       }
       return "uknown";
@@ -168,7 +168,8 @@ both = 2\n\
       }
     str.clear();
 
-
+    // Algorithm
+    //  -------
     if (cmd.foundOption("algorithm")) {
       str << cmd.optionValue("algorithm");
 
@@ -188,6 +189,9 @@ both = 2\n\
       parameters.algo = core::improved;
     str.clear();
 
+
+    // Verbosity
+    //  -------
     if (cmd.foundOption("verbosity")) {
       str << cmd.optionValue("verbosity");
       str >> parameters.verbosity;

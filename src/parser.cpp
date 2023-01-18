@@ -4,7 +4,9 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <ostream>
 #include <set>
+#include <unordered_set>
 #include <stdlib.h>
 #include <string>
 #include <utility>
@@ -127,7 +129,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   }
 
   size_t index = 0;
-  std::set<size_t> stops, starts;
+  std::unordered_set<size_t> stops, starts;
   std::vector<std::vector<span>> str_offsets;
 
   int eps_count = 0;
@@ -162,6 +164,8 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
 
   // TODO: not counting epsilons in size breaks linearize
   // size = str_offsets.back().back().stop + 1;
+
+  std::cerr << "eps count: " << eps_count << std::endl;
 
   EDS e;
   e.data = ed_string_data;
@@ -251,7 +255,7 @@ LinearizedEDS linearize(EDS &eds) {
   return l;
 }
 
-std::string msa_to_eds(string_vec &msa)  {
+std::string msa_to_eds(string_vec &msa) {
   int last_col_idx = msa.front().length(); // rename to col count
   int last_row_idx = msa.size() ; // rename to row count
 

@@ -5,12 +5,13 @@
 #include <cstddef>
 #include <cstdio>
 #include <iostream>
+#include <iterator>
 #include <set>
 #include <stdlib.h>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
-#include <iterator>
 
 #include <algorithm>
 #include <cctype>
@@ -23,10 +24,10 @@
 #include <map>
 #include <numeric>
 #include <queue>
-#include <set>
 #include <sstream>
 #include <stack>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 using namespace std;
@@ -95,8 +96,8 @@ struct span {
 struct EDS {
   std::vector<degenerate_letter> data;
   std::vector<std::vector<span>> str_offsets;
-  std::set<size_t> stops;
-  std::set<size_t> starts;
+  std::unordered_set<size_t> stops;
+  std::unordered_set<size_t> starts;
   size_t size;
   size_t m; // number of strings
   size_t length;

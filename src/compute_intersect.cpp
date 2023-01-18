@@ -197,6 +197,7 @@ match_info compute_match_info(vector<spread> const &txt_spans, //
 
 void handle_epsilon(matrix *w_matrix,   //
                     matrix *q_matrix,   //
+
                     int fixed,          // other
                     int to,             // idx of letter with epsilon
                     core::ed_string in, // eds with epsilon
@@ -735,6 +736,14 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
       }
   }
 
+  for (auto v : w_suffix_trees) {
+    // STDelete(&v.first);
+  }
+
+  for (auto v : q_suffix_trees) {
+    // STDelete(&v.first);
+  }
+
   if (false) {
     printf(" Improved \n");
     std::cerr << std::endl << std::endl;
@@ -785,8 +794,6 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
   LinearizedEDS linear_w = parser::linearize(eds_w);
   LinearizedEDS linear_q = parser::linearize(eds_q);
 
-
-
   size_t last_row = linear_w.str.length();
   size_t last_col = linear_q.str.length();
 
@@ -831,8 +838,6 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
       }
     }
 
-
-
     for (int prev_row_idx : prev_w) {
       for (int prev_col_idx : prev_q) {
         if (dp_matrix[prev_row_idx][prev_col_idx]) {
@@ -857,11 +862,11 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
         dp_matrix[row_idx][col_idx] = true;
       }
 
-      if (linear_w.str[row_idx] == '*') {
+      if (linear_w.str[row_idx] == '*' && col_idx == last_col - 1) {
         int_vec prev_w = linear_w.prev_chars[row_idx];
 
         for (int r : prev_w) {
-          for (int c = 0; c <= col_idx; c++) {
+          for (int c = 0; c < last_col; c++) {
             if (dp_matrix[r][c]) {
               dp_matrix[row_idx][c] = true;
             }
@@ -873,11 +878,16 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
         int_vec prev_q = linear_q.prev_chars[col_idx];
 
         for (int c : prev_q) {
+          if (dp_matrix[row_idx][c]) {
+            dp_matrix[row_idx][col_idx] = true;
+          }
+          /*
           for (int r = 0; r <= row_idx; r++) {
             if (dp_matrix[r][c]) {
               dp_matrix[r][col_idx] = true;
             }
           }
+          */
         }
       }
     }
