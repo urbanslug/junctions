@@ -19,6 +19,7 @@ void test_lacks_intersect();
 void test_contains_intersect();
 void test_parse_ed_string();
 void test_handle_epsilon();
+void test_contains_intersect_active_prefixes();
 void test_msa_to_eds();
 
 void print_properties(EDS &eds_w, EDS &eds_q) {
@@ -29,6 +30,9 @@ void print_properties(EDS &eds_w, EDS &eds_q) {
 
 int main() {
   test_handle_epsilon();
+  // test_contains_intersect();
+  // test_lacks_intersect();
+  // test_contains_intersect_active_prefixes();
 
   /*
   test_lacks_intersect();
@@ -146,6 +150,91 @@ void test_contains_intersect() {
   IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
 }
 
+void test_contains_intersect_active_prefixes() {
+  std::string ed_string_w, ed_string_q;
+  EDS eds_w, eds_q;
+
+  auto params = init_tests();
+
+  auto run_n_print = [&]() {
+    bool naive_res = naive::intersect(eds_w, eds_q, params);
+    bool imp_res = improved::intersect(eds_w, eds_q, params);
+    std::cerr << "naive: " << naive_res << " imp: " << imp_res;
+    exit(1);
+  };
+
+  ed_string_w = "{AT,TCT}";
+  ed_string_q = "{TC,G}{CT,T}";
+
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{A,G}{CTC,CAAGT}{GA,CTA}";
+  ed_string_q = "{ACTCGA}";
+
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+
+  utils::print_edt(eds_w);
+  utils::print_edt(eds_q);
+
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  // exit(1);
+
+  ed_string_w = "{A,G}{CTC,CAAGT}{GA,CTA}{TC,G}{CT,T}";
+  ed_string_q = "{ACTCGA}{AT,TCT}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // utils::print_edt(eds_w);
+  // utils::print_edt(eds_q);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{ACTCGA}{AT,TCT}";
+  ed_string_q = "{A,G}{CTC,CAAGT}{GA,CTA}{TC,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // utils::print_edt(eds_w);
+  // utils::print_edt(eds_q);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+}
+
+void test_lacks_intersect() {
+  std::string ed_string_w, ed_string_q;
+  EDS eds_w, eds_q;
+
+  auto params = init_tests();
+
+  auto run_n_print = [&]() {
+    bool naive_res = naive::intersect(eds_w, eds_q, params);
+    bool imp_res = improved::intersect(eds_w, eds_q, params);
+    std::cerr << "naive: " << naive_res << " imp: " << imp_res;
+    exit(1);
+  };
+
+  ed_string_w = "{GC}{AC,G}";
+  ed_string_q = "{G,T}{GC}{AC,G}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // run_n_print();
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{G,T}{GCGGTGGCTT}{AC,G}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "{TC,G}{CG,G}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+}
+
 void test_handle_epsilon() {
   std::string ed_string_w, ed_string_q;
   EDS eds_w, eds_q;
@@ -155,17 +244,186 @@ void test_handle_epsilon() {
   auto run_n_print =[&](){
     bool naive_res = naive::intersect(eds_w, eds_q, params);
     bool imp_res = improved::intersect(eds_w, eds_q, params);
-    std::cerr << "naive: " << naive_res << " imp: " << imp_res;
+    std::cerr << "naive: " << naive_res << " improved: " << imp_res;
     exit(1);
   };
 
+  ed_string_w = "{AT,TC}{TC,T}";
+  ed_string_q = "TC{,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // run_n_print();
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+  // exit(1);
+
+  ed_string_w = "{AT,TC}{ATC,}{T}";
+  ed_string_q = "{TC,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "A";
+  ed_string_q = "{C,}A";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  // ed_string_w = "A{C,}G";
+  // ed_string_q = "{C,}G";
+  ed_string_w = "A{C,}";
+  ed_string_q = "{C,}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // run_n_print();
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{C,}";
+  ed_string_q = "{C,}A";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // run_n_print();
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{AT,TC}";
+  ed_string_q = "{,G}AT";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
 
   // ed_string_w = "{GAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
   // ed_string_q = "{GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}{GATGATC}";
   // ed_string_w = "{AT}{C,}{GA}";
   // ed_string_q = "{ATG}{C,}{A}";
+  ed_string_w = "{GT,}{A,C}{T}";
+  ed_string_q = "{AT,}{G}{T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // run_n_print();
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
 
-  ed_string_w = "{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}{G,}{CA}{AGC,}{GGGAGCG}{TTA,}{GTC}{G,T}{A}{AG,}{TATTGCG}{C,}{CA}{C,}{A,T}{ATGCGCAGG}{AGC,}{G}{TA,}{ATTCAGTCT}{G,}{TG}{C,}{GCCGC}{A,}{AACAA}{T,}{GC}{G,}{GT}{CTT,GGC}{GT}{A,}{C}{G,T}{C,T}{A,T}{CCGGCA}{G,}{GGCTGGGACAT}{TG,}{TGTGTC}{A,G}{A,G}{CCGCAG}{C,}{T}{C,T}{C,T}";
+
+
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "{,G}AT{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // run_n_print();
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  // ed_string_w = "{GT,}{A,C}{T}";
+  // ed_string_q = "{G,}{AT}";
+  // ed_string_w = "{GT,}{A,C}{T}{A,G}{ATG}";
+  // ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}";
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}";
+  ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}{A,C}{G}{C,G}{TT}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // run_n_print();
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
+  // ed_string_w = "{GCG}{TTA,}{TC}{G,T}";
+  ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
+  // ed_string_w = "{GCG}{TTA,}";
+  // ed_string_q = "{GCGTT}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  
+  // exit(1);
+
+  ed_string_w = "{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+  // exit(1);
+
+ 
+
+  ed_string_w = "{AT,TC}{ATC,A}";
+  ed_string_q = "{,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{AT,TC}{ATC,}";
+  ed_string_q = "{TC,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  
+
+  ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
+  ed_string_q = "{TC,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{G,}{T,}{TTTACCC}{A,}{G}{A,G}";
+  ed_string_q = "{T,}{TTTACCC}{AG,GA}{T}{G,T}{CAGG}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{GATGATC}{G,}{CA}{AGC,}{GGGAGCG}{TTA,}{G}";
+  ed_string_q = "{GATGATCGCAGGGAGCGTT}{AG,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
+  ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCA}";
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
+  ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
+  ed_string_q =
+      "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCC}{T,}{T}{CGG,T}{C}{CG,}"
+      "{GATGATCGCAGGGAGCGTT}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w =
+      "{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
+  ed_string_q = "{AACCACTTTTCCATGAC}{A,}{AGGA}{G,}{TT}{A,}{"
+                "GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
+  ed_string_w =
+      "{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{AGGA}{G,}{"
+      "TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}{G,}{CA}{AGC,}{GGGAGCG}{"
+      "TTA,}{GTC}{G,T}{A}{AG,}{TATTGCG}{C,}{CA}{C,}{A,T}{ATGCGCAGG}{AGC,}{G}{"
+      "TA,}{ATTCAGTCT}{G,}{TG}{C,}{GCCGC}{A,}{AACAA}{T,}{GC}{G,}{GT}{CTT,GGC}{"
+      "GT}{A,}{C}{G,T}{C,T}{A,T}{CCGGCA}{G,}{GGCTGGGACAT}{TG,}{TGTGTC}{A,G}{A,"
+      "G}{CCGCAG}{C,}{T}{C,T}{C,T}";
 
 
   ed_string_q = "{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AACCACTTTTCCATGAC}{A,}{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}{GATGATCGCAGGGAGCGTT}{AG,T}{T}{AC,CG}{ATATTGCG}{CCA,}{CAATGCGCAGG}{A,G}{GC}{GT,}{AATTCAGTCTGTGGCCGCAACAA}{GCG,}{T}{G,}{GCGTCTTACCGGCA}{G,}{GGCTGGGACATTGTGTGTC}{AG,GA}{CCGCAG}{CTTT,TCAC}";
@@ -183,156 +441,6 @@ IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
         improved::intersect(eds_w, eds_q, params));
 // exit(1);
 
-ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
-ed_string_q =
-    "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-// ed_string_w = "{GT,}{A,C}{T}";
-// ed_string_q = "{G,}{AT}";
-// ed_string_w = "{GT,}{A,C}{T}{A,G}{ATG}";
-// ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}";
-ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}";
-ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}{A,C}{G}{C,G}{TT}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-// run_n_print();
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-// ed_string_w = "{GC}{AC,G}";
-// ed_string_q = "{G,T}{GC}{AC,G}";
-ed_string_w = "{GCGGTGGCTT}{AC,G}";
-ed_string_q = "{G,T}{GCGGTGGCTT}{AC,G}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-// run_n_print();
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-// exit(1);
-
-ed_string_w = "{AT,TC}{ATC,T}";
-ed_string_q = "{,G}AT{CT,T}";
-// ed_string_w = "{AT,TC}";
-// ed_string_q = "{,G}AT";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-// run_n_print();
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
-// ed_string_w = "{GCG}{TTA,}{TC}{G,T}";
-ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
-// ed_string_w = "{GCG}{TTA,}";
-// ed_string_q = "{GCGTT}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{AT,TC}{ATC,}{T}";
-ed_string_q = "{TC,G}{CT,T}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-// exit(1);
-
-ed_string_w = "{GCGGTGGCTT}{AC,G}";
-ed_string_q = "{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-// exit(1);
-
-ed_string_w = "{GT,}{A,C}{T}";
-ed_string_q = "{AT,}{G}{T}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{AT,TC}{ATC,A}";
-ed_string_q = "{,G}{CT,T}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{AT,TC}{ATC,}";
-ed_string_q = "{TC,G}{CT,T}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{AT,TC}{TC,T}";
-ed_string_q = "TC{,G}{CT,T}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-// exit(1);
-
-ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
-ed_string_q = "{TC,G}{CT,T}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{G,}{T,}{TTTACCC}{A,}{G}{A,G}";
-ed_string_q = "{T,}{TTTACCC}{AG,GA}{T}{G,T}{CAGG}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{GATGATC}{G,}{CA}{AGC,}{GGGAGCG}{TTA,}{G}";
-ed_string_q = "{GATGATCGCAGGGAGCGTT}{AG,T}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
-ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCA}";
-ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
-ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
-ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCC}{T,}{T}{CGG,T}{C}{CG,}"
-              "{GATGATCGCAGGGAGCGTT}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
-
-ed_string_w = "{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
-ed_string_q = "{AACCACTTTTCCATGAC}{A,}{AGGA}{G,}{TT}{A,}{"
-              "GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}";
-eds_w = parser::parse_ed_string(ed_string_w, params);
-eds_q = parser::parse_ed_string(ed_string_q, params);
-IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-        improved::intersect(eds_w, eds_q, params));
 }
 
-void test_lacks_intersect() {
-  auto params = init_tests();
-
-  std::string ed_string_w = "{AT,TC}{ATC,T}";
-  std::string ed_string_q = "{TC,G}{CG,G}";
-  EDS eds_w = parser::parse_ed_string(ed_string_w, params);
-  EDS eds_q = parser::parse_ed_string(ed_string_q, params);
-  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
-}
 

@@ -131,17 +131,30 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   size_t index = 0;
   std::unordered_set<size_t> stops, starts;
   std::vector<std::vector<span>> str_offsets;
+  std::vector<std::vector<slicex>> str_slices;
 
   int eps_count = 0;
   int strs = 0;
+  size_t str_start = 0;
 
   for (size_t i = 0; i < ed_string_data.size(); i++) {
     std::vector<span> letter_offsets;
     std::vector<std::string> i_strings = ed_string_data[i].data;
     span s;
 
+    std::vector<slicex> letter_slices;
+    letter_slices.reserve(i_strings.size());
+    slicex sl;
+    str_start = 0;
+
     for (auto str : i_strings) {
       ++strs;
+
+      sl.start = str_start;
+      sl.length = str.length();
+      letter_slices.push_back(sl);
+      str_start += str.length();
+
       s.start = index;
       starts.insert(s.start);
       index += str.length();
@@ -152,6 +165,9 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
 
     if (ed_string_data[i].has_epsilon) {
       ++eps_count;
+
+      letter_slices.push_back(slicex{.start = str_start, .length = 0});
+
       s.start = index;
       s.stop = index++;
       starts.insert(s.start);
@@ -159,6 +175,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
       letter_offsets.push_back(s);
     }
 
+    str_slices.push_back(letter_slices);
     str_offsets.push_back(letter_offsets);
   }
 
@@ -171,8 +188,10 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   e.data = ed_string_data;
   e.length = ed_string_data.size();
   e.size = size;
+  e.epsilons = eps_count;
   e.m = eps_count + strs;
   e.str_offsets = str_offsets;
+  e.str_slices = str_slices;
   e.starts = starts;
   e.stops = stops;
 

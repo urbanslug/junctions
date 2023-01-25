@@ -5,6 +5,8 @@
 #include <iostream>
 #include <ostream>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <stdlib.h>
 #include <string>
 #include <thread>
@@ -19,515 +21,11 @@
 
 namespace improved {
 
-
-/*
-  Check that the match is valid i.e within a text string
-  return which string the match is in and where in the string the
-  match starts
-*/
-match_info compute_match_info(vector<spread> const &txt_spans, //
-                              int txt_letter_idx,              //
-                              int qry_letter_idx,              //
-                              int match_position,              //
-                              int qlen,                        //
-                              suffix suff,                     //
-                              std::set<suffix> const &txt_active_suffixes,
-                              matrix const &txt_matrix, //
-                              matrix const &qry_matrix,  //
-                              core::ed_string in,   //
-                              std::set<cell> *txt_reachable_epsilons,
-                              std::set<cell> *qry_reachable_epsilons
-                              ) {
-  if (false) {
-    std::cerr << utils::indent(3)
-              << "DEBUG, [improved::intersect::compute_match_info]"
-              << std::endl;
-  }
-
-  if (false) {
-    std::cerr << utils::indent(4)
-              << "suffix " << suff
-              << " match_pos: " << match_position
-              << std::endl;
-  }
-
-  int match_str_idx = -1;
-  int str_count = (int)txt_spans.size();
-  match_info invalid_match = match_info { .str_idx = match_str_idx, .start_idx = -1 };
-
-  // is the active suffix extendable
-  bool is_qry_active_suffix = suff.query_letter_idx != -1;
-
-  // was this suffix created by a partial match in the previous letter?
-  bool from_prev_letter = false;
-  if (txt_letter_idx > 0) {
-    from_prev_letter = suff.query_letter_idx == (txt_letter_idx - 1);
-  }
-
-  if (is_qry_active_suffix && !from_prev_letter) { return invalid_match; }
-
-  if (false) {
-    std::cerr << utils::indent(4)
-              << "is active suffix " << is_qry_active_suffix
-              << ", frm prev ltr " << from_prev_letter
-              << std::endl;
-  }
-
-  // Find the string in which the match occurred
-  // Set match_str_idx to -1, if we go out of the string in which the match occurred
-  spread s;
-  int end, match_end;
-  for (int span_idx = 0; span_idx < str_count; span_idx++) {
-    s = txt_spans[span_idx];
-    end  = s.start + s.len;
-    match_end = match_position + qlen;
-
-    if (match_position == s.start) {
-      if ((is_qry_active_suffix && qlen <= s.len) || qlen <= s.len) {
-        match_str_idx = span_idx;
-        break;
-      } else {
-        match_str_idx = -1;
-      }
-    }
-
-    if (match_position < end && match_end < end) {
-      match_str_idx = span_idx;
-      break;
-    }
-  }
-
-  if (match_str_idx < 0 ) { return invalid_match; }
-
-  // Find the start index of the match (start_idx) within
-  // the matched string (match_str_idx)
-  int prev_lens = 0;
-  for (int span_idx = 0; span_idx < match_str_idx; span_idx++) {
-    prev_lens += txt_spans[span_idx].len;
-  }
-  int match_start_idx = match_position - prev_lens;
-
-  // validate the match
-  // ------------------
-
-  // If the match occured internally, can we extend an active suffix?
-  if (match_start_idx > 0) {
-    // to confirm validity, create the suffix that would extend and
-    // see if it exists in the set
-    if ( qry_letter_idx > 0 ) {
-      suffix s = {.query_letter_idx = qry_letter_idx -1, .str_idx = match_str_idx, .start_idx = match_start_idx };
-      if ( !txt_active_suffixes.count(s) ) { return invalid_match; }
-    } else {
-      return invalid_match;
-    }
-  }
-
-  // && !(txt_letter_idx == 0 && qry_letter_idx == 0)
-
-
-  // entire strings against each other
-  if ( match_start_idx == 0 && !is_qry_active_suffix ) {
-    bool prev_txt_reachable, prev_qry_reachable;
-    int prev_txt_ltr = txt_letter_idx == 0 ? txt_letter_idx : txt_letter_idx - 1;
-    int prev_qry_ltr = qry_letter_idx == 0 ? qry_letter_idx : qry_letter_idx - 1;
-
-    bool is_txt_zero = prev_txt_ltr == txt_letter_idx;
-    bool is_qry_zero = prev_qry_ltr == qry_letter_idx;
-
-    if (is_txt_zero && is_qry_zero) {
-      prev_qry_reachable = true;
-      prev_txt_reachable = true;
-    }
-
-    if (!is_txt_zero && !is_qry_zero) {
-      if (in == core::ed_string::q) {
-        bool both_eps =
-          qry_reachable_epsilons->count(cell{.j = prev_txt_ltr, .i =  prev_qry_ltr}) &&
-          txt_reachable_epsilons->count(cell{.j = prev_txt_ltr, .i = prev_qry_ltr});
-
-        prev_qry_reachable = qry_matrix[prev_txt_ltr][prev_qry_ltr];
-        // qry_reachable_epsilons->count(cell{.j = prev_txt_ltr, .i =
-        // prev_qry_ltr});
-        prev_txt_reachable = txt_matrix[prev_txt_ltr][prev_qry_ltr]; // ||
-        // txt_reachable_epsilons->count(cell{.j = prev_txt_ltr, .i =
-        // prev_qry_ltr});
-
-        if (both_eps) { prev_txt_reachable = prev_qry_reachable = true; }
-
-      } else {
-        bool both_eps =
-          qry_reachable_epsilons->count(cell{.j = prev_qry_ltr, .i = prev_txt_ltr}) &&
-          txt_reachable_epsilons->count(cell{.j = prev_qry_ltr, .i = prev_txt_ltr});
-
-        prev_qry_reachable = qry_matrix[prev_qry_ltr][prev_txt_ltr]; // ||
-        // qry_reachable_epsilons->count(cell{.j = prev_qry_ltr, .i =
-        // prev_txt_ltr});
-        prev_txt_reachable = txt_matrix[prev_qry_ltr][prev_txt_ltr]; // ||
-        // txt_reachable_epsilons->count(cell{.j = prev_qry_ltr, .i =
-        // prev_txt_ltr});;
-
-        if (both_eps) { prev_txt_reachable = prev_qry_reachable = true; }
-      }
-    }
-
-    if (is_txt_zero && !is_qry_zero) {
-      prev_txt_reachable = true;
-      if (in == core::ed_string::q) {
-        prev_qry_reachable = qry_reachable_epsilons->count(cell{.j = prev_txt_ltr, .i = prev_qry_ltr});
-      } else {
-        prev_qry_reachable  = qry_reachable_epsilons->count(cell{.j = prev_qry_ltr, .i = prev_txt_ltr});
-      }
-    }
-
-    if (is_qry_zero && !is_txt_zero) {
-      prev_qry_reachable = true;
-      if (in == core::ed_string::q) {
-        prev_txt_reachable =txt_reachable_epsilons->count(cell{.j = prev_txt_ltr, .i = prev_qry_ltr});
-      } else {
-        prev_txt_reachable = txt_reachable_epsilons->count(cell{.j = prev_qry_ltr, .i = prev_txt_ltr});;
-      }
-    }
-
-    bool prev_letters_matched = prev_qry_reachable && prev_txt_reachable;
-    if (!prev_letters_matched) { return invalid_match; }
-  }
-
-  return match_info{.str_idx = match_str_idx, .start_idx = match_start_idx};
-}
-
-void handle_epsilon(matrix *w_matrix,   //
-                    matrix *q_matrix,   //
-
-                    int fixed,          // other
-                    int to,             // idx of letter with epsilon
-                    core::ed_string in, // eds with epsilon
-                    std::vector<std::set<suffix>> *active_suffixes, // active suffixes of the other
-                    int txt_d_letter_str_count, //
-                    std::set<cell> *w_reachable_epsilons,
-                    std::set<cell> *q_reachable_epsilons
-                    ) {
-  if (false) {
-    std::cerr << utils::indent(2)
-              << "INFO, [improved::intersect::handle_epsilon]"
-              << std::endl;
-  }
-
-  if (false) {
-    std::cerr << utils::indent(2)
-              << "in: " << (in == core::ed_string::q ? "Q" : "W")
-              << std::endl;
-  }
-
-  // make all strings active suffixes
-  for (int idx = 0; idx < txt_d_letter_str_count; idx++) {
-    suffix s = suffix{.query_letter_idx = to, .str_idx = idx, .start_idx = 0};
-    (*active_suffixes)[fixed].insert(s);
-  }
-
-  if (to == 0) {
-    // by default reachable
-    if (in == core::ed_string::q) {
-      q_reachable_epsilons->insert(cell{.j = to, .i = fixed});
-      //(*q_matrix)[to][fixed] = true;
-
-      // (*w_matrix)[to][fixed] = true;
-    } else {
-      w_reachable_epsilons->insert(cell{.j = fixed, .i = to});
-      // (*w_matrix)[fixed][to] = true;
-
-      // (*q_matrix)[to][fixed] = true;
-
-    }
-  } else {
-
-    int from = to - 1;
-
-    // if we can reach prev we can reach this one
-    if (in == core::ed_string::q) {
-      // in q we copy over 1s from row j-1 to j
-
-      if ( (*q_matrix)[from][fixed] || q_reachable_epsilons->count(cell{.j = from, .i = fixed}) ) {
-        q_reachable_epsilons->insert(cell{.j = to, .i = fixed});
-      }
-      if ( (*w_matrix)[from][fixed] || w_reachable_epsilons->count(cell{.j = from, .i = fixed})) {
-        w_reachable_epsilons->insert(cell{.j = to, .i = fixed});
-      }
-
-      // if ( (*q_matrix)[from][fixed] ) { (*q_matrix)[to][fixed] = true; }
-      // if ( (*w_matrix)[from][fixed] ) { (*w_matrix)[to][fixed] = true; }
-    } else {
-      // in w we copy over 1s from row i-1 to i
-      bool prev_q_reachable =
-        (*q_matrix)[fixed][from] ||
-        q_reachable_epsilons->count(cell{.j = fixed, .i = from});
-      bool prev_w_reachable =
-        (*w_matrix)[fixed][from] ||
-        w_reachable_epsilons->count(cell{.j = fixed, .i = from});
-
-      if (false) {
-        std::cerr << utils::indent(3)
-                  << "prev reachable w: " << prev_w_reachable
-                  << " q: " << prev_q_reachable
-                  << std::endl;
-      }
-
-      if ((*q_matrix)[fixed][from] || q_reachable_epsilons->count(cell{.j = fixed, .i = from})) {
-        q_reachable_epsilons->insert(cell{.j = fixed, .i = to});
-      }
-      if ( (*w_matrix)[fixed][from] || w_reachable_epsilons->count(cell{.j = fixed, .i = from})) {
-        w_reachable_epsilons->insert(cell{.j = fixed, .i = to});
-      }
-
-      // if ((*q_matrix)[fixed][from]) { (*q_matrix)[fixed][to] = true; }
-      // if ((*w_matrix)[fixed][from]) { (*w_matrix)[fixed][to] = true; }
-    }
-    // copy active suffixes created by from to also include to
-    for (int fxd = 0; fxd <= fixed; fxd++) {
-      std::set<suffix> *suffixes = &(*active_suffixes)[fxd];
-      for (suffix suff : *suffixes) {
-
-        if (false) {
-          std::cerr << utils::indent(3)
-                    << "fixed: " << fixed
-                    << " from: " << from
-                    << " to: " << to
-                    << " suffix: " << suff
-                    << " to save? " << (suff.query_letter_idx == from)
-                    << std::endl;
-        }
-
-        if (suff.query_letter_idx == from) {
-          suffixes->insert(suffix{.query_letter_idx = to, .str_idx = suff.str_idx, .start_idx = suff.start_idx});
-        }
-      }
-    }
-  }
-}
-
-// TODO: do this while reading the EDT
-void compute_letter_spans(string_vec d_letter_data, //
-                          std::vector<std::vector<spread>>* eds_spans //
-                          ) {
-  std::vector<spread> spans;
-  spans.reserve(d_letter_data.size());
-
-  int str_start = 0;
-
-  for (std::string str : d_letter_data) {
-    spans.push_back(spread{.start = str_start, .len = (int)str.length()});
-    str_start += str.length();
-  }
-
-  eds_spans->push_back(spans);
-}
-
-std::vector<std::vector<spread>> compute_spans(EDS &eds) {
-  std::vector<std::vector<spread>> eds_spans;
-  eds_spans.reserve(eds.length);
-
-  for (degenerate_letter d_letter : eds.data) {
-    compute_letter_spans(d_letter.data, &eds_spans);
-  }
-
-  return eds_spans;
-}
-
-std::set<suffix> extract_suffixes(string_vec const& qry_d_letter_data,
-                                  int txt_letter_idx,
-                                  std::set<suffix> const& qry_suffixes
-                                  ) {
-    if (false) {
-      std::cerr << utils::indent(3)
-                << "DEBUG, [improved::intersect::extract_suffixes]"
-                << std::endl;
-    }
-
-    std::set<suffix> s;
-
-    // full strings
-    for(int idx=0; idx < qry_d_letter_data.size(); idx++) {
-      s.insert(suffix{.query_letter_idx = -1, .str_idx = idx, .start_idx = 0});
-    }
-
-    if (txt_letter_idx == 0) { return s; }
-
-    // we may have an active suffix from a predecessor
-    // active suffixes
-    for (suffix suff : qry_suffixes) {
-
-      if (false) { std::cerr << utils::indent(4) << suff << std::endl; }
-
-      bool from_epsilon = suff.start_idx == 0;
-
-      if (suff.query_letter_idx == txt_letter_idx - 1 && !from_epsilon) { s.insert(suff); }
-    }
-
-    return s;
-}
-
-void match(matrix *txt_matrix, //
-           matrix *qry_matrix, //
-           EDS &query_eds, //
-           std::pair<STvertex, std::string> suffix_tree, //
-           std::vector<spread> &txt_spans, //
-           int txt_letter_idx, //
-           core::ed_string in, //
-           int qry_letter_idx, //
-           std::set<suffix> *txt_active_suffixes, //
-           std::set<suffix> *qry_active_suffixes, //
-           std::set<cell> *txt_reachable_epsilons,
-           std::set<cell> *qry_reachable_epsilons
-           ) {
-  if (false) {
-    std::cerr << utils::indent(2)
-              << "txt: " << (in == core::ed_string::q ? "Q" : "W")
-              << std::endl;
-  }
-  string_vec const& qry_d_letter_data = query_eds.data[qry_letter_idx].data;
-
-  std::set<suffix> suffixes = extract_suffixes(qry_d_letter_data,
-                                               txt_letter_idx,
-                                               *qry_active_suffixes);
-
-  if (false) {
-    std::cerr << utils::indent(2)
-              << "num suffixes " << suffixes.size()
-              << std::endl;
-  }
-
-  for (suffix suff : suffixes) {
-    if (false) {
-      std::cerr << utils::indent(3)
-                << "{ qry ltr: " << suff.query_letter_idx
-                << " str idx: " << suff.str_idx
-                << " start idx: " << suff.start_idx
-                << " }" << std::endl;
-    }
-  }
-
-  for (suffix suff : suffixes) {
-    if (false) {
-      std::cerr << utils::indent(2)
-                << "suff: str idx: " << suff.str_idx
-                << " start idx: " << suff.start_idx
-                << std::endl;
-    }
-    std::string qry_str = qry_d_letter_data[suff.str_idx].substr(suff.start_idx);
-
-
-    vector<int> match_positions = FindEndIndexes(qry_str.c_str(), &suffix_tree.first,
-                                     suffix_tree.second.c_str());
-
-    if (false) {
-      std::cerr << utils::indent(2)
-                << "query str: " << qry_str
-                << " txt str: " << suffix_tree.second.c_str()
-                << " num matches: " << match_positions.size()
-                << std::endl;
-    }
-
-    // if the string does not match anywhere
-    if (match_positions.empty()) { continue; }
-
-    int qlen = qry_str.length();
-
-    for (int match_position : match_positions) {
-      if (false) {
-        std::cerr << utils::indent(2)
-                  << "Checking match pos: " << match_position
-                  << std::endl;
-      }
-
-      match_info m_info = compute_match_info(txt_spans, txt_letter_idx,
-                                             qry_letter_idx,
-                                             match_position, qlen, suff,
-                                             *txt_active_suffixes,
-                                             *txt_matrix, *qry_matrix, in,
-                                             txt_reachable_epsilons,
-                                             qry_reachable_epsilons
-                                             );
-
-      if (false) {
-        std::cerr << utils::indent(2)
-                  << "match info {"
-                  << " match str idx: " << m_info.str_idx
-                  << ", match start idx: " << m_info.start_idx
-                  << " }"
-                  << std::endl;
-      }
-
-      if (m_info.start_idx < 0) { continue; }
-      int tlen = txt_spans[m_info.str_idx].len;
-
-      // if greater then we have a problem in compute_match_info
-      if ((m_info.start_idx + qlen) > tlen) {
-        std::cerr << "INFO, [improved::match] Error in match" << std::endl;
-        exit(1);
-      }
-
-      bool reaches_end = (m_info.start_idx + qlen) == tlen;
-
-      bool matches_entirely = m_info.start_idx == 0 && tlen == qlen;
-      bool qry_is_prefix = m_info.start_idx == 0 && !reaches_end;
-      bool qry_is_substr = m_info.start_idx > 0 && !reaches_end;
-      bool qry_is_suffix = m_info.start_idx > 0 && reaches_end;
-
-      if (false) {
-        std::cerr << utils::indent(2)
-                  << "Found: "
-                  << std::endl
-                  << utils::indent(3)
-                  << "qry str idx: " << suff.str_idx
-                  << " matches entirely: " << matches_entirely
-                  << " qry is substr: " << qry_is_substr
-                  << " suffix: " << qry_is_suffix
-                  << " prefix: " << qry_is_prefix
-                  << std::endl;
-      }
-
-      if (matches_entirely || qry_is_suffix) {
-        if (in == core::ed_string::q) {
-          (*qry_matrix)[txt_letter_idx][qry_letter_idx] = true;
-          (*txt_matrix)[txt_letter_idx][qry_letter_idx] = true;
-        } else {
-          (*qry_matrix)[qry_letter_idx][txt_letter_idx] = true;
-          (*txt_matrix)[qry_letter_idx][txt_letter_idx] = true;
-        }
-        continue;
-      }
-
-      // qry must be a prefix of the text or a substring of the text
-      // -----------------
-
-      // save matches
-      if (in == core::ed_string::q) {
-        // save W match
-        (*qry_matrix)[txt_letter_idx][qry_letter_idx] = true;
-      } else {
-        // save Q match
-        (*qry_matrix)[qry_letter_idx][txt_letter_idx] = true;
-      }
-
-      // create active suffix
-      suffix s = suffix{.query_letter_idx = qry_letter_idx,
-                        .str_idx = m_info.str_idx,
-                        .start_idx = m_info.start_idx + qlen
-      };
-
-      txt_active_suffixes->insert(s);
-
-      if (false) {
-        std::cerr << utils::indent(2)
-                  << "Created active suffix: " << s << std::endl;
-      }
-    }
-  }
-}
-
-void gen_suffix_tree(EDS const& eds, //
-                     size_t len, //
-                     std::vector<std::pair<STvertex, std::string>> *w_suffix_trees //
-                     ) {
+void gen_suffix_tree(
+    EDS const &eds,                                               //
+    size_t len,                                                   //
+    std::vector<std::pair<STvertex, std::string>> *w_suffix_trees //
+) {
   size_t i = 0;
   while (i < len) {
     std::vector<std::string> i_letter = eds.data[i].data;
@@ -544,6 +42,220 @@ void gen_suffix_tree(EDS const& eds, //
     ++(i);
   }
 };
+
+match_data is_match_in_txt(int match_position, int qlen, std::vector<slicex> const *text_offsets) {
+  if (false) {
+    std::cerr << utils::indent(3)
+              << "DEBUG, [improved::intersect::is_match_in_txt]"
+              << std::endl;
+  }
+
+  for (size_t i = 0; i < text_offsets->size(); i++) {
+    slicex sl = text_offsets->at(i);
+
+    // how well does this work for eps
+    // TODO: qlen is not needed 
+    if (match_position + qlen <= sl.start + sl.length) {
+      return match_data{
+          .text_str_idx = (int)i,
+          .text_start_idx = (match_position - (int)sl.start),
+          .query_str_idx = -1,
+          .query_start_idx = -1,
+          .length = qlen,
+
+      };
+    }
+  }
+
+  return INVALID_MATCH;
+}
+
+std::vector<match_data> match(std::vector<suffix> const *suffixes,
+                              std::vector<std::string> const *queries,
+                              std::pair<STvertex, std::string> *text,
+                              std::vector<slicex> const *text_offsets) {
+  if (false) {
+    std::cerr << utils::indent(3)
+              << "DEBUG, [improved::intersect::match]"
+              << std::endl;
+  }
+
+  std::vector<int> match_positions;
+  std::vector<match_data> matches_found;
+
+  for (auto suff = suffixes->begin(); suff != suffixes->end(); suff++) {
+    //std::string query_str = queries->at(suff->str_idx);
+    std::string query_str = queries->at(suff->str_idx).substr(suff->start_idx);
+
+    // std::cerr << "query " << query_str << " text " << text->second.c_str() << std::endl ;
+    match_positions = FindEndIndexes(query_str.c_str(), &text->first, text->second.c_str());
+
+    // std::cerr << match_positions.size() << std::endl;
+
+    if (match_positions.empty()) { continue; }
+
+    for (int match_pos : match_positions) {
+
+      // std::cerr << match_pos;
+
+      match_data m = is_match_in_txt(match_pos, query_str.length(), text_offsets);
+
+      // std::cerr << m << std::endl;
+
+      if (m == INVALID_MATCH) { continue; }
+
+      m.query_str_idx = suff->str_idx;
+      m.query_start_idx = suff->start_idx;
+      m.length = query_str.length();
+
+      matches_found.push_back(m);
+    }
+
+    match_positions.clear();
+  }
+
+  return matches_found;
+
+}
+
+bool is_prev_letter_matched(int text_letter_idx,
+                         int query_letter_idx,
+                         match_data const match_found,
+                         EDS const *query_eds,
+                         EDS const *text_eds,
+                         matrix *query_matrix,
+                         matrix *text_matrix) {
+
+  if (text_letter_idx == 0 && query_letter_idx == 0) { return true; }
+
+  if (text_letter_idx == 1 && query_letter_idx == 0 && text_eds->data[0].has_epsilon) {
+    return true;
+  }
+
+  if (query_letter_idx == 1 && text_letter_idx == 0 && query_eds->data[0].has_epsilon) {
+    return true;
+  }
+
+  // loop over ...
+  auto foo = [](int row_idx, std::vector<span> const *spans, matrix *m) {
+    for (auto s = spans->begin(); s != spans->end(); s++) {
+      if ((*m)[row_idx][s->stop]) { return true; }
+    }
+    return false;
+  };
+
+  if (text_letter_idx == 0) { // implied is query_letter_idx > 0
+    bool has_eps = query_eds->data[query_letter_idx - 1].has_epsilon;
+    bool eps_idx = query_eds->str_offsets[query_letter_idx - 1].back().stop;
+    return has_eps && (*query_matrix)[0][eps_idx];
+
+    // return foo(0, &query_eds->str_offsets[query_letter_idx - 1], query_matrix);
+  }
+
+  if (query_letter_idx == 0) { // implied is text_letter_idx > 0
+    bool has_eps = text_eds->data[text_letter_idx-1].has_epsilon;
+    bool eps_idx = text_eds->str_offsets[text_letter_idx - 1].back().stop;
+    return has_eps && (*text_matrix)[0][eps_idx];
+    // return foo(0, &text_eds->str_offsets[text_letter_idx - 1], text_matrix);
+  }
+
+  bool text_reachable, query_reachable = false;
+
+  text_reachable = foo(query_letter_idx - 1, &text_eds->str_offsets[text_letter_idx - 1], text_matrix);
+  query_reachable = foo(text_letter_idx - 1, &query_eds->str_offsets[query_letter_idx - 1], query_matrix);
+
+  if (false) {
+  std::cerr << "t idx " << text_letter_idx << " q idx " << query_letter_idx
+            << " t: " << text_reachable << " q: " << query_reachable
+            << std::endl;
+  }
+  return text_reachable && query_reachable;
+}
+
+bool is_prev_char_matched(int text_letter_idx, int query_letter_idx,
+                          EDS const *text_eds, match_data const match_found,
+                          matrix *text_matrix) {
+  if (query_letter_idx > 0) {
+    // TODO: do we want an extra check that the match is not in a str start?
+    int col = text_eds->str_offsets[text_letter_idx][match_found.text_str_idx].start;
+    col = (match_found.text_start_idx + col) - 1;
+
+    return (*text_matrix)[query_letter_idx-1][col];
+  }
+
+  return false;
+}
+
+void update_matrices(int text_letter_idx,
+                     int query_letter_idx,
+                     std::vector<match_data> const *matches_found,
+                     matrix *query_matrix,
+                     matrix *text_matrix,
+                     EDS const *query_eds,
+                     EDS const *text_eds) {
+  if (false) {
+    std::cerr << utils::indent(3)
+              << "DEBUG, [improved::intersect::update_matrices]"
+              << std::endl;
+  }
+
+  int col;
+
+  for (auto match_found = matches_found->begin(); match_found != matches_found->end(); match_found++) {
+    if (false) {
+    std::cerr << "txt ltr idx " << text_letter_idx << " qrt ltr idx " << query_letter_idx
+              << std::endl << *match_found << std::endl;
+    }
+
+    // qry is exp text is exp
+    if (match_found->is_exp_exp()) {
+      if (is_prev_letter_matched(text_letter_idx, query_letter_idx, *match_found, query_eds, text_eds, query_matrix, text_matrix)) {
+        // std::cerr << "matching" << std::endl;
+        // update query matrix
+        col = query_eds->str_offsets[query_letter_idx][match_found->query_str_idx].stop;
+        (*query_matrix)[text_letter_idx][col] = true;
+        // std::cerr << "query_matrix (" << text_letter_idx << ", " << col << ")" << std::endl;
+
+            // update text matrix
+            col =
+            text_eds->str_offsets[text_letter_idx][match_found->text_str_idx]
+                .start +
+            match_found->length - 1;
+        (*text_matrix)[query_letter_idx][col] = true;
+
+        if (false) {
+          std::cerr << "text_matrix (" << query_letter_idx << ", " << col << ")"
+                    << std::endl;
+        }
+      }
+    }
+
+    // qry is imp text is exp
+    if (match_found->is_imp_exp()) {
+      // TODO: comfirm that exp is extendable
+      // update query matrix
+      col = query_eds->str_offsets[query_letter_idx][match_found->query_str_idx].stop;
+      (*query_matrix)[text_letter_idx][col] = true;
+
+      // update text matrix
+      col = text_eds->str_offsets[text_letter_idx][match_found->text_str_idx].start + match_found->length - 1;
+      (*text_matrix)[query_letter_idx][col] = true;
+    }
+
+    // qry is exp text is imp
+    if (match_found->is_exp_imp()) {
+      if (is_prev_char_matched(text_letter_idx, query_letter_idx, text_eds, *match_found, text_matrix)) {
+        // update query matrix
+        col = query_eds->str_offsets[query_letter_idx][match_found->query_str_idx].stop;
+        (*query_matrix)[text_letter_idx][col] = true;
+
+        // update text matrix
+        col = text_eds->str_offsets[text_letter_idx][match_found->text_str_idx].start + match_found->text_start_idx + match_found->length - 1;
+        (*text_matrix)[query_letter_idx][col] = true;
+      }
+    }
+  }
+}
 
 /*
 
@@ -567,14 +279,16 @@ Is there an intersection between ED strings W and Q?
 bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
   if (parameters.verbosity > 1) { std::cerr << "DEBUG, [improved::intersect]" << std::endl; }
 
-  // size_t size_w = eds_w.size;
-  // size_t size_q = eds_q.size;
+  size_t size_w = eds_w.size;
+  size_t size_q = eds_q.size;
 
   int len_w = eds_w.length;
   int len_q = eds_q.length;
 
-  matrix w_matrix = utils::gen_matrix(len_q, len_w);
-  matrix q_matrix = utils::gen_matrix(len_q, len_w);
+  matrix w_matrix = utils::gen_matrix(len_q, size_w + eds_w.epsilons);
+  matrix q_matrix = utils::gen_matrix(len_w, size_q + eds_q.epsilons);
+
+  //std::cerr << "N1: " << size_w << " N2: " << size_q << std::endl;
 
   /*
     Generate suffix trees
@@ -610,164 +324,164 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
       << timeRefRead.count() << " sec" << std::endl;
   }
 
-
   /*
     Find the intersection
     ---------------------
   */
 
-  std::vector<std::set<suffix>> w_active_suffixes(len_w, std::set<suffix>());
-  std::vector<std::set<suffix>> q_active_suffixes(len_q, std::set<suffix>());
+  std::vector<int> match_positions;
+  // TODO: move this upwards
+  std::vector<match_data> matches_found; // how many could these be?
+  std::vector<suffix> w_suffixes, q_suffixes;
+  std::vector<span> const *letter_spans;
 
-  std::vector<std::vector<spread>> w_spans = compute_spans(eds_w);
-  std::vector<std::vector<spread>> q_spans = compute_spans(eds_q);
+  auto get_str_idx = [](int col, std::vector<span> const *spans) -> int {
+    for (int str_idx = 0; str_idx < spans->size(); str_idx++) {
+      if (col < spans->at(str_idx).stop) {
+        return str_idx;
+      }
+    }
+    return -1; // error
+  };
 
-  bool diagonal, above, left;
-  std::set<cell> q_reachable_epsilons, w_reachable_epsilons;
+  auto get_active_suffixes = [&letter_spans, &get_str_idx](EDS const *query_eds,
+                                                           int query_letter_idx,
+                                                           int text_letter_idx,
+                                                           matrix const *query_matrix,
+                                                           std::vector<suffix> *active_suffixes) {
+    letter_spans = &query_eds->str_offsets[query_letter_idx];
+    for (int col = letter_spans->front().start; col <= letter_spans->back().stop; col++) {
+      if (query_eds->stops.count(col) == 0 && (*query_matrix)[text_letter_idx - 1][col]) {
+        // TODO: remove needless assignments
+        int str_idx = get_str_idx(col, letter_spans);
+        int start_idx = (col - letter_spans->at(str_idx).start) + 1;
+        suffix suff =
+            suffix{
+                .query_letter_idx = query_letter_idx,
+                .str_idx = str_idx,
+                .start_idx = start_idx,
+        };
+
+        // std::cerr << suff << std::endl;
+
+        active_suffixes->push_back(suff);
+      }
+    }
+  };
+
+  auto get_full_strings = [](int query_letter_idx,
+                             int str_count,
+                             std::vector<suffix> *active_suffixes) {
+    for (int str_idx = 0; str_idx < str_count; str_idx++) {
+      active_suffixes->push_back(suffix{
+          .query_letter_idx = query_letter_idx,
+          .str_idx = str_idx,
+          .start_idx = 0,
+      });
+    }
+  };
 
   for (int i = 0; i < len_w; i++) {
     for (int j = 0; j < len_q; j++) {
 
       if (false) {
-        std::cerr << std::endl << utils::indent(1)
-                  << "letter i: " << i << " j: " << j
+        std::cerr << "-------------------------------"
                   << std::endl
-                  << utils::indent(1) << "---------------------"
+                  << "(" << i << ", " << j << ")"
                   << std::endl;
       }
 
-      // Handle epsilon
-      // --------------
+      // Handle ε
+      if (i == 0 && j == 0 && eds_w.data[i].has_epsilon && eds_q.data[j].has_epsilon) {
+        w_matrix[0][eds_w.str_offsets[0].back().stop] = true;
+        q_matrix[0][eds_q.str_offsets[0].back().stop] = true;
+      }
+
       if (eds_w.data[i].has_epsilon) {
-        handle_epsilon(&w_matrix, &q_matrix, j, i, core::ed_string::w,
-                       &q_active_suffixes, eds_q.data[j].data.size(),
-                       &w_reachable_epsilons, &q_reachable_epsilons
-                       );
+        // W[i] is reachable
+
+        // copy right
+        if (i > 0) {
+          for (span s : eds_w.str_offsets[i - 1]) {
+            if (w_matrix[j][s.stop]) {
+              int eps_col = eds_w.str_offsets[i].back().stop;
+              w_matrix[j][eps_col] = true;
+              break;
+            }
+          }
+        }
+        // copy down
+        if (i > 0) {
+          for (int col = eds_q.str_offsets[j].front().start; col <= eds_q.str_offsets[j].back().stop; col++) {
+            if (q_matrix[i - 1][col]) { q_matrix[i][col] = true; }
+          }
+        }
       }
+
       if (eds_q.data[j].has_epsilon) {
-        handle_epsilon(&w_matrix, &q_matrix, i, j, core::ed_string::q,
-                       &w_active_suffixes, eds_w.data[i].data.size(),
-                       &w_reachable_epsilons, &q_reachable_epsilons
-                       );
-      }
-
-      // Confirm reachability
-      // --------------------
-
-      auto reached = [&](int row, int col) -> bool {
-
-        bool i_reachable = (w_matrix[row][col] || w_reachable_epsilons.count(cell{.j = row, .i = col}));
-        bool j_reachable = (q_matrix[row][col] || q_reachable_epsilons.count(cell{.j = row, .i = col}));
-
-        if (false) {
-          std::cerr << utils::indent(2)
-                    << "row: " << row
-                    << " col: " << col
-                    << " reachable i: " << i_reachable
-                    << " j: " << j_reachable
-                    << std::endl;
-        }
-
-        if (i_reachable && j_reachable) {
-          return true;
-        }
-
-        if (i_reachable && !j_reachable) {
-          for (auto suff : q_active_suffixes[row]) {
-            if (suff.query_letter_idx == col) { return true; }
+        // copy right
+        if (j > 0) {
+          for(span s: eds_q.str_offsets[j-1]) {
+            if (q_matrix[i][s.stop]) {
+              int eps_col = eds_q.str_offsets[j].back().stop;
+              q_matrix[i][eps_col] = true;
+              break;
+            }
           }
         }
 
-        if (!i_reachable && j_reachable) {
-          for (auto suff : w_active_suffixes[col]) {
-            if (suff.query_letter_idx == row) { return true; }
+        if (j > 0) {
+          // copy down
+          for (int col = eds_w.str_offsets[i].front().start; col <= eds_w.str_offsets[i].back().stop; col++) {
+            if (w_matrix[j - 1][col]) { w_matrix[j][col] = true; }
           }
         }
-
-        return false;
-      };
-
-      // check if [j][i] is reachable, if not skip this loop iteration
-      if (j>0 && i>0) {
-        diagonal = reached(j-1, i-1);
-      } else {
-        diagonal = false;
       }
 
-      if (j>0) {
-        above = reached(j-1, i);
-      } else {
-        above = false;
-      }
+      // Handle active prefixes / all queries
+      // get W active suffixes
+      if (j > 0) { get_active_suffixes(&eds_w, i, j, &w_matrix, &w_suffixes); }
 
-      if (i > 0) {
-        left = reached(j, i-1);
-      } else {
-        left = false;
-      }
+      // get Q active suffixes
+      if (i > 0) { get_active_suffixes(&eds_q, j, i, &q_matrix, &q_suffixes); }
 
-      if (j == 0 && i == 0) { left = above = diagonal = true; }
+      // search for j_strs in i
+      get_full_strings(j, eds_q.data[j].data.size(), &q_suffixes);
+      matches_found = match(&q_suffixes, &eds_q.data[j].data, &w_suffix_trees[i], &eds_w.str_slices[i]);
+      update_matrices(i, j, &matches_found, &q_matrix, &w_matrix, &eds_q, &eds_w);
 
-      if (false) {
-        std::cerr << utils::indent(1)
-                  << "diagonal: " << diagonal
-                  << " above: " << above
-                  << " left: " << left
-                  << std::endl;
-      }
+      // search for i_strs in j
+      get_full_strings(i, eds_w.data[i].data.size(), &w_suffixes);
+      matches_found = match(&w_suffixes, &eds_w.data[i].data, &q_suffix_trees[j], &eds_q.str_slices[j]);
+      update_matrices(j, i, &matches_found, &w_matrix, &q_matrix, &eds_w, &eds_q);
 
-      if (!diagonal && !above && !left) { continue; }
-
-      // Perform matching
-      // ----------------
-
-      // match W
-      match(&w_matrix, &q_matrix, eds_q, w_suffix_trees[i],
-            w_spans[i], i, core::ed_string::w, j,
-            &w_active_suffixes[i], &q_active_suffixes[j],
-            &w_reachable_epsilons, &q_reachable_epsilons);
-      // match Q
-      match(&q_matrix, &w_matrix, eds_w, q_suffix_trees[j],
-            q_spans[j], j, core::ed_string::q, i,
-            &q_active_suffixes[j], &w_active_suffixes[i],
-            &q_reachable_epsilons, &w_reachable_epsilons);
-
-      if (false) { std::cerr << std::endl << std::endl; }
-      }
+      q_suffixes.clear();
+      w_suffixes.clear();
+    }
   }
 
-  for (auto v : w_suffix_trees) {
-    // STDelete(&v.first);
+  size_t_vec q_cols = utils::compute_accepting_states(eds_q);
+  size_t_vec w_cols = utils::compute_accepting_states(eds_w);
+
+  bool accept_w, accept_q = false;
+  for (size_t col: q_cols) {
+    if (q_matrix[len_w - 1][col]) { accept_q = true; break; }
   }
 
-  for (auto v : q_suffix_trees) {
-    // STDelete(&v.first);
+  for (size_t col : w_cols) {
+    if (w_matrix[len_q - 1][col]) { accept_w = true; break; }
   }
 
   if (false) {
-    printf(" Improved \n");
-    std::cerr << std::endl << std::endl;
-    printf("-------------W----------\n");
+    printf("w_matrix \n");
     utils::print_matrix(w_matrix);
-    printf("-------------Q----------\n");
+    printf("\nq_matrix\n");
     utils::print_matrix(q_matrix);
-    printf("\n\n");
   }
 
-  if (false) {
-    std::cout << "-------------W----------" << std::endl;
-    utils::print_edt_range(eds_w, 0, 24);
-    std::cout << std::endl << "-------------Q----------" << std::endl;
-    utils::print_edt_range(eds_q, 0, 24);
-    std::cout << std::endl;
-  }
-
-  bool eps_end = q_reachable_epsilons.count(cell{.j = len_q-1, .i = len_w-1}) &&
-    w_reachable_epsilons.count(cell{.j = len_q-1, .i = len_w-1});
-  bool str_end = w_matrix[len_q - 1][len_w - 1] && q_matrix[len_q - 1][len_w - 1];
-
-  return str_end || eps_end;
+  return accept_q && accept_w;
 }
+
 }
 
 namespace naive {

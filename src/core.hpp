@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iterator>
 #include <set>
+#include <stdexcept>
 #include <stdlib.h>
 #include <string>
 #include <unordered_set>
@@ -27,6 +28,7 @@
 #include <sstream>
 #include <stack>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -75,6 +77,7 @@ typedef std::chrono::high_resolution_clock Time;
 
 const uint8_t DEBUG_LEVEL = 0; // TODO: replace with verbosity in params
 
+
 typedef std::vector<std::vector<bool>> matrix; // TODO: remove
 typedef std::vector<std::vector<bool>> boolean_matrix;
 typedef std::vector<std::vector<int>> int_matrix;
@@ -93,12 +96,19 @@ struct span {
   size_t stop;
 };
 
+struct slicex {
+  size_t start;
+  size_t length;
+};
+
 struct EDS {
   std::vector<degenerate_letter> data;
   std::vector<std::vector<span>> str_offsets;
+  std::vector<std::vector<slicex>> str_slices;
   std::unordered_set<size_t> stops;
   std::unordered_set<size_t> starts;
   size_t size;
+  size_t epsilons; // number of epsilons
   size_t m; // number of strings
   size_t length;
 };
@@ -108,7 +118,6 @@ struct LinearizedEDS {
   std::vector<std::vector<int>> prev_chars;
 };
 
-
 struct cell {
   int j;
   int i;
@@ -116,7 +125,9 @@ struct cell {
 
 bool operator<(const cell &lhs, const cell &rhs);
 
-std::ostream &operator<<(std::ostream &os, const cell &value);
+bool operator==(const cell &lhs, const cell &rhs);
+
+std::ostream & operator<<(std::ostream &os, const cell &value);
 
 struct suffix {
   int query_letter_idx;
@@ -136,19 +147,74 @@ std::ostream &operator<<(std::ostream &os, const suffix &value);
 
 bool operator<(const suffix &lhs, const suffix &rhs);
 
+bool operator==(const suffix &lhs, const suffix &rhs);
+
+class Hasher {
+public:
+  // We use predefined hash functions of strings
+  // and define our hash function as XOR of the
+  // hash values.
+  size_t operator()(const cell &c) const {
+    return (std::hash<int>()(c.i)) ^ (std::hash<int>()(c.j));
+  }
+
+  size_t operator()(const suffix &s) const {
+    return (std::hash<int>()(s.query_letter_idx)) ^
+           std::hash<int>()(s.str_idx) ^ (std::hash<int>()(s.start_idx));
+  }
+};
+
 struct spread {
   int start;
   int len;
 };
 
+
 std::ostream &operator<<(std::ostream &os, const spread &value);
+
+//
 
 struct match_info {
   int str_idx;
   int start_idx;
 };
 
+
+
+bool operator==(const match_info &lhs, const match_info &rhs);
+
+
 std::ostream &operator<<(std::ostream &os, const match_info &value);
+
+//
+
+struct match_data {
+  int text_str_idx;
+  int text_start_idx;
+
+  int query_str_idx;
+  int query_start_idx;
+
+  int length; // also the length of the match
+
+  bool is_exp_exp() const { return query_start_idx == 0 && text_start_idx == 0; }
+
+  bool is_imp_exp() const { return query_start_idx > 0 && text_start_idx == 0; }
+
+  bool is_exp_imp() const { return query_start_idx == 0 && text_start_idx > 0; }
+};
+
+const match_data INVALID_MATCH = match_data{.text_str_idx = -1,
+                                            .text_start_idx = -1,
+                                            .query_str_idx = -1,
+                                            .query_start_idx = -1,
+                                            .length = -1};
+
+
+
+bool operator==(const match_data &lhs, const match_data &rhs);
+
+std::ostream &operator<<(std::ostream &os, const match_data &value);
 
 // ----
 // CLI
