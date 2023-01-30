@@ -1,7 +1,4 @@
-
 # Human Genome Experiments
-
-
 
 The [GRCh38 dataset][1] chromosome 6 download link https://ftp.ensembl.org/pub/release-108/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz
 
