@@ -30,9 +30,10 @@ sed -n '38059999,38060999p' homo_sapiens-chr6.vcf > homo_sapiens-chr6.lpa.subset
 
 Build the ed string with [aedso](https://github.com/urbanslug/aedso)
 ```
-aedso chr6.lpa.fa homo_sapiens-chr6.lpa.subset.vcf > x.eds
-aedso chr6.lpa.fa homo_sapiens_clinically_associated_chr6.vcf > y.eds
+aedso -s 160531482 -e 160664275 chr6.lpa.fa homo_sapiens-chr6.lpa.subset.vcf > x.eds
+aedso -s 160531482 -e 160664275 chr6.lpa.fa homo_sapiens_clinically_associated_chr6.vcf > y.eds
 ```
+
 and comapre using junctions 
 ```
 junctions -v=1 -a=2 -w x.eds -q y.eds
@@ -54,12 +55,12 @@ bedtools getfasta -fi Homo_sapiens.GRCh38.dna.chromosome.6.fa -bed hla.bed -fo c
 
 Subset the generic VCF
 ```
-sed -n '31180079,7472483p' homo_sapiens-chr6.vcf > homo_sapiens-chr6.hla.subset.vcf
+sed -n '7465083,7472483p' homo_sapiens-chr6.vcf > homo_sapiens-chr6.hla.subset.vcf
 ```
 
 ```
-aedso chr6.hla.fa homo_sapiens-chr6.hla.subset.vcf > j.eds
-aedso chr6.hla.fa homo_sapiens_clinically_associated.vcf > k.eds
+aedso -s 31353872 -e 31367067 chr6.hla.fa homo_sapiens-chr6.hla.subset.vcf > j.eds
+aedso -s 31353872 -e 31367067 chr6.hla.fa homo_sapiens_clinically_associated.vcf > k.eds
 ```
 
 ```
