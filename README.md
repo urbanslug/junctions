@@ -23,10 +23,10 @@ Available options
     Print this help page
 
 -w <value>
-    a file containing an msa (in RC-MSA format) or ED-String in .eds format
+    a file containing an ED-String in .eds format
 
 -q <value>
-    a file containing an msa (in RC-MSA format) or ED-String in .eds format
+    a file containing an ED-String in .eds format
 
 -a, --algorithm
     algorithm to use:

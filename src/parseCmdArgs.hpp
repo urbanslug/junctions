@@ -28,7 +28,7 @@ core::file_format extract_extension(std::string file_path) {
   if (f == core::unknown) {
     std::cerr << "ERROR,Could not determine the format of "
               << file_path
-              << "\nThis input should be an eds file or an MSA in..format "
+              << "\nThis input should be an ED-string file in .eds format"
               << std::endl;
     exit(1);
   }
@@ -52,11 +52,11 @@ $ ./build/junctions -a=2 -w data/x.eds -q data/y.eds");
 
     cmd.defineOption(
                      "w",
-                     "a file containing an msa (in RC-MSA format) or ED-String (in .eds format)",
+                     "a file containing an ED-String (in .eds format)",
                      ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("q",
-                     "a file containing an msa (in RC-MSA format) or ED-String "
+                     "a file containing an ED-String "
                      "(in .eds format)",
                      ArgvParser::OptionRequiresValue);
 
