@@ -1,3 +1,6 @@
+#ifndef PARSER_H
+#define PARSER_H
+
 #include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
@@ -12,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "./utils.cpp"
+#include "./utils.hpp"
 
 namespace parser {
 // ----
@@ -70,7 +73,8 @@ std::vector<std::string> read_msa(std::string &file_path) {
 
 EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   if (parameters.verbosity > 1) {
-    std::cerr << "INFO, [parser::parse_ed_string]" << std::endl;
+    std::cerr << utils::indent(1) << "[parser::parse_ed_string]"
+              << std::endl;
   }
 
   std::vector<std::string> degenerate_letter_data;
@@ -182,7 +186,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   // TODO: not counting epsilons in size breaks linearize
   // size = str_offsets.back().back().stop + 1;
 
-  std::cerr << "eps count: " << eps_count << std::endl;
+  // std::cerr << "eps count: " << eps_count << std::endl;
 
   EDS e;
   e.data = ed_string_data;
@@ -455,3 +459,5 @@ std::string msa_to_eds(string_vec &msa) {
   return ed_string;
 }
 }
+
+#endif

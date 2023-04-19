@@ -1,5 +1,6 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef CORE_HPP
+#define CORE_HPP
+
 
 #include <bits/stdc++.h>
 #include <cstddef>
@@ -10,6 +11,7 @@
 #include <stdexcept>
 #include <stdlib.h>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -32,7 +34,124 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+
+
 using namespace std;
+/*
+ * Own
+ */
+
+namespace junctions {
+
+std::string indent(int level);
+
+/**
+ *
+ * is a match explicit or implicit
+ */
+enum match_type { exp, imp };
+
+  // typedef std::pair<match_pe, match_type> vertex_type;
+
+struct graph_slice {
+  int txt_start;
+  int qry_start;
+
+  std::pair<match_type, match_type> q_m;
+  std::pair<match_type, match_type> t_m;
+
+  int len;
+  std::string str;
+
+  void dbg_print(int indent_level = 0) {
+    std::cerr << indent(indent_level) << "Graph slice {" << std::endl
+              << indent(indent_level + 1) << "txt start " << this->txt_start << std::endl
+              << indent(indent_level + 1) << "qry start " << this->qry_start << std::endl
+              << indent(indent_level + 1) << "len " << this->len << std::endl
+              << indent(indent_level + 1) << "str " << this->str << std::endl
+              << indent(indent_level) << "}" << std::endl;
+  }
+};
+
+std::ostream &operator<<(std::ostream &os, const junctions::graph_slice &s);
+
+// or match positon?
+struct match_locus {
+  int string_index; // rename to str_index
+  int char_index; // is this always zero?
+
+  // candidate active suffix match
+  bool candidate_asm() {
+    return !(this->char_index == 0);
+  }
+};
+
+typedef match_locus locus;
+
+struct query_result {
+  bool beyond_text; // there was a match but the query was longer than the text
+  int match_length;
+  std::vector<match_locus> results;
+
+  query_result() {
+    this->results = std::vector<match_locus>{};
+    this->match_length = -1;
+    this->beyond_text=false;
+  }
+
+  bool is_valid() { return this->match_length > 0 && !this->results.empty(); }
+
+  bool is_hit() { return this->match_length > 0 && !this->results.empty(); }
+
+  bool is_miss() { return !this->is_hit(); }
+};
+
+
+std::ostream &operator<<(std::ostream &os, const junctions::query_result &r);
+
+struct match {
+  int query_str_index;
+  // int query_char_index; // is this always zero? is always zero so... we should remove
+
+  int text_str_index;
+  int text_char_index;
+
+  int match_length;
+  bool beyond_txt;
+
+  std::string str;
+  //std::string t_str;
+
+  // bool is_active_suffix_match;
+
+  // std::slice text_match;
+  // std::slice query_match;
+
+  // match constructor
+
+
+  match null_match() {
+    return {
+        .query_str_index = -1,
+        .text_str_index = -1,
+        .text_char_index = -1,
+        .match_length = -1,
+        .beyond_txt = false,
+        .str = "",
+    };
+    
+  }
+};
+
+} // namespace junctions
+
+
+// TODO: replace with std::slice
+struct slicex {
+  size_t start;
+  size_t length;
+};
 
 /*
   Suffix tree
@@ -68,6 +187,37 @@ int chg(char ch);
 
 int los(int m);
 
+/* Budowa drzewa sufiksowego algorytmem Ukkonena
+ * (z przykladem wyszukiwania w nim slow)
+ * Zlozonosc: O(n).
+ */
+
+struct STedge;
+struct STvertex {
+  map<char, STedge> g; /* edges to children */
+  STvertex *f;         /* suffix link */
+  // suffix number
+  // (0 is an inch word, -1 means that the vertex is not a leaf)
+  /* numer sufiksu (0 to cale slowo, -1 oznacza ze wierzcholek
+   * nie jest lisciem) */
+  int numer;
+  int string_id;
+};
+
+struct STedge {
+  int l, r; /* x[l]..x[r] is a piece of text that represents an edge */
+  STvertex *v;
+};
+
+
+
+STvertex *Create_suffix_tree(const char *x, int n);
+vector<int> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x);
+junctions::query_result FindEndIndexesTwo(const char *query, STvertex *current_vertex, const char *x);
+void update_leaves(STvertex *current_vertex, std::vector<slicex> const *text_offsets);
+
+// TODO: move graph stuff here
+
 // ---
 // own
 // ----
@@ -96,15 +246,10 @@ struct span {
   size_t stop;
 };
 
-struct slicex {
-  size_t start;
-  size_t length;
-};
-
 struct EDS {
   std::vector<degenerate_letter> data;
   std::vector<std::vector<span>> str_offsets;
-  std::vector<std::vector<slicex>> str_slices;
+  std::vector<std::vector<slicex>> str_slices; 
   std::unordered_set<size_t> stops;
   std::unordered_set<size_t> starts;
   size_t size;
@@ -197,6 +342,18 @@ struct match_data {
 
   int length; // also the length of the match
 
+  /*
+  match_data() {
+    this->text_str_idx = -1;
+    this->text_start_idx = -1;
+    this->query_str_idx = -1;
+    this->query_start_idx = -1;
+    this->length = -1;
+  }
+
+  match_data(int  ){}
+*/
+
   bool is_exp_exp() const { return query_start_idx == 0 && text_start_idx == 0; }
 
   bool is_imp_exp() const { return query_start_idx > 0 && text_start_idx == 0; }
@@ -233,6 +390,10 @@ std::ostream &operator<<(std::ostream &os, const core::ed_string &value);
 
 enum algorithm { naive, improved, both };
 
+enum witness {shortest, longest};
+
+enum arg {check_intersection, compute_graph};
+
 /**
  * @brief   parameters for cli args
  */
@@ -243,8 +404,19 @@ struct Parameters {
   file_format w_format;
   std::string q_file_path; // query sequence(s)
   file_format q_format;
+  //
+  arg task;
+  
+  bool output_dot;
+  bool size_of_multiset;
+  // witness
+  bool compute_witness;
+  witness witness_choice;
+  // matching stats
+  bool compute_match_stats;
+  int match_stats_str;
+  int match_stats_letter_idx;
 };
 }
-
 
 #endif

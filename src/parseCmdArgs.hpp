@@ -5,6 +5,7 @@
  */
 
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -13,6 +14,7 @@
 #include "./core.hpp"
 
 namespace cli {
+  // TODO: move this
 core::file_format extract_extension(std::string file_path) {
   auto const pos = file_path.find_last_of('.');
   core::file_format f;
@@ -42,34 +44,59 @@ core::file_format extract_extension(std::string file_path) {
    */
   void initCmdParser(CommandLineProcessing::ArgvParser &cmd)
   {
-    cmd.setIntroductoryDescription("-----------------\n\
+  cmd.setIntroductoryDescription("-----------------\n\
 Compute the intersection of Elastic Degenerate Strings\n\
-\n\
+\
+Provide at at least -i to check whether and intersection exists,\n\
+or -g to compute the intersection graph\n\n\n\
+\
 Example usage: \n\
-$ ./build/junctions -a=2 -w data/x.eds -q data/y.eds");
+check whether the intersection exists\n\
+$ ./build/junctions -i -a=2 data/x.eds data/y.eds\n\
+compute the intersection graph\n\
+$ ./build/junctions -g -d data/x.eds data/y.eds");
 
-    cmd.setHelpOption("h", "help", "Print this help page");
+  cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption(
-                     "w",
-                     "a file containing an ED-String (in .eds format)",
-                     ArgvParser::OptionRequiresValue);
+  cmd.defineOption("intersect", "check whether the intersection is non-empty");
+  cmd.defineOptionAlternative("intersect", "i");
 
-    cmd.defineOption("q",
-                     "a file containing an ED-String "
-                     "(in .eds format)",
-                     ArgvParser::OptionRequiresValue);
-
-    cmd.defineOption("algorithm", "algorithm to use:\n\
+  cmd.defineOption("algorithm", "(used with -i) algorithm to use:\n\
 improved = 0\n\
 naive = 1\n\
 both = 2\n\
-[default: 0]");
-    cmd.defineOptionAlternative("algorithm", "a");
+[default: 0]", ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative("algorithm", "a");
 
-    cmd.defineOption("verbosity", "amount of debug information [default : 0]",
-                     ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative("verbosity", "v");
+  cmd.defineOption("graph", "compute the intersection graph");
+  cmd.defineOptionAlternative("graph", "g");
+
+  cmd.defineOption("print-dot",
+      "output the intersection graph in dot format [default: false]");
+  cmd.defineOptionAlternative("print-dot", "d");
+
+  cmd.defineOption("multiset", "compute the size of the multiset");
+  cmd.defineOptionAlternative("multiset", "m");
+
+  cmd.defineOption("witness", "compute the shortest or longest witness\n\
+shortest = short/shortest/0\n\
+longest = short/longest/1",
+                   ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative("witness", "w");
+
+  cmd.defineOption("match-stats-str", "matching stats ed string\n\
+T_1 = 1\n\
+T_2 = 2\n\
+[default: 1]",
+                   ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative("match-stats-str", "T");
+
+  cmd.defineOption("match-stats-idx", "matching stats letter index", ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative("match-stats-idx", "n");
+
+  cmd.defineOption("verbosity", "amount of debug information [default : 0]",
+                   ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative("verbosity", "v");
   }
 
   /**
@@ -101,7 +128,37 @@ both = 2\n\
               << (parameters.q_format == 0 ? "msa" : "eds")
               << ")" << std::endl;
 
-    // rest
+    switch (parameters.task) {
+    case core::arg::compute_graph:
+    std::cerr << "task: compute intersection graph." << std::endl;
+    break;
+    case core::arg::check_intersection:
+    std::cerr << "task: check intersection" << std::endl;
+    break;
+    default:
+    std::cerr << "Unhandled task: report a bug"  << std::endl;
+    }
+
+    if (parameters.output_dot) {
+      std::cerr << "Print dot" << std::endl;
+    }
+
+    if (parameters.size_of_multiset) {
+      std::cerr << "Compute the size of the multiset" << std::endl;
+    }
+
+    if (parameters.compute_witness) {
+      std::cerr << "witness choice = " << parameters.witness_choice << std::endl;
+    }
+
+    if (parameters.compute_match_stats) {
+      if (parameters.match_stats_str == 1 || parameters.match_stats_str == 2) {
+        std::cerr << "match stats: str = " << parameters.match_stats_str
+                  << " letter index = " << parameters.match_stats_letter_idx
+                  << std::endl;
+      }
+    }
+
     std::cerr << "algorithm = " << algo_string(parameters.algo) << std::endl;
 
     std::cerr << "verbosity = " << parameters.verbosity << std::endl;
@@ -123,53 +180,30 @@ both = 2\n\
       {
         std::cerr << cmd.parseErrorDescription(result) << std::endl;
         exit(1);
-      }
-    else if (!cmd.foundOption("w") )
-      {
-        std::cerr << "ERROR, align::parseandSave, Provide a w file\n\
-        This input should be an eds file or an MSA in .. format" << std::endl;
+    } else if (!cmd.foundOption("i") && !cmd.foundOption("g")) {
+        /*
+          std::cerr << "Provide at at least -i to check whether and intersection
+          " "exists,  or -g to compute the intersection graph"
+                    << std::endl;
+                    */
+
+        std::cerr << cmd.usageDescription();
         exit(1);
-      }
-    else if (!cmd.foundOption("q") )
-      {
-        std::cerr << "ERROR, align::parseandSave, Provide a w file\n\
-        This input should be an eds file or an MSA in .. format"
-                  << std::endl;
-        exit(1);
-      }
+    }
 
     std::stringstream str;
 
-    // Parse w file
-    if(cmd.foundOption("w"))
-      {
-        std::string ref;
+    /*
+     * Intersection
+     * ------------
+     */
 
-        str << cmd.optionValue("w");
-        str >> ref;
-
-        parameters.w_format = extract_extension(ref);
-
-        parameters.w_file_path = ref;
-      }
-    str.clear();
-
-    // Parse query files
-    if(cmd.foundOption("q"))
-      {
-        std::string query;
-
-        str << cmd.optionValue("q");
-        str >> query;
-
-        parameters.q_format = extract_extension(query);
-
-        parameters.q_file_path = query;
-      }
-    str.clear();
+    if (cmd.foundOption("intersect")) {
+      parameters.task = core::arg::check_intersection;
+    } 
 
     // Algorithm
-    //  -------
+    // ---------
     if (cmd.foundOption("algorithm")) {
       str << cmd.optionValue("algorithm");
 
@@ -189,14 +223,111 @@ both = 2\n\
       parameters.algo = core::improved;
     str.clear();
 
+    /*
+     * Graph
+     * -----
+     */
+
+    // Compute Graph
+    // -------------
+    if (cmd.foundOption("graph")) {
+      parameters.task = core::arg::compute_graph;
+    } 
+
+    // Matching stats
+    if (cmd.foundOption("match-stats-str")) {
+      parameters.compute_match_stats = true;
+      str << cmd.optionValue("match-stats-str");
+
+      if (str.str() == std::to_string(1)) {
+        parameters.match_stats_str = 1;
+      }
+
+      if (str.str() == std::to_string(2)) {
+        parameters.match_stats_str = 2;
+      }
+    } else
+      parameters.match_stats_str = 0;
+    str.clear();
+
+    if (cmd.foundOption("match-stats-idx")) {
+      parameters.compute_match_stats = true;
+      str << cmd.optionValue("match-stats-idx");
+
+      parameters.match_stats_letter_idx =  stoi(str.str());
+
+    }
+    str.clear();
+
+    // Witness
+    if (cmd.foundOption("witness")) {
+      str << cmd.optionValue("witness");
+      parameters.compute_witness = true;
+
+      if (str.str() == "shortest" || str.str() == "short" || str.str() == std::to_string(0)) {
+        parameters.witness_choice = core::witness::shortest;
+      }
+
+      if (str.str() == "longest" || str.str() == "long" || str.str() == std::to_string(1)) {
+        parameters.witness_choice = core::witness::shortest;
+      }
+    } else
+      parameters.compute_witness = false;
+    str.clear();
+
+    // Size of the multiset
+    if (cmd.foundOption("multiset")) {
+      parameters.size_of_multiset = true;
+    } else {
+      parameters.size_of_multiset = false;
+    }
+
+    // dot format
+    if (cmd.foundOption("print-dot")) {
+      parameters.output_dot = true;
+    } else {
+      parameters.output_dot = false;
+    }
+
+    /*
+     * Other
+     * -----
+     */
 
     // Verbosity
-    //  -------
+    // ---------
     if (cmd.foundOption("verbosity")) {
       str << cmd.optionValue("verbosity");
       str >> parameters.verbosity;
     } else
       parameters.verbosity = 0;
+
+    str.clear();
+
+    /*
+     * Args
+     * ----
+     */
+
+    // args
+    // ----
+    if (cmd.allArguments().size() != 2) {
+      std::cerr << "Provide 2 input files (args) at the end "
+                << std::endl
+                << std::endl;
+      cmd.usageDescription();
+      exit(1);
+    }
+
+    if (!cmd.allArguments().empty()){
+      std::vector<string> args = cmd.allArguments();
+
+      parameters.w_format = extract_extension(args[0]);
+      parameters.w_file_path = args[0];
+
+      parameters.q_format = extract_extension(args[1]);
+      parameters.q_file_path = args[1];
+    }
 
     if (parameters.verbosity > 0) {
       printCmdOptions(parameters);

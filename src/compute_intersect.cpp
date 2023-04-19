@@ -14,9 +14,10 @@
 #include <utility>
 #include <vector>
 
-#include "./parser.cpp"
+#include "./parser.hpp"
 #include "./suffix_tree.cpp"
 #include "core.hpp"
+#include "utils.hpp"
 
 
 namespace improved {

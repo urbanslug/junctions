@@ -13,13 +13,17 @@
 #include "./argvparser.hpp"
 #include "./compute_intersect.cpp"
 #include "./parseCmdArgs.hpp"
+#include "graph.cpp"
 #include "core.hpp"
+#include "utils.hpp"
 
+void test_string_matching();
 void test_lacks_intersect();
 void test_contains_intersect();
 void test_parse_ed_string();
 void test_handle_epsilon();
 void test_contains_intersect_active_prefixes();
+void test_compute_graph();
 void test_msa_to_eds();
 
 void print_properties(EDS &eds_w, EDS &eds_q) {
@@ -28,22 +32,23 @@ void print_properties(EDS &eds_w, EDS &eds_q) {
             << std::endl;
 }
 
-int main() {
-  test_handle_epsilon();
+int main(){
+  // test_string_matching();
+  // test_handle_epsilon();
   // test_contains_intersect();
   // test_lacks_intersect();
   // test_contains_intersect_active_prefixes();
 
+  // test_parse_ed_string();
+  test_compute_graph();
   /*
-  test_lacks_intersect();
-  test_contains_intersect();
-  test_parse_ed_string();
-  test_handle_epsilon();
-  test_msa_to_eds();
+    test_lacks_intersect();
+    test_contains_intersect();
+    test_parse_ed_string();
+    test_handle_epsilon();
+    test_msa_to_eds();
   */
 }
-
-
 
 /*
   Tests
@@ -56,10 +61,129 @@ int main() {
 
 core::Parameters init_tests() {
   core::Parameters test_params;
-  test_params.verbosity = 5;
+  test_params.verbosity = 3;
 
   return test_params;
 };
+
+void test_string_matching() {
+
+  std::string text, query;
+  junctions::query_result match_positions;
+
+  auto print_match_positions =
+    [&](junctions::query_result const &match_positions) {
+        std::cerr << "Query = " << query << std::endl
+                  << "Text = " << text << std::endl
+                  << "Matches found = " << match_positions.results.size()
+                  << std::endl;
+        std::cerr << match_positions;
+        std::cerr << std::endl; 
+
+      };
+
+  text = "ABCDAGT_";
+  std::vector<slicex> text_slices =  {slicex{.start = 0, .length = 3},
+                                     slicex{.start = 3, .length = 4}};
+
+  STvertex *root = Create_suffix_tree(text.c_str(), text.length());
+  update_leaves(root, &text_slices);
+
+  query = "AB";
+  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
+  print_match_positions(match_positions);
+  // match_positions.clear();
+
+  query = "jk";
+  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
+  print_match_positions(match_positions);
+  // match_positions.clear();
+
+  query = "A";
+  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
+  print_match_positions(match_positions);
+  // match_positions.clear();
+
+  query = "ABCDAGTA";
+  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
+  print_match_positions(match_positions);
+  // match_positions.clear();
+
+  query = "GTA";
+  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
+  print_match_positions(match_positions);
+  //match_positions.clear();
+
+  query = "GT";
+  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
+  print_match_positions(match_positions);
+}
+
+void test_compute_graph() {
+  auto params = init_tests();
+  std::string ed_string_w, ed_string_q;
+  EDS eds_w, eds_q;
+
+  // epsilons
+  ed_string_w = "{AT,TC}";
+  ed_string_q = "{,G}";
+
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // graph::compute_intersection_graph(eds_w, eds_q, params);
+  // return;
+
+  // full matches
+  ed_string_w = "{AT,TC}";
+  ed_string_q = "{TC,G}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  //graph::compute_intersection_graph(eds_w, eds_q, params);
+
+  ed_string_w = "{ACT}";
+  ed_string_q = "{A}{C}{T}";
+  // ed_string_w = "{AT}";
+  // ed_string_q = "{A}{T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // graph::compute_intersection_graph(eds_w, eds_q, params);
+  // return;
+
+  ed_string_w = "{AT,TC}{AC,T}";
+  ed_string_q = "{TC,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // graph::compute_intersection_graph(eds_w, eds_q, params);
+  // return;
+
+  // active suffixes
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "{TC,G}{CT,T}";
+  // eds_w = parser::parse_ed_string(ed_string_w, params);
+  // eds_q = parser::parse_ed_string(ed_string_q, params);
+  // graph::compute_intersection_graph(eds_w, eds_q, params);
+
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "TC{,G}{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // graph::compute_intersection_graph(eds_w, eds_q, params);
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{AT}";
+  ed_string_q = "{AT,}{GAT}";
+  //ed_string_w = "{GT,}{A,C}{T}";
+  // ed_string_q = "{AT,}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  graph::compute_intersection_graph(eds_w, eds_q, params);
+  return;
+
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "{,G}AT{CT,T}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  // graph::compute_intersection_graph(eds_w, eds_q, params);
+}
 
 void test_msa_to_eds() {
   string_vec msa;
@@ -110,9 +234,8 @@ void test_parse_ed_string() {
   eds = parser::parse_ed_string(ed_string, params);
   // print_edt(eds);
 
-  ed_string = "{AT,TC}{ATC,}";
+  ed_string = "{AT,TC}{ATC,}CTA";
   eds = parser::parse_ed_string(ed_string, params);
-  // print_edt(eds);
 
   ed_string = "ACTGAC{AT,,TC}AGG{,ATC,}CT{AT,TC}A";
   // ed_string = "ACC{AT,,TC}AGG";
@@ -305,7 +428,7 @@ void test_handle_epsilon() {
 
 
   ed_string_w = "{AT,TC}{ATC,T}";
-  ed_string_q = "{,G}AT{CT,T}";
+  ed_string_q = "{,G}AT{CT,T}"; 
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
   // run_n_print();

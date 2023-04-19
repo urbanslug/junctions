@@ -1,6 +1,7 @@
-#include "./core.hpp"
 #include <ostream>
 #include <tuple>
+
+#include "core.hpp"
 
 ll nwd(ll a, ll b) { return !b ? a : nwd(b, a % b); }
 template <class T> inline T sqr(const T &a) { return a * a; }
@@ -25,6 +26,30 @@ int toi(char ch) { return int(ch) - int('0'); }
 int chg(char ch) { return int(ch) - int('a'); }
 
 int los(int m) { return (int)((double)m * (rand() / (RAND_MAX + 1.0))); }
+
+namespace junctions {
+
+std::string indent(int level) {
+  std::string repeat;
+  for (int i = 0; i < level; i++) {
+    repeat += "\t";
+  }
+  return repeat;
+}
+
+std::ostream &operator<<(std::ostream &os, const junctions::query_result &r) {
+  os << "match length: " << r.match_length << " beyond text: " << r.beyond_text;
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const junctions::graph_slice &s) {
+  os << "Graph slice {"
+     << "\ntxt start: " << s.txt_start << "\nqry start: " << s.qry_start
+     << "\nlen: " << s.len << "\nstr: " << s.str << "\n}" << std::endl;
+  return os;
+}
+}
+
 
 // suffix
 // ------
