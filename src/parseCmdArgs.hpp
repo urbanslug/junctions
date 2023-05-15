@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <utility>
 
 #include "./argvparser.hpp"
 #include "./core.hpp"
@@ -57,6 +58,9 @@ compute the intersection graph\n\
 $ ./build/junctions -g -d data/x.eds data/y.eds");
 
   cmd.setHelpOption("h", "help", "Print this help page");
+
+  cmd.defineOption("info", "print info about the ed string and exit");
+  cmd.defineOptionAlternative("info", "e");
 
   cmd.defineOption("intersect", "check whether the intersection is non-empty");
   cmd.defineOptionAlternative("intersect", "i");
@@ -118,6 +122,16 @@ T_2 = 2\n\
     };
 
     // core params
+
+    if (parameters.task == core::arg::info ) {
+      std::cerr << "Input files: ";
+      for (auto f: parameters.input_files) {
+        std::cerr << f.second << " (format: " << (f.first == 0 ? "msa" : "eds")
+                  << ")" << std::endl;
+      }
+    
+    } else {
+
     std::cerr << "w = " << parameters.w_file_path
               << " (format: "
               << (parameters.w_format == 0 ? "msa" : "eds")
@@ -127,6 +141,7 @@ T_2 = 2\n\
               << " (format: "
               << (parameters.q_format == 0 ? "msa" : "eds")
               << ")" << std::endl;
+    }
 
     switch (parameters.task) {
     case core::arg::compute_graph:
@@ -134,6 +149,9 @@ T_2 = 2\n\
     break;
     case core::arg::check_intersection:
     std::cerr << "task: check intersection" << std::endl;
+    break;
+    case core::arg::info:
+    std::cerr << "task: print info" << std::endl;
     break;
     default:
     std::cerr << "Unhandled task: report a bug"  << std::endl;
@@ -180,7 +198,8 @@ T_2 = 2\n\
       {
         std::cerr << cmd.parseErrorDescription(result) << std::endl;
         exit(1);
-    } else if (!cmd.foundOption("i") && !cmd.foundOption("g")) {
+    } else if (!cmd.foundOption("e") && !cmd.foundOption("i") &&
+               !cmd.foundOption("g")) {
         /*
           std::cerr << "Provide at at least -i to check whether and intersection
           " "exists,  or -g to compute the intersection graph"
@@ -194,13 +213,22 @@ T_2 = 2\n\
     std::stringstream str;
 
     /*
+     * Info
+     * ------------
+     */
+
+    if (cmd.foundOption("info")) {
+      parameters.task = core::arg::info;
+    }
+
+    /*
      * Intersection
      * ------------
      */
 
     if (cmd.foundOption("intersect")) {
       parameters.task = core::arg::check_intersection;
-    } 
+    }
 
     // Algorithm
     // ---------
@@ -309,19 +337,22 @@ T_2 = 2\n\
      * ----
      */
 
-    // args
-    // ----
-    if (cmd.allArguments().size() != 2) {
-      std::cerr << "Provide 2 input files (args) at the end "
-                << std::endl
-                << std::endl;
+    if (cmd.allArguments().empty()) {
+      std::cerr << "Input files not provided." << std::endl;
       cmd.usageDescription();
       exit(1);
     }
 
-    if (!cmd.allArguments().empty()){
-      std::vector<string> args = cmd.allArguments();
+    std::vector<string> args = cmd.allArguments();
 
+    if (parameters.task == core::arg::info) {
+
+      for (auto arg: args) {
+        parameters.input_files.push_back(std::make_pair(extract_extension(arg), arg));
+      }
+
+    } else {
+      // assume 2 input files
       parameters.w_format = extract_extension(args[0]);
       parameters.w_file_path = args[0];
 

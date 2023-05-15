@@ -384,6 +384,7 @@ enum file_format {
   unknown
 };
 
+
 enum ed_string { w, q };
 
 std::ostream &operator<<(std::ostream &os, const core::ed_string &value);
@@ -392,7 +393,7 @@ enum algorithm { naive, improved, both };
 
 enum witness {shortest, longest};
 
-enum arg {check_intersection, compute_graph};
+  enum arg {check_intersection, compute_graph, info};
 
 /**
  * @brief   parameters for cli args
@@ -406,7 +407,11 @@ struct Parameters {
   file_format q_format;
   //
   arg task;
-  
+
+  // we assume input is in eds?
+  std::vector<std::pair<file_format, std::string>> input_files;
+
+
   bool output_dot;
   bool size_of_multiset;
   // witness

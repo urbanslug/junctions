@@ -184,6 +184,36 @@ EDS read_files(core::Parameters& parameters, core::ed_string which_ed_string) {
   return ed_string;
 }
 
+EDS read_file(core::Parameters &parameters, std::pair<core::file_format, std::string> file) {
+  std::string eds_string, file_path;
+  EDS ed_string;
+  std::vector<std::string> msa_data;
+
+  core::file_format format = file.first;
+  file_path = file.second;
+
+  switch (format) {
+  case core::file_format::eds:
+    eds_string = parser::read_eds(file_path);
+    ed_string = parser::parse_ed_string(eds_string, parameters);
+    break;
+  case core::file_format::msa:
+    msa_data = parser::read_msa(file_path);
+    eds_string = parser::msa_to_eds(msa_data);
+    ed_string = parser::parse_ed_string(eds_string, parameters);
+    break;
+  default:
+    std::cerr << "[junctions::read_file] Error: Could not figure out format for " << file.second << std::endl;
+    exit(1);
+  }
+
+  return ed_string;
+}
+
+void print_info(EDS f, int indent_level = 0) {
+  std::cout << utils::indent(indent_level) << f.size << "\t" << f.m << std::endl;
+}
+
 int main(int argc, char **argv) {
 
   // CLI
@@ -202,25 +232,43 @@ int main(int argc, char **argv) {
   }
 
   // Read files
-  EDS q = read_files(parameters, core::ed_string::q);
-  EDS w = read_files(parameters, core::ed_string::w);
+  EDS q, w;
 
+  // TODO: combine with loop
   // print (debug) info
-  if (parameters.verbosity > 0) {
+  if (false) {
     std::cerr << utils::indent(1)
               << "N: " << w.size << " n: " << w.m
               << " M: " << q.size << " m: " << q.m
               << std::endl;
   }
 
+  auto loop = [&](){
+
+    EDS i;
+    std::cout << "File\tN\tm" << std::endl;
+    for (auto f: parameters.input_files) {
+      i = read_file(parameters, f);
+      std::cerr << f.second;
+      print_info(i, 1);
+    }
+  };
+
   // utils::print_edt_data(w.data);
 
   switch (parameters.task) {
   case core::arg::compute_graph:
+    q = read_files(parameters, core::ed_string::q);
+    w = read_files(parameters, core::ed_string::w);
     do_graph(w, q, parameters);
     break;
   case core::arg::check_intersection:
+    q = read_files(parameters, core::ed_string::q);
+    w = read_files(parameters, core::ed_string::w);
     do_intersect(w, q, parameters);
+    break;
+  case core::arg::info:
+    loop();
     break;
   default:
     std::cerr << "Unhandled task: report a bug" << std::endl;
