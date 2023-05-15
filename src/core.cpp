@@ -136,3 +136,19 @@ std::ostream &operator<<(std::ostream &os, const core::ed_string &value) {
   os << (value == core::ed_string::q ? "Q" : "W");
   return os;
 }
+
+// enums
+// -----
+/*
+std::ostream &operator<<(std::ostream &os, const core::witness &value) {
+  switch (value) {
+  case core::witness::longest:
+    os << "longest";
+    break;
+  case core::witness::shortest:
+    os << "shortest";
+    break;
+  }
+  return os;
+}
+*/

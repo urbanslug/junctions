@@ -393,7 +393,10 @@ enum algorithm { naive, improved, both };
 
 enum witness {shortest, longest};
 
-  enum arg {check_intersection, compute_graph, info};
+  //std::ostream &operator<<(std::ostream &os, const core::witness &value);
+
+
+enum arg {check_intersection, compute_graph, info};
 
 /**
  * @brief   parameters for cli args

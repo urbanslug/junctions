@@ -203,12 +203,12 @@ struct Graph {
       current_dist = dists[current_node];
 
       for (auto e : out) {
-        if (dists[tbl_idx(e.dest)] < current_dist + e.dest ) {
-          dists[tbl_idx(e.dest)] = current_dist + e.dest;
+        if (dists[tbl_idx(e.dest)] < current_dist + e.weight ) {
+          dists[tbl_idx(e.dest)] = current_dist + e.weight;
         }
+
         to_visit.push(e.dest);
       }
-
       visited.insert(current_node);
     }
 

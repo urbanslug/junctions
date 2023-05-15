@@ -122,13 +122,16 @@ void do_graph(EDS w, EDS q, core::Parameters const &parameters) {
   }
 
   if (parameters.compute_witness) {
+    int witness_len;
     // TODO: confirm that an intersection exists
     switch (parameters.witness_choice) {
     case core::witness::longest:
-      graph::longest_witness(g);
+      witness_len = graph::longest_witness(g);
+      std::cout << "longest witness is: " << witness_len << " chars long." << std::endl;
       break;
     case core::witness::shortest:
-      graph::shortest_witness(g);
+      witness_len =  graph::shortest_witness(g);
+      std::cout << "shortests witness is: " << witness_len << " chars long." <<  std::endl;
       break;
     default:
       break;
@@ -236,12 +239,12 @@ int main(int argc, char **argv) {
 
   // TODO: combine with loop
   // print (debug) info
-  if (false) {
-    std::cerr << utils::indent(1)
-              << "N: " << w.size << " n: " << w.m
-              << " M: " << q.size << " m: " << q.m
-              << std::endl;
-  }
+  auto foo = [&]() {
+    if (parameters.verbosity > 0) {
+      std::cerr << utils::indent(1) << "N_1: " << w.size << " m_1: " << w.m
+                << " N_2: " << q.size << " m_2: " << q.m << std::endl;
+    }
+  };
 
   auto loop = [&](){
 
@@ -260,11 +263,15 @@ int main(int argc, char **argv) {
   case core::arg::compute_graph:
     q = read_files(parameters, core::ed_string::q);
     w = read_files(parameters, core::ed_string::w);
+
+    foo();
+
     do_graph(w, q, parameters);
     break;
   case core::arg::check_intersection:
     q = read_files(parameters, core::ed_string::q);
     w = read_files(parameters, core::ed_string::w);
+    foo();
     do_intersect(w, q, parameters);
     break;
   case core::arg::info:

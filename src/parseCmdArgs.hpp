@@ -166,7 +166,9 @@ T_2 = 2\n\
     }
 
     if (parameters.compute_witness) {
-      std::cerr << "witness choice = " << parameters.witness_choice << std::endl;
+      std::cerr << "witness choice = "
+                << (parameters.witness_choice == core::witness::longest ? "longest" : "shortest")
+                << std::endl;
     }
 
     if (parameters.compute_match_stats) {
@@ -297,10 +299,12 @@ T_2 = 2\n\
       }
 
       if (str.str() == "longest" || str.str() == "long" || str.str() == std::to_string(1)) {
-        parameters.witness_choice = core::witness::shortest;
+        parameters.witness_choice = core::witness::longest;
       }
     } else
       parameters.compute_witness = false;
+
+    str.str("");
     str.clear();
 
     // Size of the multiset
@@ -321,7 +325,6 @@ T_2 = 2\n\
      * Other
      * -----
      */
-
     // Verbosity
     // ---------
     if (cmd.foundOption("verbosity")) {
