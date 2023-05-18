@@ -37,10 +37,81 @@ std::string indent(int level) {
   return repeat;
 }
 
-std::ostream &operator<<(std::ostream &os, const junctions::query_result &r) {
-  os << "match length: " << r.match_length << " beyond text: " << r.beyond_text;
+/**
+ * concatenate a vector of strings with a given characters interspersing them
+ *
+ *
+ * @param[in]  v vector of input strings to concatenate
+ * @param[in]  c the character to have in between the strings
+ * @param[out] s the resulting concatenated string
+ */
+void join(const vector<string> &v, char c, string &s) {
+  s.clear();
+
+  for (vector<string>::const_iterator p = v.begin(); p != v.end(); ++p) {
+    s += *p;
+    if (p != v.end() - 1)
+      s += c;
+  }
+}
+
+// match locus
+// -----------
+bool operator<(const junctions::match_locus &lhs,
+               const junctions::match_locus &rhs) {
+  return std::tie(lhs.string_index, lhs.char_index) <
+         std::tie(rhs.string_index, rhs.char_index);
+}
+
+bool operator==(const junctions::match_locus &lhs,
+                const junctions::match_locus &rhs) {
+  return std::tie(lhs.string_index, lhs.char_index) ==
+         std::tie(rhs.string_index, rhs.char_index);
+}
+
+// Extended match
+// ----------
+
+bool operator==(const junctions::extended_match &lhs, const junctions::extended_match &rhs) {
+  return std::tie(lhs.beyond_text, lhs.match_length, lhs.str_idx, lhs.chr_idx) ==
+         std::tie(lhs.beyond_text, lhs.match_length, lhs.str_idx, lhs.chr_idx);
+}
+
+std::ostream &operator<<(std::ostream &os, const junctions::extended_match &r) {
+  os << "beyond text: " << r.beyond_text
+     << " match length: " << r.match_length
+     << " str idx: " << r.str_idx
+     << " char idx: " << r.chr_idx;
   return os;
 }
+
+// query result
+// ------------
+
+
+std::ostream &operator<<(std::ostream &os, const junctions::query_result &r) {
+  os << "match length: " << r.match_length << " beyond text: " << r.beyond_text;
+  os << std::endl << "results: " << std::endl;
+  for (auto res: r.results) {
+    os << "char idx: " << res.char_index << " str idx: " << res.string_index << std::endl;
+  }
+  return os;
+}
+
+bool operator==(const junctions::query_result &lhs, const junctions::query_result &rhs) {
+
+  std::vector<match_locus> rv = rhs.results;
+  std::vector<match_locus> lv = lhs.results;
+
+  std::sort(lv.begin(), lv.end());
+  std::sort(rv.begin(), rv.end());
+
+  return std::tie(lhs.beyond_text, lhs.match_length, lv) ==
+         std::tie(rhs.beyond_text, rhs.match_length, rv);
+}
+
+// graph slice
+// ------
 
 std::ostream &operator<<(std::ostream &os, const junctions::graph_slice &s) {
   os << "Graph slice {"
@@ -49,6 +120,7 @@ std::ostream &operator<<(std::ostream &os, const junctions::graph_slice &s) {
   return os;
 }
 }
+
 
 
 // suffix

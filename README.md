@@ -35,6 +35,13 @@ For example:
 This can later be visualized using  `dot -Tsvg -o x.svg x.dot` or
 `dot -Tpng -o x.png x.dot`
 
+For larger graphs use the experimental `scripts/dot2gfa.py` script to convert the insersection graph 
+into gfa.
+
+```
+cat x.dot | python scripts/dot2gfa.py > x.gfa
+```
+
 ## Compile and Run
 Compile
 ```sh

@@ -1,4 +1,5 @@
 *.dot
+*.gfa
 *.png
 *.svg
 out

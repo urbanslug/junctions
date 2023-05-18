@@ -1,4 +1,3 @@
-
 #include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
@@ -33,14 +32,17 @@ void print_properties(EDS &eds_w, EDS &eds_q) {
 }
 
 int main(){
-  // test_string_matching();
+
   // test_handle_epsilon();
   // test_contains_intersect();
   // test_lacks_intersect();
   // test_contains_intersect_active_prefixes();
 
   // test_parse_ed_string();
-  test_compute_graph();
+
+  test_string_matching();
+  // test_compute_graph();
+
   /*
     test_lacks_intersect();
     test_contains_intersect();
@@ -57,66 +59,436 @@ int main(){
 
 // If parameter is not true, test fails
 // This check function would be provided by the test framework
-#define IS_TRUE(x) { if (!(x)) std::cout << __FUNCTION__ << " failed on line " << __LINE__ << std::endl;}
+#define IS_TRUE(x) { if (!(x)) std::cerr << __FUNCTION__ << " failed on line " << __LINE__ << std::endl;}
+
+#define IS_TRUE2(x, y) { if (!(x)) std::cerr << __FUNCTION__ << " failed test " << y << std::endl; }
 
 core::Parameters init_tests() {
   core::Parameters test_params;
-  test_params.verbosity = 3;
+  test_params.verbosity = 5;
 
   return test_params;
 };
 
+/* -> */
+bool logical_implication(bool p, bool q) { return !p || q; }
+
+/* <-> */
+bool double_implication(bool a, bool b) { return !(a && !b) && !(!a && b); }
+
 void test_string_matching() {
 
+  //std::string text, query;
   std::string text, query;
-  junctions::query_result match_positions;
+
+  // actual and expected query results
+  vector<junctions::extended_match> match_positions, exp;
+
+  // junctions::query_result exp; // expected
+
+  std::vector<std::string> txt_strs;
+  std::vector<slicex> text_slices;
+  STvertex *root;
 
   auto print_match_positions =
-    [&](junctions::query_result const &match_positions) {
+      [&]() {
         std::cerr << "Query = " << query << std::endl
                   << "Text = " << text << std::endl
-                  << "Matches found = " << match_positions.results.size()
-                  << std::endl;
-        std::cerr << match_positions;
-        std::cerr << std::endl; 
-
+                  << "Matches found: " << match_positions.size() << std::endl;
+        for (auto m : match_positions) { std::cerr << m << std::endl; }
       };
 
-  text = "ABCDAGT_";
-  std::vector<slicex> text_slices =  {slicex{.start = 0, .length = 3},
-                                     slicex{.start = 3, .length = 4}};
+  auto setup = [&]() {
+    junctions::join(txt_strs, '$', text);
+    text += '_'; // add a terminator char
+    root = Create_suffix_tree(text.c_str(), text.length());
+    update_leaves(root, &text_slices);
+  };
 
-  STvertex *root = Create_suffix_tree(text.c_str(), text.length());
-  update_leaves(root, &text_slices);
+
+  txt_strs = {"ABC", "DAGT"};
+  text_slices = {slicex{.start = 0, .length = 3},
+                 slicex{.start = 3, .length = 4}};
+  setup();
 
   query = "AB";
-  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
-  print_match_positions(match_positions);
-  // match_positions.clear();
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+
+  exp = {
+    junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 0}
+  };
+
+
+  IS_TRUE(exp == match_positions);
+
+  // ---------------------
 
   query = "jk";
-  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
-  print_match_positions(match_positions);
-  // match_positions.clear();
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+  exp = {};
+  
+  
+  IS_TRUE(exp == match_positions);
+
+  // ---------------------
 
   query = "A";
-  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
-  print_match_positions(match_positions);
-  // match_positions.clear();
+  // reset();
+  // setup();
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+      junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 0, .chr_idx = 0},
+      junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 1, .chr_idx = 4}
+  };
+
+  
+  IS_TRUE(exp == match_positions);
+
+  // ---------------------
+
+  // TODO: investigate
 
   query = "ABCDAGTA";
-  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
-  print_match_positions(match_positions);
-  // match_positions.clear();
+  
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+
+  //print_match_positions();
+
+  exp = {
+    junctions::extended_match{.beyond_text = true, .match_length = 3, .str_idx = 0, .chr_idx = 0}
+  };
+
+  
+  IS_TRUE(exp == match_positions);
+
+  // ---------------------
 
   query = "GTA";
-  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
-  print_match_positions(match_positions);
-  //match_positions.clear();
+  //reset();
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  //print_match_positions(match_positions);
+
+  exp = {
+    junctions::extended_match{.beyond_text = true, .match_length = 2, .str_idx = 1, .chr_idx = 5}
+  };
+
+  IS_TRUE(exp == match_positions);
+
+  // ---------------------
 
   query = "GT";
-  match_positions = FindEndIndexesTwo(query.c_str(), root, text.c_str());
-  print_match_positions(match_positions);
+  
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+    junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 1, .chr_idx = 5}
+  };
+
+  
+
+  IS_TRUE(exp == match_positions);
+
+  // ---------------------
+
+  txt_strs = {"TG", "AT", "A"};
+
+  text_slices = {
+    slicex{.start = 0, .length = 2},
+    slicex{.start = 2, .length = 2},
+    slicex{.start = 4, .length = 1}};
+  setup();
+
+  query = "G";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+    junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 0, .chr_idx = 1}
+  };
+
+
+  IS_TRUE(exp == match_positions);
+
+
+  // ---------------------
+
+  txt_strs = {"TCCCTTC"};
+  text_slices = {slicex{.start = 0, .length = 7}};
+  setup();
+
+  query = "TCG";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+    junctions::extended_match{.beyond_text = true, .match_length = 2, .str_idx = 0, .chr_idx = 5}
+  };
+
+
+  IS_TRUE(exp == match_positions);
+
+  // ---------------------
+
+  txt_strs = {"TCC"};
+  text_slices = {slicex{.start = 0, .length = 3}};
+  setup();
+
+  query = "CA";
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+
+
+  // print_match_positions(match_positions);
+
+  exp = {
+    junctions::extended_match{.beyond_text = true, .match_length = 1, .str_idx = 0, .chr_idx = 2}
+  };
+
+  IS_TRUE(exp == match_positions);
+
+
+  // --------------------------
+  // txt_strs = {"AGT_"};
+  // query = "TAC";
+
+  txt_strs = {"AGT"};
+  text_slices = {slicex{.start = 0, .length = 3}};
+  setup();
+
+  query = "GTC";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+    junctions::extended_match{ .beyond_text = true, .match_length = 2, .str_idx = 0, .chr_idx = 1}
+  };
+
+
+  IS_TRUE(exp == match_positions);
+
+  // --------------------------
+
+  txt_strs = {"AGGAG"};
+  text_slices = {slicex{.start = 0, .length = 5}};
+  setup();
+
+  query = "GAGG";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+
+  exp = {
+      junctions::extended_match{ .beyond_text = true, .match_length = 3, .str_idx = 0, .chr_idx = 2},
+      junctions::extended_match{ .beyond_text = true, .match_length = 1, .str_idx = 0, .chr_idx = 4},
+  };
+
+  IS_TRUE(exp == match_positions);
+
+  // --------------------------
+
+  txt_strs = {"TTGTTC"};
+  text_slices = {slicex{.start = 0, .length = 6}};
+  setup();
+
+  query = "TT";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+
+  exp = {
+      junctions::extended_match{ .beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 0},
+      junctions::extended_match{ .beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 3},
+  };
+  
+  IS_TRUE(exp == match_positions);
+
+  // --------------------------
+  txt_strs = {"TGTC"};
+  text_slices = {slicex{.start = 0, .length = 4}};
+  setup();
+
+  query = "T";
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+      junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 0, .chr_idx = 0},
+      junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 0, .chr_idx = 2},
+  };
+
+  IS_TRUE(exp == match_positions);
+
+  // --------------------------
+  txt_strs = {"CCGC"};
+  text_slices = {slicex{.start = 0, .length = 4}};
+  setup();
+  query = "CC";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+      junctions::extended_match{.beyond_text = true, .match_length = 1, .str_idx = 0, .chr_idx = 0},
+      junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 3},
+  };
+
+  IS_TRUE(exp == match_positions);
+
+
+  // --------------------------
+  
+  txt_strs = {"TGAATGCCT"};
+  text_slices = {slicex{.start = 0, .length = 9}};
+  setup();
+
+  query = "TG";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+  // print_match_positions();
+
+  exp = {
+      junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 0},
+      junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 4},
+      junctions::extended_match{.beyond_text = true, .match_length = 1, .str_idx = 0, .chr_idx = 8},
+  };
+
+  IS_TRUE(exp == match_positions);
+
+  
+  // --------------------------
+  txt_strs = {"TGATGCT"};
+  text_slices = {slicex{.start = 0, .length = 7}};
+  setup();
+
+  query = "TG";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+      junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 0},
+      junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 3},
+      junctions::extended_match{.beyond_text = true, .match_length = 1, .str_idx = 0, .chr_idx = 6},
+  };
+
+
+  IS_TRUE(exp == match_positions);
+
+  // --------------------------
+
+  txt_strs = {"TCG", "CGC"};
+  text_slices = {slicex{.start = 0, .length = 3},
+                 slicex{.start = 3, .length = 3}};
+
+  setup();
+  query = "GAACA";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+
+  exp = {
+    junctions::extended_match{ .beyond_text = true, .match_length = 1, .str_idx = 0, .chr_idx = 2}
+  };
+
+  IS_TRUE(exp == match_positions);
+
+  // --------------------------
+  query = "G";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  exp = {
+      junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 0, .chr_idx = 2},
+      junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 1, .chr_idx = 4},
+  };
+
+  IS_TRUE(exp == match_positions);
+
+  // --------------------------
+
+  txt_strs = {"CT"
+              "TGGATACAGAGCCACGGT"
+              "T"};
+  text_slices = {slicex{.start = 0, .length = 110}};
+
+  // TODO: finish test
+
+  // --------------------------
+
+  txt_strs = {"G", "C"};
+  text_slices = {slicex{.start = 0, .length = 1},
+                 slicex{.start = 1, .length = 1}};
+
+  setup();
+
+  query = "TAC";
+  // query = "TGCTACGCGTGGG";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  // --------------------------
+
+  txt_strs = {"CTCCCAAGACCTAAGCGCTGAGGCACATATACGCGTACACCTAGCATTTTGTTAGGGAGCAG"
+              "TGGATACAGAGCCACGGT"
+              "TCTTACTGGGGGGCAGTCAACTACAC"
+              "CTA"
+              "T"};
+  text_slices = {slicex{.start = 0, .length = 110}};
+
+  setup();
+
+  query = "TGC";
+  // query = "TGCTACGCGTGGG";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  // --------------------------
+
+  txt_strs = {"TTGTGCAATGGTTTAAAAAGTCCAACATGGATACCGCTTGGGGAGGCTGAGACGATGGTTGTGA"
+              "CAGGGCCTCTACACCTAT"};
+  text_slices = {slicex{.start = 0, .length = 82}};
+
+  setup();
+
+  query = "TGCTACGCGTGGGCAGTGTTGTTAA";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions(match_positions);
+
+  // --------------------------
+
+  txt_strs = {"GAT",
+              "GGG",
+              "GCG"};
+  text_slices = {
+      slicex{.start = 0, .length = 3},
+      slicex{.start = 3, .length = 3},
+      slicex{.start = 6, .length = 3},
+  };
+
+  junctions::join(txt_strs, '$', text);
+  text += '_'; // add a terminator char
+  root = Create_suffix_tree(text.c_str(), text.length());
+  update_leaves(root, &text_slices);
+
+  query = "GAT";
+  vector<junctions::extended_match> k = FindEndIndexesThree(query.c_str(), root, text.c_str());
+
+  
 }
 
 void test_compute_graph() {
@@ -124,65 +496,239 @@ void test_compute_graph() {
   std::string ed_string_w, ed_string_q;
   EDS eds_w, eds_q;
 
-  // epsilons
-  ed_string_w = "{AT,TC}";
-  ed_string_q = "{,G}";
+  graph::Graph g(0,0);
+  bool contains_intersect;
+  int len;
 
-  eds_w = parser::parse_ed_string(ed_string_w, params);
-  eds_q = parser::parse_ed_string(ed_string_q, params);
-  // graph::compute_intersection_graph(eds_w, eds_q, params);
+  auto check = [&](int line) {
+    eds_w = parser::parse_ed_string(ed_string_w, params);
+    eds_q = parser::parse_ed_string(ed_string_q, params);
+
+    g = graph::compute_intersection_graph(eds_w, eds_q, params);
+    g.print_dot();
+    contains_intersect = improved::intersect(eds_w, eds_q, params) && naive::intersect(eds_w, eds_q, params);
+    len = graph::longest_witness(g);
+    IS_TRUE2(double_implication(len >= 0, contains_intersect), line);
+  };
+
+  ed_string_w = "TTT"
+                "{A,}"
+                "TTG"
+                "TGCAATGGTTTAAAAAGTCCAACATGGATACCGCTTGGGGAGGCT"
+                "GAGA"
+                "CG"
+                "ATGGTTGTGACAG"
+                "GGC"
+                "CTCTACAC"
+                "CTA"
+                "T"
+                "{G,C,}"
+                "CTA"
+                "CGCGTGGGCAGTGTTGTTAA";
+  ed_string_q = "TTT"
+                "A"
+                "TTG"
+                "TGCAATGGTTTAAAAAGTCCAACATGGATACCGCTTGGGGAGGCT"
+                "GAGA"
+                "{CG,AT,GC}"
+                "ATGGTTGTGACAG"
+                "{GGC,T,CCA}"
+                "CTCTACAC"
+                "{CTA,GCT,TAC}"
+                "T"
+                "G"
+                "CTA"
+                "CGCGTGGGCAGTGTTGTTAA";
+  check(__LINE__);
   // return;
 
-  // full matches
+  /*
+    active suffixes
+    ---------------
+  */
+
+  ed_string_w = "CTCCCAAGACCTAAGCGCTGAGGCACATATACGCGTACACCTAGCATTTTGTTAGGGAGCAG"
+                "TGGATACAGAGCCACGGT"
+                "TCTTACTGGGGGGCAGTCAACTACAC"
+                "CTA"
+                "T"
+                "{G,C,}"
+                "CTACGCGTGGG";
+
+  ed_string_q = "CTCCCAAGACCTAAGCGCTGAGGCACATATACGCGTACACCTAGCATTTTGTTAGGGAGCAG"
+                "TGGATACAGAGCCACGGT"
+                "TCTTACTGGGGGGCAGTCAACTACAC"
+                "{CTA,GCT,TAC}"
+                "T"
+                "G"
+                "CTACGCGTGGG";
+  check(__LINE__);
+
+  ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
+  ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
+  check(__LINE__);
+
+  ed_string_w = "TCTC{TCG,CGC}AACAATCACTCAA";
+  ed_string_q = "TCTC{TC,CG}GAACA{A,,C}TCAC{TC,CT,A}AA";
+  check(__LINE__);
+  //return;
+
+  ed_string_w = "{CCG}{CC,G}{AGA}";
+  ed_string_q = "{CCGC}{C,GAGG}{AGA}";
+  check(__LINE__);
+
+
+  ed_string_w = "{CAGG}{A,}{GAGGCACAATGAGCCAGCA}";
+  ed_string_q = "{CAGGAG}{A,}{GGCACAATGAGCCAGCA}";
+  check(__LINE__);
+
+  ed_string_w = "{AGG}{A,}{GAGG}";
+  ed_string_q = "{AGGAG}{A,}{GG}";
+  check(__LINE__);
+
+  ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCCGCGCGGTGG}";
+  ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCCGCGCGGTGGT}";
+  check(__LINE__);
+
+  ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCC}";
+  ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCC}";
+  check(__LINE__);
+
+  ed_string_w = "AATCAGTGCTTCTAGCTCTTGGAGGGCTTGTACATTAACGGAACT{G,C}CA";
+  ed_string_q = "AATCAGTGCTTCTAGCTCTTGGAGGGCTTGTACATTAACGGAAC{TG,AT,A}CA";
+  check(__LINE__);
+
+  ed_string_w = "GTGACATGTACATTACT{G,C}CA";
+  ed_string_q = "GTGACATGTACATTAC{TG,AT,A}CA";
+  check(__LINE__);
+
+  /*
+    full matches
+    ------------
+  */
+
+  ed_string_w = "{AT,TC}";
+  ed_string_q = "{,G}";
+  check(__LINE__);
+
   ed_string_w = "{AT,TC}";
   ed_string_q = "{TC,G}";
-  eds_w = parser::parse_ed_string(ed_string_w, params);
-  eds_q = parser::parse_ed_string(ed_string_q, params);
-  //graph::compute_intersection_graph(eds_w, eds_q, params);
+  check(__LINE__);
 
   ed_string_w = "{ACT}";
   ed_string_q = "{A}{C}{T}";
-  // ed_string_w = "{AT}";
-  // ed_string_q = "{A}{T}";
-  eds_w = parser::parse_ed_string(ed_string_w, params);
-  eds_q = parser::parse_ed_string(ed_string_q, params);
-  // graph::compute_intersection_graph(eds_w, eds_q, params);
-  // return;
+  check(__LINE__);
 
   ed_string_w = "{AT,TC}{AC,T}";
   ed_string_q = "{TC,G}{CT,T}";
-  eds_w = parser::parse_ed_string(ed_string_w, params);
-  eds_q = parser::parse_ed_string(ed_string_q, params);
-  // graph::compute_intersection_graph(eds_w, eds_q, params);
-  // return;
+  check(__LINE__);
 
   // active suffixes
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "{TC,G}{CT,T}";
-  // eds_w = parser::parse_ed_string(ed_string_w, params);
-  // eds_q = parser::parse_ed_string(ed_string_q, params);
-  // graph::compute_intersection_graph(eds_w, eds_q, params);
+  check(__LINE__);
+
+  /*
+    epsilons
+    --------
+   */
+
+  ed_string_w = "{T}{C}";
+  ed_string_q = "T{,G}{C}";
+  check(__LINE__);
 
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "TC{,G}{CT,T}";
-  eds_w = parser::parse_ed_string(ed_string_w, params);
-  eds_q = parser::parse_ed_string(ed_string_q, params);
-  // graph::compute_intersection_graph(eds_w, eds_q, params);
+
+  check(__LINE__);
 
   ed_string_w = "{GT,}{A,C}{T}{A,G}{AT}";
   ed_string_q = "{AT,}{GAT}";
-  //ed_string_w = "{GT,}{A,C}{T}";
-  // ed_string_q = "{AT,}";
-  eds_w = parser::parse_ed_string(ed_string_w, params);
-  eds_q = parser::parse_ed_string(ed_string_q, params);
-  graph::compute_intersection_graph(eds_w, eds_q, params);
-  return;
+  check(__LINE__);
 
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "{,G}AT{CT,T}";
-  eds_w = parser::parse_ed_string(ed_string_w, params);
-  eds_q = parser::parse_ed_string(ed_string_q, params);
-  // graph::compute_intersection_graph(eds_w, eds_q, params);
+  check(__LINE__);
+
+  ed_string_w = "{TTGA}";
+  ed_string_q = "{TT}{A,}{GA}";
+  check(__LINE__);
+
+  ed_string_w = "{T}";
+  ed_string_q = "{T}{A,}";
+  check(__LINE__);
+
+  ed_string_w = "{TG}";
+  ed_string_q = "{T}{A,}{G}";
+  check(__LINE__);
+
+  ed_string_w = "{TTGAATATGGCATTC}";
+  ed_string_q = "{TT}{A,}{GAATATGGCATTC}";
+  check(__LINE__);
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  check(__LINE__);
+
+  ed_string_w =
+      "{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AACCACTTTTCCATGAC}{A,}{AGGA}"
+      "{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}{GATGATCGCAGGGAGCGTT}";
+  ed_string_q = "{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{"
+                "AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}{G,}"
+                "{CA}{AGC,}{GGGAGCG}{TT,}";
+  check(__LINE__);
+
+
+  ed_string_w = "{TCCCTTC}{GGCCG,}{G}";
+  ed_string_q = "{TCCCT}{CG,}{TCG}";
+  check(__LINE__);
+
+  ed_string_w = "{GTAATCCCTTC}{GGCCG,}{GATGATC}";
+  ed_string_q = "{GTAATCCCT}{CG,}{TCGATGATC}";
+  check(__LINE__);
+
+  ed_string_w = "{TC}{G,}{G}";
+  ed_string_q = "{T}{CG,}{TCG}";
+  // TODO: figure out this test
+  check(__LINE__);
+
+  ed_string_w = "C{TG,AT,A}C";
+  ed_string_q = "CT{G,C}C";
+  check(__LINE__);
+
+  ed_string_w = "C{TG,AT,A}C";
+  ed_string_q = "CT{G,C}C";
+  check(__LINE__);
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}";
+  ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}{A,C}{G}{C,G}{TT}";
+  check(__LINE__);
+
+  ed_string_w = "{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  check(__LINE__);
+
+  ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
+  ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
+  check(__LINE__);
+
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
+  ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCA}";
+  check(__LINE__);
+
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
+  ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
+  check(__LINE__);
+
+  ed_string_w = "{A,G}{CTC,CAAGT}{GA,CTA}";
+  ed_string_q = "{ACTCGA}";
+  check(__LINE__);
+
+  ed_string_w = "CT{G,C}CACC";
+  ed_string_q = "C{TG,AT,A}CACC";
+  check(__LINE__);
+
+
 }
 
 void test_msa_to_eds() {
@@ -297,6 +843,7 @@ void test_contains_intersect_active_prefixes() {
   ed_string_w = "{A,G}{CTC,CAAGT}{GA,CTA}";
   ed_string_q = "{ACTCGA}";
 
+
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
 
@@ -389,7 +936,7 @@ void test_handle_epsilon() {
   ed_string_q = "{C,}A";
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
-  
+
   IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
 
   // ed_string_w = "A{C,}G";
@@ -428,7 +975,7 @@ void test_handle_epsilon() {
 
 
   ed_string_w = "{AT,TC}{ATC,T}";
-  ed_string_q = "{,G}AT{CT,T}"; 
+  ed_string_q = "{,G}AT{CT,T}";
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
   // run_n_print();
@@ -463,7 +1010,7 @@ void test_handle_epsilon() {
   IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
           improved::intersect(eds_w, eds_q, params));
 
-  
+
   // exit(1);
 
   ed_string_w = "{GCGGTGGCTT}{AC,G}";
@@ -474,7 +1021,7 @@ void test_handle_epsilon() {
           improved::intersect(eds_w, eds_q, params));
   // exit(1);
 
- 
+
 
   ed_string_w = "{AT,TC}{ATC,A}";
   ed_string_q = "{,G}{CT,T}";
@@ -490,7 +1037,7 @@ void test_handle_epsilon() {
   IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
           improved::intersect(eds_w, eds_q, params));
 
-  
+
 
   ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
   ed_string_q = "{TC,G}{CT,T}";
@@ -551,6 +1098,7 @@ void test_handle_epsilon() {
 
   ed_string_q = "{TGCAGGGGCTAATCGACCTCTGGC}{A,}{AACCACTTTTCCATGAC}{A,}{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}{GATGATCGCAGGGAGCGTT}{AG,T}{T}{AC,CG}{ATATTGCG}{CCA,}{CAATGCGCAGG}{A,G}{GC}{GT,}{AATTCAGTCTGTGGCCGCAACAA}{GCG,}{T}{G,}{GCGTCTTACCGGCA}{G,}{GGCTGGGACATTGTGTGTC}{AG,GA}{CCGCAG}{CTTT,TCAC}";
 
+
   // ed_string_w = "{CCGCAG}{C,}{T}{C,T}{C,T}";
 //ed_string_q = "{CCGCAG}{CTTT,TCAC}";
 
@@ -565,5 +1113,3 @@ IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
 // exit(1);
 
 }
-
-

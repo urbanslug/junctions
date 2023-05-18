@@ -44,11 +44,25 @@ using namespace std;
 
 namespace junctions {
 
+const std::string unicode_eps = "\u03B5";
+const std::string unicode_sub_1 = "\u2081";
+const std::string unicode_sub_2 = "\u2082";
+
+const std::string T_1 = "T\u2081";
+const std::string T_2 = "T\u2082";
+const std::string N_1 = "N\u2081";
+const std::string N_2 = "N\u2082";
+const std::string q_0 = "q\u2080";
+const std::string q_a = "q\u2090";
+
 std::string indent(int level);
+
+void join(const vector<string> &v, char c, string &s);
 
 /**
  *
  * is a match explicit or implicit
+ *
  */
 enum match_type { exp, imp };
 
@@ -68,6 +82,8 @@ struct graph_slice {
     std::cerr << indent(indent_level) << "Graph slice {" << std::endl
               << indent(indent_level + 1) << "txt start " << this->txt_start << std::endl
               << indent(indent_level + 1) << "qry start " << this->qry_start << std::endl
+              << indent(indent_level + 1) << "q_m(" << this->q_m.first << ", " << this->q_m.second << ")" << std::endl
+              << indent(indent_level + 1) << "t_m(" << this->t_m.first << ", " << this->t_m.second << ")" << std::endl
               << indent(indent_level + 1) << "len " << this->len << std::endl
               << indent(indent_level + 1) << "str " << this->str << std::endl
               << indent(indent_level) << "}" << std::endl;
@@ -86,6 +102,8 @@ struct match_locus {
     return !(this->char_index == 0);
   }
 };
+
+bool operator<(const match_locus &lhs, const match_locus &rhs);
 
 typedef match_locus locus;
 
@@ -110,42 +128,65 @@ struct query_result {
 
 std::ostream &operator<<(std::ostream &os, const junctions::query_result &r);
 
-struct match {
-  int query_str_index;
-  // int query_char_index; // is this always zero? is always zero so... we should remove
+bool operator==(const junctions::query_result &lhs, const junctions::query_result &rhs);
 
-  int text_str_index;
-  int text_char_index;
+// generalization of query result and match locus above
+// replace query_result an match_locus with this
+struct extended_match {
+  bool beyond_text; // there was a match but the query was longer than the text
+  int match_length; // the length of the match
+  int str_idx; // the index of the text string
 
-  int match_length;
-  bool beyond_txt;
+  // the match position in the conactenated string ignoring $
+  // TODO: make this char idx in the actual txt string
+  int chr_idx;
 
-  std::string str;
-  //std::string t_str;
+  /*
+  extended_match() {
+    this->beyond_text = false;
+    this->match_length = -1;
+    this->str_idx = -1;
+    this->chr_idx = -1;
+  }*/
 
-  // bool is_active_suffix_match;
-
-  // std::slice text_match;
-  // std::slice query_match;
-
-  // match constructor
-
-
-  match null_match() {
-    return {
-        .query_str_index = -1,
-        .text_str_index = -1,
-        .text_char_index = -1,
-        .match_length = -1,
-        .beyond_txt = false,
-        .str = "",
-    };
-    
-  }
 };
 
-} // namespace junctions
+std::ostream &operator<<(std::ostream &os, const junctions::extended_match &r);
+bool operator==(const junctions::extended_match &lhs, const junctions::extended_match &rhs);
 
+  struct match {
+    int query_str_index;
+    // no need for query_char_idx bexause it's always 0
+
+    int text_str_index;
+    int text_char_index;
+
+    int match_length;
+    bool beyond_txt;
+
+    std::string str;
+    // std::string t_str;
+
+    // bool is_active_suffix_match;
+
+    // std::slice text_match;
+    // std::slice query_match;
+
+    // match constructor
+
+    match null_match() {
+      return {
+          .query_str_index = -1,
+          .text_str_index = -1,
+          .text_char_index = -1,
+          .match_length = -1,
+          .beyond_txt = false,
+          .str = "",
+      };
+    }
+  };
+
+} // namespace junctions
 
 // TODO: replace with std::slice
 struct slicex {

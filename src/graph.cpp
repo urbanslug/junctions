@@ -1,6 +1,7 @@
 #include <climits>
 #include <cstddef>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <ostream>
 #include <stack>
@@ -35,6 +36,14 @@ bool operator<(const Edge &lhs, const Edge &rhs) {
   return std::tie(lhs.dest, lhs.weight, lhs.str, lhs.is_eps) < std::tie(rhs.dest, rhs.weight, rhs.str, rhs.is_eps);
 }
 
+struct compare_by_weight {
+  bool operator()(const pair<int, int> &l, const pair<int, int> &r) {
+    return l.second > r.second;
+  }
+
+  bool operator()(const Edge &l, const Edge &r) { return l.weight > r.weight; }
+};
+
 std::ostream &operator<<(std::ostream &os, const Edge &e) {
   os << "Edge {"
      << "dest: " << e.dest << " qry start: " << e.str
@@ -53,7 +62,7 @@ struct Vertex {
    * imp exp 2
    * imp imp 3
    */
-  int vertex_type; 
+  int vertex_type;
 
   // initialize a struct with default values
   Vertex(): incoming(std::set<Edge>{}), outgoing(std::set<Edge>{}), vertex_type(-1) {}
@@ -77,14 +86,29 @@ struct Graph {
   Graph(int N_1, int N_2) {
     this->N_1 = N_1;
     this->N_2 = N_2;
-    this->V = N_1 * N_2;
-    adj.resize(V);
+    this->V = (N_1 + 1) * (N_2 + 1);
+    // std::cerr << junctions::indent(2) << "v: " << V << junctions::N_2 << N_1 << junctions::N_2 << N_2;
+    ///this->err = false;
+
+    try {
+      adj.resize(V);
+    } catch (const std::bad_alloc &) {
+      std::cerr << "not enough memory for this graph" << std::endl;
+      exit(-1);
+    } catch (const std::length_error  &) {
+      std::cerr << "graph would be too large" << std::endl;
+      exit(-1);
+    }
   }
 
   // x in [1 - n1 -1], also l
   // y in [1 - n2 -1], also k
   // zero indexed
-  int compute_index(int x, int y, int i, int j) { return ((y+j)*N_1) + x+i; }
+  int compute_index(int x, int y) {
+
+    // return ((y+j)*N_1) + x+i;
+    return (x * (N_2+1)) + y;
+  }
 
   bool is_exp_exp(int idx) { return this->adj[idx].vertex_type == 0; }
 
@@ -131,7 +155,7 @@ struct Graph {
    *
    *
    * @param[in] start_node_idx
-   * @return 
+   * @return
    */
   int longest_frm_start(int start_node_idx) {
     int stop_node = this->adj.size();
@@ -156,9 +180,7 @@ struct Graph {
       to_visit.pop();
       out = this->adj[current_node].outgoing;
 
-      if (visited.count(current_node) > 0) {
-        continue;
-      }
+      if (visited.count(current_node) > 0) { continue; }
 
       current_dist = dists[current_node];
 
@@ -177,6 +199,14 @@ struct Graph {
     return max;
   }
 
+  /**
+   * longest path from start_node_idx to stop_node_idx
+   *
+   *
+   * @param[in] start_node_idx
+   * @param[in] stop_node_idx
+   * @return
+   */
   int witness(int start_node_idx, int stop_node_idx) {
     auto tbl_idx = [&start_node_idx](int gr_idx) -> int { return gr_idx - start_node_idx; };
     auto gr_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
@@ -215,46 +245,61 @@ struct Graph {
     return dists[tbl_idx(stop_node_idx)];
   }
 
-  int djikstra(int start_node_idx, int stop_node_idx) {
-    auto tbl_idx = [&start_node_idx](int gr_idx) -> int { return gr_idx - start_node_idx; };
-    auto gr_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
 
-    int size = stop_node_idx - start_node_idx + 1;
+  /**
+   * Using dijkstra with a min heap to compute the
+   * shortest path from start_node_idx to stop_node_idx
+   * 
+   *
+   *
+   * @param[in] start_node_idx
+   * @param[in] stop_node_idx
+   * @return
+   */
+  int dijkstra(int start_node_idx, int stop_node_idx) {
+
+    // a vector of distances from start_node_idx to every other node
     std::vector<int> dists(this->V, INT_MAX);
-    dists[0] = 0;
+    std::vector<bool> explored(this->V, false);
 
-    int current_node = start_node_idx;
-    int current_dist;
-    std::pair <int,int> min; // node idx in the graph and dist
+    std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, compare_by_weight> min_queue;
 
-    while (current_node != stop_node_idx) {
-      std::set<Edge> out = this->adj[current_node].outgoing;
-      min = std::make_pair(current_node, INT_MAX);
+    // set distance from start_node_idx to itself as 0
+    dists[start_node_idx] = 0;
 
-      current_dist = dists[current_node];
+    min_queue.push(std::make_pair(start_node_idx, dists[start_node_idx]));
 
-      // TODO: handle epsilon
-      for (auto e: out) {
-        // TODO: merge with relax
-        // find min outgoing
+    // a pair of node idx and weight
+    std::pair<int, int> u;
+    int i; // i is the node index w is the weight
 
-        int weight = e.is_eps ? 0 : e.weight ;
+    while (!min_queue.empty()) {
+      u = min_queue.top();
+      i = u.first;
 
-        if ((current_dist + weight) < min.second ) {
-          min = std::make_pair(e.dest, current_dist + weight);
-        }
+      if (i == stop_node_idx) { return dists[i]; }
+
+      explored[i] = true;
+      min_queue.pop();
+
+      for (auto ej : this->adj[i].outgoing) {
 
         // relax
-        if (dists[tbl_idx(e.dest)] > current_dist +weight) {
-          dists[tbl_idx(e.dest)] = current_dist + weight;
+        if ( dists[i] + ej.weight < dists[ej.dest] ) {
+          dists[ej.dest] = dists[i] + ej.weight;
+        }
+
+        // add to min queue
+        if (!explored[ej.dest]) {
+          min_queue.push(std::make_pair(ej.dest, dists[ej.dest]) );
         }
       }
-
-      current_node = min.first;
     }
 
-    return dists[tbl_idx(stop_node_idx)];
+    return dists[stop_node_idx];
+    ;
   }
+
 
   // function to add an edge to the graph
   // src is T_1
@@ -279,38 +324,24 @@ struct Graph {
     int stop, start;
     int l, k, l_prime, k_prime;
 
-    if (i > 0) {
-      l = w_m.first == junctions::match_type::exp ? i_boundary.first - 1 : N_1;
-    } else {
-      l = w_m.first == junctions::match_type::exp ? i_boundary.first : N_1;
+    if (parameters.verbosity > 4) {
+      std::cerr << junctions::indent(2) << "w_m => (" << i_boundary.first << ", " << i_boundary.second << ")" << std::endl
+                << junctions::indent(2) << "q_m => (" << j_boundary.first << ", " << j_boundary.second << ")" << std::endl;
     }
 
-    if (j > 0) {
-      k = q_m.first == junctions::match_type::exp ? j_boundary.first -1 : N_2;
-    } else {
-      k = q_m.first == junctions::match_type::exp ? j_boundary.first : N_2;
-    }
+    l = w_m.first == junctions::match_type::exp ? i_boundary.first : N_1;
+    k = q_m.first == junctions::match_type::exp ? j_boundary.first : N_2;
 
-    start = compute_index(l, k, i, j);
-
-    if ((i == 0 && j == 0) &&
-        q_m.first == junctions::match_type::exp && w_m.first == junctions::match_type::exp) {
-      this->q_0.insert(start);
-    }
+    start = compute_index(l, k);
 
     l_prime = w_m.second == junctions::match_type::exp ? i_boundary.second + 1 : N_1 + weight;
     k_prime = q_m.second == junctions::match_type::exp ? j_boundary.second + 1 : N_2 + weight;
 
-    if (eps_side == 1) {
-      k_prime = k;
-    }
+    if (eps_side == 1) { k_prime = k; }
 
-    if (eps_side == 2) {
-      
-      l_prime = l;
-    }
+    if (eps_side == 2) { l_prime = l; }
 
-    stop = compute_index(l_prime, k_prime, i, j);
+    stop = compute_index(l_prime, k_prime);
 
     bool is_eps = (eps_side == 1 || eps_side == 2) ? true : false;
 
@@ -349,7 +380,7 @@ struct Graph {
     }
 
     if (parameters.verbosity > 3) {
-      std::cerr << utils::indent(2) << "(N_1, N_2) (" << N_1 << ", " << N_2 << ")"
+      std::cerr << utils::indent(2) << "(" + junctions::N_1 +", " + junctions::N_2 + ") (" << N_1 << ", " << N_2 << ")"
                 << std::endl
                 << utils::indent(2) << "(l, l') (" << l << ", " << l_prime << ")"
                 << std::endl
@@ -374,89 +405,74 @@ struct Graph {
   }
 
   void dbg_print(int indent_level=1) {
-    std::cerr << utils::indent(indent_level) << "Graph {"
-              << std::endl
-              << utils::indent(indent_level + 1) << "size: " << this->V
-              << std::endl
-              << utils::indent(indent_level) << "}"
-              << std::endl;
+    std::cerr << utils::indent(indent_level) << "Graph {" << std::endl
+              << utils::indent(indent_level + 1) << "nodes in " << junctions::T_1 << ": " << this->N_1 << std::endl
+              << utils::indent(indent_level + 1) << "nodes in " << junctions::T_2 << ": " << this->N_2 << std::endl
+              << utils::indent(indent_level + 1) << "size of intersection graph: " << this->V << std::endl
+              << utils::indent(indent_level) << "}" << std::endl;
   }
 
   void print_dot() {
-    auto print_idx = [&](int idx) -> string {
-      if (this->q_0.count(idx) > 0) { return "q_0"; }
-      if (idx == this->V - 1) { return "q_a"; }
+    auto print_idx = [&](int idx) -> std::string {
+      if (idx == 0) { return junctions::q_0; }
+      if (idx == this->V - 1) { return junctions::q_a; }
       return std::to_string(idx);
     };
 
-    std::cout
-        << "digraph G {\n"
-        << "\trankdir = LR;\n"
-        << "\tnode[shape = circle];\n";
+    auto print_node = [&](int idx, std::string color) {
+      if (idx == 0 || idx == this->V - 1) { color = "green"; }
+      std::cout << "\t" << print_idx(idx) << " [color=\"" << color << "\"];" << std::endl;
+    };
 
-    std::cout << "\t" << "q_0" << "[color=\"green\"];" << std::endl;
-    std::cout << "\t" << "q_a" << "[color=\"green\"];" << std::endl;
-
-    for (int i = 0; i < this->V; i++) {
-
-      if (this->q_0.count(i) > 0) {continue;}
-
-      if (this->adj[i].vertex_type == 0 && i != this->V-1 ) {
-        std::cout << "\t" << std::to_string(i) << "[color=\"blue\"];" << std::endl;
-      } else if (this->adj[i].vertex_type == 1 || this->adj[i].vertex_type == 2) {
-        std::cout << "\t" << std::to_string(i) << "[color=\"orange\"];" << std::endl;
-      } else if (this->adj[i].vertex_type == 3) {
-        std::cout << "\t" << std::to_string(i) << "[color=\"red\"];" << std::endl;
+    auto print_label = [](Edge e) -> std::string {
+      if (e.is_eps) {
+        return " \"(" + junctions::unicode_eps + ", " + std::to_string(e.weight) + ")\"";
       } else {
+        return " \"(" + e.str + ", " + std::to_string(e.weight) + ")\"";
+      }
+    };
+
+    std::cout << "digraph G {\n"
+              << "\trankdir = LR;\n"
+              << "\tnode[shape = circle];\n";
+
+    // print nodes
+    for (int i = 0; i < this->V; i++) {
+      switch (this->adj[i].vertex_type) {
+      case 0:
+        print_node(i, "blue");
+        break;
+      case 1:
+      case 2:
+        print_node(i, "orange");
+        break;
+      case 3:
+        print_node(i, "red");
+        break;
+      default:
+        break;
       }
     }
 
-    for (auto v: this->adj) {
-      if (v.vertex_type == 0) {
+    // print edges
+    std::string s, label;
+    Vertex v;
 
-      } else if (v.vertex_type == 1 || v.vertex_type == 2) {
-        }
-    }
-
-    /*
-    for (auto o: this->q_0 ){
-      std::cout << "\t" << "q_0 -> " << std::to_string(o.dest) << "\n";
-    }
-    */
-
-    // print nodes
-    std::string s;
-    for (int i=0; i < this->V; i++){
-
-
-      Vertex v = this->adj[i];
+    for (int i=0; i < this->V; i++) {
+      v = this->adj[i];
 
       // unreachable
       if (v.incoming.empty() && v.outgoing.empty()) {
-        if (false) { std::cout << "\t" + print_idx(i) + ";\n"; }
+        // if (false) { std::cout << "\t" + print_idx(i) + ";\n"; }
         continue;
       }
 
-      // std::cerr << utils::indent(2) << "n: " << i << " -> ";
-
-      std::string label, to;
       for (auto e : v.outgoing) {
-
-        // std::cerr << e.dest;
-
-        if (e.is_eps) {
-          // label = " \"(" + e.str + ", \u03B5, " + std::to_string(e.weight) + ")\"";
-          label = " \"(\u03B5, " + std::to_string(e.weight) + ")\"";
-        } else {
-          label = " \"(" + e.str + ", " + std::to_string(e.weight) + ")\"";
-        }
-
         std::cout << "\t" << print_idx(i) << " -> " << print_idx(e.dest)
-                  << " [label=" << label
+                  << " [label=" << print_label(e)
                   << ", weight=" << std::to_string(e.weight)
                   << "];\n";
       }
-      //std::cerr << std::endl;
     }
 
     std::cout << "}" << std::endl;
@@ -475,10 +491,9 @@ void gen_suffix_tree(EDS const &eds,
     std::vector<std::string> i_letter = eds.data[i].data;
     std::vector<slicex> const* str_slices = &eds.str_slices[i];
     std::string text;
-    for (auto i_str : i_letter) {
-      text.append(i_str);
-    }                    // concat the strings
-    text.push_back('_'); // add a terminator char
+
+    junctions::join(i_letter, '$', text); // concat the strings with dollar sign
+    text += '_'; // add a terminator char
 
     // Create the suffix tree
     STvertex* root = Create_suffix_tree(text.c_str(), text.length());
@@ -492,16 +507,16 @@ void gen_suffix_tree(EDS const &eds,
 
 /**
  *
- *
+ * slices exist in l
  * @param[in]  queries           queries
  * @param[in]  text              text
  * @param[out] candidate_matches matches_found in the context of the degenerate letter and not N
 */
 void match(std::vector<string> const &queries,
+           std::vector<slicex> const &txt_slices,
            std::pair<STvertex, std::string> *text,
            std::vector<junctions::match> *candidate_matches,
-           core::Parameters const &parameters
-           ) {
+           core::Parameters const &parameters) {
   if (parameters.verbosity > 2) {
     std::cerr << utils::indent(1) << "DEBUG, [graph::match]" << std::endl;
   }
@@ -537,12 +552,18 @@ void match(std::vector<string> const &queries,
     // a vector of match locus
     for (auto match_pos : match_positions.results) {
 
+      bool bynd_txt = match_positions.beyond_text;
+      int o = txt_slices[match_pos.string_index].start + txt_slices[match_pos.string_index].length;
+      if (match_pos.char_index + qry_str.length() > o) {
+        bynd_txt = true;
+      }
+
       if (parameters.verbosity > 3) {
-        std::cerr << utils::indent(2)
-                  << "qry " << qry_str
-                  << " txt " << text->second
-                  << " txt str idx " << match_pos.string_index
-                  << "txt start" << match_pos.char_index << std::endl;
+        std::cerr << utils::indent(2) << "qry " << qry_str << std::endl
+                  << utils::indent(2) << "txt " << text->second << std::endl
+                  << utils::indent(2) << "txt str idx " << match_pos.string_index << std::endl
+                  << utils::indent(2) << "txt start " << match_pos.char_index << std::endl
+                  << utils::indent(2) << "bynd txt " << bynd_txt << std::endl;
       }
 
       candidate_matches->push_back(
@@ -550,15 +571,16 @@ void match(std::vector<string> const &queries,
                            .text_str_index = match_pos.string_index,
                            .text_char_index = match_pos.char_index,
                            .match_length = match_len,
-                           .beyond_txt = match_positions.beyond_text,
+                           .beyond_txt = bynd_txt,
                            .str = qry_str.substr(0, match_len)});
     }
   }
 }
 
-std::pair<int, int> compute_letter_boundaries(std::vector<span> const &offsets) {
+std::pair<int, int> compute_letter_boundaries(std::vector<span> const &offsets, bool has_eps = false) {
   int left = offsets.front().start;
-  int right = offsets.back().stop;
+
+  int right = has_eps ? offsets.back().stop : offsets.back().stop;
 
   return std::make_pair(left, right);
 }
@@ -579,9 +601,12 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
                     std::vector<slicex> const &txt_slices,
                     std::vector<span> const &txt_offsets,
                     std::vector<span> const &qry_offsets,
-                    matrix *active_suffixes, int qry_letter_idx,
+                    matrix *txt_active_suffixes,
+                    matrix *qry_active_suffixes,
+                    int qry_letter_idx,
+                    int txt_letter_idx,
                     std::vector<junctions::graph_slice> *v,
-                    core::Parameters const &parameters ) {
+                    core::Parameters const &parameters) {
 
   if (parameters.verbosity > 2) {
     std::cerr << utils::indent(1) << "DEBUG, [graph::filter_matches]"
@@ -625,11 +650,12 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
     int t_start_in_N = in_txt_N(candiate_match.text_char_index);
 
     if (parameters.verbosity > 3) {
-      std::cerr << utils::indent(2) << "txt_str_idx"
-                << candiate_match.text_str_index << "start char in concat l"
-                << candiate_match.text_char_index << " start char in l  "
-                << match_start_in_txt << " char start in N (not concat) "
-                << t_start_in_N << std::endl;
+      std::cerr << utils::indent(2)
+                << "txt_str_idx: " << candiate_match.text_str_index
+                << " start char in concat l: " << candiate_match.text_char_index
+                << " start char in l:  " << match_start_in_txt
+                << " char start in N (not concat): " << t_start_in_N
+                << std::endl;
     }
 
     // int txt_end = txt_slice.start + txt_slice.length;
@@ -639,7 +665,7 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
     if (match_start_in_txt > 0 && qry_letter_idx > 0) {
         // is valid active suffix
         // int in_N = in_txt_N(candiate_match.text_char_index); wrong
-        valid_as = ((*active_suffixes)[qry_letter_idx - 1][t_start_in_N] == 1);
+      valid_as = ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N] == 1);
     }
 
     // is an exp - exp match
@@ -671,7 +697,10 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
     int txt_slice_end = txt_slice.start + txt_slice.length;
 
     if (parameters.verbosity > 3) {
-      std::cerr << utils::indent(2) << candidate_match_end << " " << txt_slice_end
+      std::cerr << utils::indent(2)
+                << "txt_slice.start " << txt_slice.start
+                << " candidate_match_end " << candidate_match_end
+                << " txt_slice_end " << txt_slice_end
                 << std::endl;
     }
 
@@ -695,8 +724,9 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
       // this creates and active suffix
       // set match end as an active suffix
       int in_N = in_txt_N_2(candiate_match.text_str_index, match_end);
+
       // std::cerr << utils::indent(2) << "save as: " << qry_letter_idx << in_N;
-      (*active_suffixes)[qry_letter_idx][in_N] = 1;
+      (*txt_active_suffixes)[qry_letter_idx][in_N] = 1;
     }
 
     /*
@@ -723,6 +753,11 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
     q_m_start = junctions::match_type::exp;
     q_m_stop = candiate_match.beyond_txt ? junctions::match_type::imp : junctions::match_type::exp;
 
+    // create an active suffix in the query
+    if (candiate_match.beyond_txt) {
+      (*qry_active_suffixes)[txt_letter_idx][q_start_in_N + m_len] = 1;
+    }
+
     if (parameters.verbosity > 3) {
       std::cerr << utils::indent(2)
                 << "beyond txt: " << candiate_match.beyond_txt
@@ -731,10 +766,17 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
                 << std::endl;
     }
 
+
+
     // TODO: replace with proper message
     if (m_len < 0) {
       std::cerr << "----" << std::endl;
       exit(1);
+    }
+
+    std::string actual_match_str = candiate_match.str;
+    if (m_len < candiate_match.str.length()) {
+      actual_match_str = candiate_match.str.substr(0, m_len);
     }
 
       junctions::graph_slice s =
@@ -743,7 +785,7 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
                                  .q_m = std::make_pair(q_m_start, q_m_stop),
                                  .t_m = std::make_pair(t_m_start, t_m_stop),
                                  .len = m_len,
-                                 .str = candiate_match.str};
+                                 .str = actual_match_str};
 
       if (parameters.verbosity > 3) { s.dbg_print(2); }
 
@@ -769,7 +811,8 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
  */
 void create_edge(Graph *g,
                  std::vector<junctions::graph_slice> const &valid_matches,
-                 int qry, std::pair<int, int> qry_boundary,
+                 int qry,
+                 std::pair<int, int> qry_boundary,
                  std::pair<int, int> txt_boundary, int i, int j,
                  core::Parameters const &parameters,
                  bool eps_edge = false) {
@@ -811,15 +854,21 @@ void create_edge(Graph *g,
 * @param[in] parameters
 * return
 */
-Graph compute_intersection_graph(EDS &eds_w, EDS &eds_q,
+Graph compute_intersection_graph(EDS &eds_w,
+                                 EDS &eds_q,
                                  core::Parameters const &parameters) {
-  if (parameters.verbosity > 1) { std::cerr << "[graph::compute_intersection_graph]" << std::endl; }
+  if (parameters.verbosity > 1) { std::cerr << "DEBUG [graph::compute_intersection_graph]" << std::endl; }
 
   size_t size_w = eds_w.size;
   size_t size_q = eds_q.size;
 
   int len_w = eds_w.length;
   int len_q = eds_q.length;
+
+  if (parameters.verbosity > 0) {
+    std::cerr << utils::indent(1) << "N" << junctions::unicode_sub_1 << ": " << size_w << " m" << junctions::unicode_sub_1 << ": " << len_w << std::endl
+              << utils::indent(1) << "N" << junctions::unicode_sub_2 << ": " << size_q << " m" << junctions::unicode_sub_2 << ": " << len_q << std::endl;
+  }
 
   /*
     Generate suffix trees
@@ -860,7 +909,7 @@ Graph compute_intersection_graph(EDS &eds_w, EDS &eds_q,
     -------------
   */
 
-  Graph g = Graph(eds_w.size + eds_w.epsilons + len_w, eds_q.size + eds_q.epsilons + len_q);
+  Graph g = Graph(eds_w.size + eds_w.epsilons, eds_q.size + eds_q.epsilons);
 
   if (parameters.verbosity > 0) { g.dbg_print(1); }
 
@@ -879,59 +928,128 @@ Graph compute_intersection_graph(EDS &eds_w, EDS &eds_q,
       // T_2[j] has epsilon
       // T_1[i] is the query
       if (eds_q.data[j].has_epsilon) {
-        int eps_idx = eds_q.str_offsets[j].back().start;
-        std::vector<span> i_offsets = eds_w.str_offsets[i];
-        int str_count = eds_w.data[i].has_epsilon ? i_offsets.size() - 1 : i_offsets.size();
 
-        for (int idx = 0; idx < str_count; idx++ ) {
-          span offset = i_offsets[idx];
-          int str_len = (1 + offset.stop) - offset.start;
-          std::string str = eds_w.data[i].data[idx];
-
-          valid_matches.push_back(junctions::graph_slice{
-              .txt_start = eps_idx,
-              .qry_start = (int)offset.start,
-              .q_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
-              .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
-              .len = str_len,
-              .str = str});
+        if (parameters.verbosity > 4) {
+          std::cerr << utils::indent(1)
+                    << "DEBUG [graph::compute_intersection_graph] "
+                    << junctions::unicode_eps << " at "
+                    << junctions::T_2 << "[" << j << "]" << std::endl;
         }
 
-        txt_boundary = compute_letter_boundaries(eds_q.str_offsets[j]);
+        int eps_idx = eds_q.str_offsets[j].back().start;
+
+        txt_boundary = compute_letter_boundaries(eds_q.str_offsets[j], true);
         qry_boundary = compute_letter_boundaries(eds_w.str_offsets[i]);
 
-        create_edge(&g, valid_matches, 1, qry_boundary, txt_boundary, i, j, parameters , true);
+        // std::cerr << junctions::indent(2) << "txt_b => (" << txt_boundary.first << ", " << txt_boundary.second << ")" << std::endl
+        //           << junctions::indent(2) << "qry_b => (" << qry_boundary.first << ", " << qry_boundary.second << ")" << std::endl;
+
+        valid_matches.push_back(junctions::graph_slice{
+            .txt_start = eps_idx,
+            .qry_start = qry_boundary.first,
+            .q_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
+            .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
+            .len = 0,
+            .str = ""});
+
+        // std::cerr << "b->" << qry_boundary.first << "\n";
+
+        // the last letter in T_1
+        if (i == len_w - 1) {
+          std::pair<int, int>  accept_qry_boundary = std::make_pair(qry_boundary.second + 1, qry_boundary.second + 1);
+          // std::cerr << "------ "<< qry_boundary.second << std::endl;
+          create_edge(&g, valid_matches, 1, accept_qry_boundary, txt_boundary, i, j, parameters, true);
+        }
+
+        if (false) {
+          for (auto row = 0; row < len_q; row++) {
+            for (int col = 0; col < size_w; col++)
+              std::cerr << i_active_suffixes[row][col] << ", ";
+            std::cerr << std::endl;
+          }
+        }
+
+        // handle active suffixes
+        if (j > 0) {
+          for (int col=0; col <= eds_w.str_offsets[i].back().stop; col++) {
+            if (i_active_suffixes[j-1][col]) {
+              // update active suffixes
+              i_active_suffixes[j][col] = 1;
+
+              // update active suffixes
+              valid_matches.push_back(junctions::graph_slice{
+                  .txt_start = eps_idx,
+                  .qry_start = col,
+                  .q_m = std::make_pair(junctions::match_type::imp, junctions::match_type::imp),
+                  .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
+                  .len = 0,
+                  .str = ""});
+            }
+          }
+        }
+
+        create_edge(&g, valid_matches, 1, qry_boundary, txt_boundary, i, j, parameters, true);
+
       }
+
 
       clean_up();
 
       // T_1[i] has epsilon
       // T_2[j] is the query
       if (eds_w.data[i].has_epsilon) {
-        int eps_idx = eds_w.str_offsets[i].back().start;
-        std::vector<span> j_offsets = eds_q.str_offsets[j];
-        int str_count =
-            eds_q.data[j].has_epsilon ? j_offsets.size() - 1 : j_offsets.size();
 
-        for (int idx = 0; idx < str_count; idx++) {
-          span offset = j_offsets[idx];
-          int str_len = (1 + offset.stop) - offset.start;
-          std::string str = eds_q.data[j].data[idx];
-
-          valid_matches.push_back(junctions::graph_slice{
-              .txt_start = eps_idx,
-              .qry_start = (int)offset.start,
-              .q_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
-              .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
-              .len = str_len,
-              .str = str});
+        if (parameters.verbosity > 4) {
+          std::cerr << utils::indent(1)
+                    << "DEBUG [graph::compute_intersection_graph] "
+                    << junctions::unicode_eps << " at "
+                    << junctions::T_1 << "[" << i << "]" << std::endl;
         }
 
+        txt_boundary = compute_letter_boundaries(eds_w.str_offsets[i], true);
         qry_boundary = compute_letter_boundaries(eds_q.str_offsets[j]);
-        txt_boundary = compute_letter_boundaries(eds_w.str_offsets[i]);
 
-        create_edge(&g, valid_matches, 2, qry_boundary, txt_boundary, i, j,
-                    parameters, true);
+        int eps_idx = eds_w.str_offsets[i].back().start;
+
+        valid_matches.push_back(junctions::graph_slice{
+            .txt_start = eps_idx,
+            .qry_start = qry_boundary.first,
+            .q_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
+            .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
+            .len = 0,
+            .str = ""});
+
+
+
+        // the last letter in T_2
+        if (j == len_q - 1) {
+          std::pair<int, int> accept_qry_boundary =
+              std::make_pair(qry_boundary.second + 1, qry_boundary.second + 1);
+          // std::cerr << "------ "<< qry_boundary.second << std::endl;
+          create_edge(&g, valid_matches, 2, accept_qry_boundary, txt_boundary, i, j, parameters, true);
+        }
+
+
+        // update active suffixes
+        if (i > 0) {
+          for (int col = 0; col <= eds_q.str_offsets[j].back().stop; col++) {
+            if (j_active_suffixes[i - 1][col]) {
+              // update active suffixes
+              j_active_suffixes[i][col] = 1;
+
+              // update active suffixes
+              valid_matches.push_back(junctions::graph_slice{
+                  .txt_start = eps_idx,
+                  .qry_start = col,
+                  .q_m = std::make_pair(junctions::match_type::imp, junctions::match_type::imp),
+                  .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
+                  .len = 0,
+                  .str = ""});
+            }
+          }
+        }
+
+        create_edge(&g, valid_matches, 2, qry_boundary, txt_boundary, i, j, parameters, true);
       }
 
       clean_up();
@@ -943,19 +1061,21 @@ Graph compute_intersection_graph(EDS &eds_w, EDS &eds_q,
       // Text => T_1[i]
 
       if (parameters.verbosity > 3) {
-        std::cerr << "Query => T_2[" << j << "] Text => T_1[ " << i << "]"
+        std::cerr << utils::indent(1)
+                  << "Query => T" << junctions::unicode_sub_2 << "[" << j << "] "
+                  << "Text => T" << junctions::unicode_sub_1 << "[" << i << "]"
                   << std::endl;
       }
 
-        
       // perform matching
-      match(eds_q.data[j].data, &w_suffix_trees[i], &candidate_matches,
+      match(eds_q.data[j].data, eds_w.str_slices[i], &w_suffix_trees[i], &candidate_matches,
             parameters);
 
       // filter matches
       filter_matches(candidate_matches, eds_w.str_slices[i],
                      eds_w.str_offsets[i], eds_q.str_offsets[j],
-                     &i_active_suffixes, j, &valid_matches, parameters);
+                     &i_active_suffixes, &j_active_suffixes,
+                     j, i, &valid_matches, parameters);
 
       qry_boundary = compute_letter_boundaries(eds_q.str_offsets[j]);
       txt_boundary = compute_letter_boundaries(eds_w.str_offsets[i]);
@@ -969,9 +1089,12 @@ Graph compute_intersection_graph(EDS &eds_w, EDS &eds_q,
 
        // Search for i_strs in T_2[j]
        // ---------------------------
-       if (parameters.verbosity > 3) {}
+
        if (parameters.verbosity > 3) {
-        std::cerr << "Query => T_1[" << i << "] Text => T_2[ " << j << "]"
+
+        std::cerr << utils::indent(1)
+                  << "Query => T" << junctions::unicode_sub_1 << "[" << i << "] "
+                  << "Text => T" << junctions::unicode_sub_2 << "[" << j << "]"
                   << std::endl;
        }
 
@@ -979,12 +1102,14 @@ Graph compute_intersection_graph(EDS &eds_w, EDS &eds_q,
        // Text => T_2[j]
 
        // perform matching
-       match(eds_w.data[i].data, &q_suffix_trees[j], &candidate_matches, parameters);
+       match(eds_w.data[i].data, eds_q.str_slices[j], &q_suffix_trees[j],
+             &candidate_matches, parameters);
 
        // filter matches
        filter_matches(candidate_matches, eds_q.str_slices[j],
                       eds_q.str_offsets[j], eds_w.str_offsets[i],
-                      &j_active_suffixes, i, &valid_matches, parameters);
+                      &j_active_suffixes, &i_active_suffixes,
+                      i, j, &valid_matches, parameters);
 
        txt_boundary = compute_letter_boundaries(eds_q.str_offsets[j]);
        qry_boundary = compute_letter_boundaries(eds_w.str_offsets[i]);
@@ -1003,14 +1128,20 @@ Graph compute_intersection_graph(EDS &eds_w, EDS &eds_q,
    * ---------------------------------
    */
 
-  txt_boundary = compute_letter_boundaries(eds_w.str_offsets[len_w - 1]); // w
-  qry_boundary = compute_letter_boundaries(eds_q.str_offsets[len_q - 1]); // q
+  // TODO: remove this capping stuff
 
-  int i = g.compute_index(txt_boundary.second + 1, qry_boundary.second +1, len_w - 1, len_q - 1);
+  // txt_boundary = compute_letter_boundaries(eds_w.str_offsets[len_w - 1]); // w
+  // qry_boundary = compute_letter_boundaries(eds_q.str_offsets[len_q - 1]); // q
 
-  // std::cerr << txt_boundary.second << " " << qry_boundary.second << " i: " << i << std::endl;
+  // int a = txt_boundary.second + 1;
+  // int b = qry_boundary.second + 1;
 
-  g.q_a.push_back(Edge{.dest = i, .weight = 0});
+  // int i = g.compute_index(a, b);
+
+  // std::cerr << "-------> capping\n";
+  // std::cerr << a << " " << b << " i: " << i << std::endl;
+
+  // g.q_a.push_back(Edge{.dest = i, .weight = 0});
 
 
   return g;
@@ -1044,11 +1175,11 @@ int match_stats(Graph &g, EDS &eds_w, EDS &eds_q, core::Parameters const &parame
 
       ks.push_back(k);
 
-      start_nodes.push_back(g.compute_index(l, k, letter, j));
+      start_nodes.push_back(g.compute_index(l, k));
 
       for (int idx = 1; idx < o.size(); idx++) {
         ks.push_back(idx);
-        start_nodes.push_back(g.compute_index(l, idx, letter, j));
+        start_nodes.push_back(g.compute_index(l, idx));
       }
     }
 
@@ -1073,11 +1204,11 @@ int match_stats(Graph &g, EDS &eds_w, EDS &eds_q, core::Parameters const &parame
 
       ls.push_back(k);
 
-      start_nodes.push_back(g.compute_index(l, k, i, letter));
+      start_nodes.push_back(g.compute_index(l, k));
 
       for (int idx = 1; idx < o.size(); idx++) {
         ls.push_back(idx);
-        start_nodes.push_back(g.compute_index(l, idx, i, letter));
+        start_nodes.push_back(g.compute_index(l, idx));
       }
     }
 
@@ -1087,10 +1218,11 @@ int match_stats(Graph &g, EDS &eds_w, EDS &eds_q, core::Parameters const &parame
     }
   }
 
-    
+
   return max;
 }
 
+  // TODO: remove
 /**
  *
  *
@@ -1107,8 +1239,8 @@ void foobar(Graph g, EDS &eds_w, EDS &eds_q) {
   k = compute_letter_boundaries(eds_q.str_offsets[w_start]).first;
   k_prime = compute_letter_boundaries(eds_q.str_offsets[w_stop]).second;
 
-  int start_node = g.compute_index(l-1, k-1, w_start, q_start);
-  int end_node = g.compute_index(l + 1, k + 1, w_stop, q_stop);
+  // int start_node = g.compute_index(l-1, k-1, w_start, q_start);
+  // int end_node = g.compute_index(l + 1, k + 1, w_stop, q_stop);
 }
 
 int longest_witness(Graph g) {
@@ -1116,7 +1248,7 @@ int longest_witness(Graph g) {
 }
 
 int shortest_witness(Graph g) {
-  return g.djikstra(0, g.V - 1);
+  return g.dijkstra(0, g.V - 1);
 }
 
 }

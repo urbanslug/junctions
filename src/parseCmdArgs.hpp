@@ -145,29 +145,31 @@ T_2 = 2\n\
 
     switch (parameters.task) {
     case core::arg::compute_graph:
-    std::cerr << "task: compute intersection graph." << std::endl;
+    std::cerr << "task: compute intersection graph" << std::endl;
     break;
     case core::arg::check_intersection:
     std::cerr << "task: check intersection" << std::endl;
+    std::cerr << "algorithm = " << algo_string(parameters.algo) << std::endl;
     break;
     case core::arg::info:
     std::cerr << "task: print info" << std::endl;
     break;
     default:
-    std::cerr << "Unhandled task: report a bug"  << std::endl;
+    std::cerr << "unhandled task: report a bug"  << std::endl;
     }
 
     if (parameters.output_dot) {
-      std::cerr << "Print dot" << std::endl;
+      std::cerr << "print dot" << std::endl;
     }
 
     if (parameters.size_of_multiset) {
-      std::cerr << "Compute the size of the multiset" << std::endl;
+      std::cerr << "compute the size of the multiset" << std::endl;
     }
 
     if (parameters.compute_witness) {
       std::cerr << "witness choice = "
                 << (parameters.witness_choice == core::witness::longest ? "longest" : "shortest")
+
                 << std::endl;
     }
 
@@ -179,9 +181,9 @@ T_2 = 2\n\
       }
     }
 
-    std::cerr << "algorithm = " << algo_string(parameters.algo) << std::endl;
-
     std::cerr << "verbosity = " << parameters.verbosity << std::endl;
+
+    std::cerr << std::endl;
   }
 
   /**
