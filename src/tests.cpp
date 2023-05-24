@@ -105,7 +105,6 @@ void test_string_matching() {
     update_leaves(root, &text_slices);
   };
 
-
   txt_strs = {"ABC", "DAGT"};
   text_slices = {slicex{.start = 0, .length = 3},
                  slicex{.start = 3, .length = 4}};
@@ -118,17 +117,16 @@ void test_string_matching() {
     junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 0}
   };
 
-
   IS_TRUE(exp == match_positions);
 
   // ---------------------
 
   query = "jk";
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
+  // print_match_positions();
   exp = {};
-  
-  
+
+
   IS_TRUE(exp == match_positions);
 
   // ---------------------
@@ -145,7 +143,7 @@ void test_string_matching() {
       junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 1, .chr_idx = 4}
   };
 
-  
+
   IS_TRUE(exp == match_positions);
 
   // ---------------------
@@ -153,7 +151,7 @@ void test_string_matching() {
   // TODO: investigate
 
   query = "ABCDAGTA";
-  
+
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
 
   //print_match_positions();
@@ -162,7 +160,7 @@ void test_string_matching() {
     junctions::extended_match{.beyond_text = true, .match_length = 3, .str_idx = 0, .chr_idx = 0}
   };
 
-  
+
   IS_TRUE(exp == match_positions);
 
   // ---------------------
@@ -170,7 +168,7 @@ void test_string_matching() {
   query = "GTA";
   //reset();
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  //print_match_positions(match_positions);
+  //print_match_positions();
 
   exp = {
     junctions::extended_match{.beyond_text = true, .match_length = 2, .str_idx = 1, .chr_idx = 5}
@@ -181,15 +179,15 @@ void test_string_matching() {
   // ---------------------
 
   query = "GT";
-  
+
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
+  // print_match_positions();
 
   exp = {
     junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 1, .chr_idx = 5}
   };
 
-  
+
 
   IS_TRUE(exp == match_positions);
 
@@ -206,7 +204,7 @@ void test_string_matching() {
   query = "G";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
+  // print_match_positions();
 
   exp = {
     junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 0, .chr_idx = 1}
@@ -225,7 +223,7 @@ void test_string_matching() {
   query = "TCG";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
+  // print_match_positions();
 
   exp = {
     junctions::extended_match{.beyond_text = true, .match_length = 2, .str_idx = 0, .chr_idx = 5}
@@ -264,7 +262,7 @@ void test_string_matching() {
   query = "GTC";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
+  // print_match_positions();
 
   exp = {
     junctions::extended_match{ .beyond_text = true, .match_length = 2, .str_idx = 0, .chr_idx = 1}
@@ -282,7 +280,7 @@ void test_string_matching() {
   query = "GAGG";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
+  // print_match_positions();
 
 
   exp = {
@@ -301,14 +299,13 @@ void test_string_matching() {
   query = "TT";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
-
+  // print_match_positions();
 
   exp = {
       junctions::extended_match{ .beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 0},
       junctions::extended_match{ .beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 3},
   };
-  
+
   IS_TRUE(exp == match_positions);
 
   // --------------------------
@@ -318,7 +315,7 @@ void test_string_matching() {
 
   query = "T";
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  // print_match_positions(match_positions);
+  // print_match_positions();
 
   exp = {
       junctions::extended_match{.beyond_text = false, .match_length = 1, .str_idx = 0, .chr_idx = 0},
@@ -328,6 +325,7 @@ void test_string_matching() {
   IS_TRUE(exp == match_positions);
 
   // --------------------------
+
   txt_strs = {"CCGC"};
   text_slices = {slicex{.start = 0, .length = 4}};
   setup();
@@ -345,7 +343,7 @@ void test_string_matching() {
 
 
   // --------------------------
-  
+
   txt_strs = {"TGAATGCCT"};
   text_slices = {slicex{.start = 0, .length = 9}};
   setup();
@@ -364,8 +362,8 @@ void test_string_matching() {
 
   IS_TRUE(exp == match_positions);
 
-  
   // --------------------------
+
   txt_strs = {"TGATGCT"};
   text_slices = {slicex{.start = 0, .length = 7}};
   setup();
@@ -380,7 +378,6 @@ void test_string_matching() {
       junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 3},
       junctions::extended_match{.beyond_text = true, .match_length = 1, .str_idx = 0, .chr_idx = 6},
   };
-
 
   IS_TRUE(exp == match_positions);
 
@@ -404,6 +401,7 @@ void test_string_matching() {
   IS_TRUE(exp == match_positions);
 
   // --------------------------
+
   query = "G";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
@@ -487,8 +485,6 @@ void test_string_matching() {
 
   query = "GAT";
   vector<junctions::extended_match> k = FindEndIndexesThree(query.c_str(), root, text.c_str());
-
-  
 }
 
 void test_compute_graph() {
