@@ -36,6 +36,7 @@ bool operator<(const Edge &lhs, const Edge &rhs) {
   return std::tie(lhs.dest, lhs.weight, lhs.str, lhs.is_eps) < std::tie(rhs.dest, rhs.weight, rhs.str, rhs.is_eps);
 }
 
+// TODO: move to a more central location
 struct compare_by_weight {
   bool operator()(const pair<int, int> &l, const pair<int, int> &r) {
     return l.second > r.second;
@@ -297,7 +298,6 @@ struct Graph {
     }
 
     return dists[stop_node_idx];
-    ;
   }
 
 
@@ -317,9 +317,8 @@ struct Graph {
                core::Parameters const &parameters,
                int eps_side = 0
                ) {
-    if (parameters.verbosity > 2) {
-      std::cerr << utils::indent(1) << "DEBUG, [Graph::g.addEdge]" << std::endl;
-    }
+
+    if (parameters.verbosity > 2) { std::cerr << utils::indent(1) << "DEBUG, [Graph::g.addEdge]" << std::endl; }
 
     int stop, start;
     int l, k, l_prime, k_prime;
@@ -949,7 +948,7 @@ Graph compute_intersection_graph(EDS &eds_w,
             .qry_start = qry_boundary.first,
             .q_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
             .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
-            .len = 0,
+            .len = 0, 
             .str = ""});
 
         // std::cerr << "b->" << qry_boundary.first << "\n";

@@ -29,6 +29,12 @@ int los(int m) { return (int)((double)m * (rand() / (RAND_MAX + 1.0))); }
 
 namespace junctions {
 
+/* -> */
+bool logical_implication(bool p, bool q) { return !p || q; }
+
+/* <-> */
+bool double_implication(bool a, bool b) { return !(a && !b) && !(!a && b); }
+
 std::string indent(int level) {
   std::string repeat;
   for (int i = 0; i < level; i++) {
@@ -82,6 +88,18 @@ std::ostream &operator<<(std::ostream &os, const junctions::extended_match &r) {
      << " match length: " << r.match_length
      << " str idx: " << r.str_idx
      << " char idx: " << r.chr_idx;
+  return os;
+}
+
+// match
+// -----
+std::ostream &operator<<(std::ostream &os, const junctions::match &m) {
+  os << "qry str idx: " << m.query_str_index
+     << " txt str idx: " << m.text_str_index
+     << " txt char idx: " << m.text_char_index
+     << " match length: " << m.match_length
+     << " beyond txt: " << m.beyond_txt
+     << " str: " << m.str;
   return os;
 }
 

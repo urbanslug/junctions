@@ -60,13 +60,23 @@ std::string indent(int level);
 void join(const vector<string> &v, char c, string &s);
 
 /**
+ * ->
+ */
+bool logical_implication(bool p, bool q);
+
+/**
+ * <->
+ */
+bool double_implication(bool a, bool b);
+
+/**
  *
- * is a match explicit or implicit
+ * Is a match explicit or implicit
  *
  */
 enum match_type { exp, imp };
 
-  // typedef std::pair<match_pe, match_type> vertex_type;
+// typedef std::pair<match_pe, match_type> vertex_type;
 
 struct graph_slice {
   int txt_start;
@@ -125,7 +135,6 @@ struct query_result {
   bool is_miss() { return !this->is_hit(); }
 };
 
-
 std::ostream &operator<<(std::ostream &os, const junctions::query_result &r);
 
 bool operator==(const junctions::query_result &lhs, const junctions::query_result &rhs);
@@ -152,39 +161,42 @@ struct extended_match {
 };
 
 std::ostream &operator<<(std::ostream &os, const junctions::extended_match &r);
+
 bool operator==(const junctions::extended_match &lhs, const junctions::extended_match &rhs);
 
-  struct match {
-    int query_str_index;
-    // no need for query_char_idx bexause it's always 0
+struct match {
+  int query_str_index;
+  // no need for query_char_idx bexause it's always 0
 
-    int text_str_index;
-    int text_char_index;
+  int text_str_index;
+  int text_char_index;
 
-    int match_length;
-    bool beyond_txt;
+  int match_length;
+  bool beyond_txt;
 
-    std::string str;
-    // std::string t_str;
+  std::string str;
+  // std::string t_str;
 
-    // bool is_active_suffix_match;
+  // bool is_active_suffix_match;
 
-    // std::slice text_match;
-    // std::slice query_match;
+  // std::slice text_match;
+  // std::slice query_match;
 
-    // match constructor
+  // match constructor
 
-    match null_match() {
-      return {
-          .query_str_index = -1,
-          .text_str_index = -1,
-          .text_char_index = -1,
-          .match_length = -1,
-          .beyond_txt = false,
-          .str = "",
-      };
-    }
-  };
+  match null_match() {
+    return {
+      .query_str_index = -1,
+      .text_str_index = -1,
+      .text_char_index = -1,
+      .match_length = -1,
+      .beyond_txt = false,
+      .str = "",
+    };
+  }
+};
+
+std::ostream &operator<<(std::ostream &os, const junctions::match &m);
 
 } // namespace junctions
 
@@ -298,6 +310,11 @@ struct EDS {
   size_t m; // number of strings
   size_t length;
 };
+
+// TODO: reorder
+void gen_suffix_tree(
+    EDS const &eds,
+    std::vector<std::pair<STvertex, std::string>> *suffix_trees);
 
 struct LinearizedEDS {
   std::string str;

@@ -48,7 +48,7 @@ void do_intersect(EDS w, EDS q, core::Parameters const &parameters) {
     timeRefRead = Time::now() - t0;
 
     if (parameters.verbosity > 0) {
-      std::cerr << "INFO [junctions::main] Time spent by improved algorithm:"
+      std::cerr << "INFO [junctions::main] Time spent by improved algorithm: "
                 << timeRefRead.count() << " sec" << std::endl;
     }
   } else if (parameters.algo == core::algorithm::both) {
@@ -282,8 +282,16 @@ int main(int argc, char **argv) {
   // print (debug) info
   auto foo = [&]() {
     if (parameters.verbosity > 0) {
-      std::cerr << utils::indent(1) << "N_1: " << w.size << " m_1: " << w.m
-                << " N_2: " << q.size << " m_2: " << q.m << std::endl;
+      std::cerr << "Input info {"
+                << std::endl << utils::indent(1)
+                << "N" << junctions::unicode_sub_1 << ": " << w.size
+                << " m" << junctions::unicode_sub_1 << ": " << w.m
+                << " n" << junctions::unicode_sub_1 << ": " << w.length
+                << std::endl << utils::indent(1)
+                << "N" << junctions::unicode_sub_2 << ": " << q.size
+                << " m" << junctions::unicode_sub_2 << ": " << q.m
+                << " n" << junctions::unicode_sub_2 << ": " << q.length
+                << std::endl << "}" << std::endl;
     }
   };
 

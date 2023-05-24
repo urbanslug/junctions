@@ -35,13 +35,13 @@ int main(){
 
   // test_handle_epsilon();
   // test_contains_intersect();
-  // test_lacks_intersect();
+  //test_lacks_intersect();
   // test_contains_intersect_active_prefixes();
 
   // test_parse_ed_string();
 
   test_string_matching();
-  // test_compute_graph();
+  //test_compute_graph();
 
   /*
     test_lacks_intersect();
@@ -104,6 +104,23 @@ void test_string_matching() {
     root = Create_suffix_tree(text.c_str(), text.length());
     update_leaves(root, &text_slices);
   };
+
+  txt_strs = {"CACCACGTACTTGACGTTACGAAAGAACAGGGATACCCAAATCCGAGACCTAGGTTACA"};
+  text_slices = {slicex{.start = 0, .length = 59}};
+
+  junctions::join(txt_strs, '$', text);
+  text += '_'; // add a terminator char
+  root = Create_suffix_tree(text.c_str(), text.length());
+  update_leaves(root, &text_slices);
+
+  query = "ACATTTCGCCCCGTCCCTGTTCGGACGCTTACGTTTAGCCCCTTGATCATTAGAGGTTTTCGAC"
+          "TTTACTGAGCCGCGTCCGGTTCATGTGGTCCCTATTGCGTGTGGGATGACATTCCTACATCTCA"
+          "TAGCACGCTTCGTCCGTTTCCGGTAACAGAATGGACCACAAACACCATTTTACGTTGGGGGGCG"
+          "CCGAACCCACGTGTGGTGAGTGGCCGGGCACAGAAGT";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  print_match_positions();
+  return;
 
   txt_strs = {"ABC", "DAGT"};
   text_slices = {slicex{.start = 0, .length = 3},
@@ -478,13 +495,68 @@ void test_string_matching() {
       slicex{.start = 6, .length = 3},
   };
 
+  setup();
+
+  query = "GAT";
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // --------------------------
+
+  txt_strs = {"A", "G"};
+  text_slices = {
+      slicex{.start = 0, .length = 1},
+      slicex{.start = 1, .length = 1},
+  };
+
+  setup();
+  
+  query = "GAT";
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions();
+  // ------------------------
+
+  txt_strs = {"AT"};
+  text_slices = { slicex{.start = 0, .length = 2} };
+
   junctions::join(txt_strs, '$', text);
   text += '_'; // add a terminator char
   root = Create_suffix_tree(text.c_str(), text.length());
   update_leaves(root, &text_slices);
 
-  query = "GAT";
-  vector<junctions::extended_match> k = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  query = "T";
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions();
+
+  // ------------------------
+
+  txt_strs = {"ACA"};
+  text_slices = {slicex{.start = 0, .length = 3}};
+
+  junctions::join(txt_strs, '$', text);
+  text += '_'; // add a terminator char
+  root = Create_suffix_tree(text.c_str(), text.length());
+  update_leaves(root, &text_slices);
+
+  query = "ACAT";
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions();
+
+  // ------------------------
+
+  txt_strs = {"CACCACGTACTTGACGTTACGAAAGAACAGGGATACCCAAATCCGAGACCTAGGTTACA"};
+  text_slices = {slicex{.start = 0, .length = 59}};
+
+  junctions::join(txt_strs, '$', text);
+  text += '_'; // add a terminator char
+  root = Create_suffix_tree(text.c_str(), text.length());
+  update_leaves(root, &text_slices);
+
+  query = "ACATTTCGCCCCGTCCCTGTTCGGACGCTTACGTTTAGCCCCTTGATCATTAGAGGTTTTCGAC"
+          "TTTACTGAGCCGCGTCCGGTTCATGTGGTCCCTATTGCGTGTGGGATGACATTCCTACATCTCA"
+          "TAGCACGCTTCGTCCGTTTCCGGTAACAGAATGGACCACAAACACCATTTTACGTTGGGGGGCG"
+          "CCGAACCCACGTGTGGTGAGTGGCCGGGCACAGAAGT";
+
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  print_match_positions();
 }
 
 void test_compute_graph() {
@@ -506,6 +578,8 @@ void test_compute_graph() {
     len = graph::longest_witness(g);
     IS_TRUE2(double_implication(len >= 0, contains_intersect), line);
   };
+
+  
 
   ed_string_w = "TTT"
                 "{A,}"
@@ -683,6 +757,14 @@ void test_compute_graph() {
   ed_string_q = "{GTAATCCCT}{CG,}{TCGATGATC}";
   check(__LINE__);
 
+  ed_string_w = "{AT,TC}{ATC,}";
+  ed_string_q = "{TC,G}{CT,T}";
+  check(__LINE__);
+
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
+  ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
+  check(__LINE__);
+
   ed_string_w = "{TC}{G,}{G}";
   ed_string_q = "{T}{CG,}{TCG}";
   // TODO: figure out this test
@@ -804,12 +886,25 @@ void test_parse_ed_string() {
 
 void test_contains_intersect() {
   auto params = init_tests();
+  std::string ed_string_w, ed_string_q;
+  EDS eds_w, eds_q;
 
-  std::string ed_string_w = "{AT,TC}{ATC,T}";
-  std::string ed_string_q = "{TC,G}{CT,T}";
+  ed_string_w = "CACCACGTACTTGACGTTACGAAAGAACAG";
+  ed_string_q = "CACCACGTACTTGACGTTACGAAAGAA{CAG,AC}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
 
-  EDS eds_w = parser::parse_ed_string(ed_string_w, params);
-  EDS eds_q = parser::parse_ed_string(ed_string_q, params);
+   // IS_TRUE(improved::intersect(eds_w, eds_q));
+   IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+           improved::intersect(eds_w, eds_q, params));
+
+   return;
+
+   ed_string_w = "{AT,TC}{ATC,T}";
+   ed_string_q = "{TC,G}{CT,T}";
+
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+   eds_q = parser::parse_ed_string(ed_string_q, params);
 
   // IS_TRUE(improved::intersect(eds_w, eds_q));
   IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
@@ -885,8 +980,10 @@ void test_lacks_intersect() {
   ed_string_q = "{G,T}{GC}{AC,G}";
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
-  // run_n_print();
+  run_n_print();
   IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  return;
 
   ed_string_w = "{GCGGTGGCTT}{AC,G}";
   ed_string_q = "{G,T}{GCGGTGGCTT}{AC,G}";
@@ -913,6 +1010,14 @@ void test_handle_epsilon() {
     std::cerr << "naive: " << naive_res << " improved: " << imp_res;
     exit(1);
   };
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  eds_w = parser::parse_ed_string(ed_string_w, params);
+  eds_q = parser::parse_ed_string(ed_string_q, params);
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
+
+  //return;
 
   ed_string_w = "{AT,TC}{TC,T}";
   ed_string_q = "TC{,G}{CT,T}";
@@ -981,8 +1086,7 @@ void test_handle_epsilon() {
   ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
-  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-          improved::intersect(eds_w, eds_q, params));
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
 
   // ed_string_w = "{GT,}{A,C}{T}";
   // ed_string_q = "{G,}{AT}";
@@ -1058,6 +1162,9 @@ void test_handle_epsilon() {
 
   ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
   ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCA}";
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
+          improved::intersect(eds_w, eds_q, params));
+
   ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
   ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
   eds_w = parser::parse_ed_string(ed_string_w, params);
