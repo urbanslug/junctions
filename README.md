@@ -16,7 +16,7 @@ end of the intersection graph. Uses the `-w <witness_type>` where witness type
 is longest/long/1 or shortest/short/0.
 
 ### Size of the multiset
-Get the number of unique strings in the language of `T_1` and `T_2` using ` -m`.
+Get the number of unique strings in the language of `T₁` and `T₂` using ` -m`.
 
 ### Matching statistics
 Find the length of the longest prefix of a string starting at some letter which
@@ -42,6 +42,15 @@ into gfa.
 cat x.dot | python scripts/dot2gfa.py > x.gfa
 ```
 
+For larger graphs you may want to visualize them in
+[bandage](https://github.com/rrwick/Bandage/) so there's a quick
+`dot` to `gfa` converter which lets one open the `gfa` graph in
+[bandage](https://github.com/rrwick/Bandage/)
+
+```
+cat x.dot | python scripts/dot2gfa.py > x.gfa
+```
+
 ## Compile and Run
 Compile
 ```sh
@@ -50,7 +59,8 @@ make
 ```
 
 Run
-```sh
+
+```
 $ ./bin/junctions
 -----------------
 Compute the intersection of Elastic Degenerate Strings
@@ -58,14 +68,17 @@ Provide at at least -i to check whether and intersection exists,
 or -g to compute the intersection graph
 Example usage:
 check whether the intersection exists
-$ ./build/junctions -i -a=2 data/x.eds data/y.eds
+$ ./bin/junctions -i -a=2 data/x.eds data/y.eds
 compute the intersection graph
-$ ./build/junctions -g -d data/x.eds data/y.eds
+$ ./bin/junctions -g -d data/x.eds data/y.eds
 
 Available options
 -----------------
 -h, --help
     Print this help page
+
+-e, --info
+    print info about the given ed string(s) and exit
 
 -i, --intersect
     check whether the intersection is non-empty
@@ -93,8 +106,8 @@ Available options
 
 -T <value>, --match-stats-str <value>
     matching stats ed string
-    T_1 = 1
-    T_2 = 2
+    T₁ = 1
+    T₂ = 2
     [default: 1]
 
 --match-stats-idx <value>, -n <value>

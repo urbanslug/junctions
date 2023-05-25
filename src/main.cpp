@@ -256,6 +256,7 @@ EDS read_file(core::Parameters &parameters, std::pair<core::file_format, std::st
   return ed_string;
 }
 
+// TODO: remove or merge with junctions::print_eds_info
 void print_info(EDS f, int indent_level = 0) {
   std::cout << utils::indent(indent_level) << f.size << "\t" << f.m << std::endl;
 }
@@ -275,28 +276,9 @@ int main(int argc, char **argv) {
 
   if (parameters.verbosity > 1) { std::cerr << "DEBUG [junctions::main]" << std::endl; }
 
-  // Read files
   EDS q, w;
 
-  // TODO: combine with loop
-  // print (debug) info
-  auto foo = [&]() {
-    if (parameters.verbosity > 0) {
-      std::cerr << "Input info {"
-                << std::endl << utils::indent(1)
-                << "N" << junctions::unicode_sub_1 << ": " << w.size
-                << " m" << junctions::unicode_sub_1 << ": " << w.m
-                << " n" << junctions::unicode_sub_1 << ": " << w.length
-                << std::endl << utils::indent(1)
-                << "N" << junctions::unicode_sub_2 << ": " << q.size
-                << " m" << junctions::unicode_sub_2 << ": " << q.m
-                << " n" << junctions::unicode_sub_2 << ": " << q.length
-                << std::endl << "}" << std::endl;
-    }
-  };
-
   auto loop = [&](){
-
     EDS i;
     std::cout << "File\tN\tm" << std::endl;
     for (auto f: parameters.input_files) {
@@ -306,22 +288,17 @@ int main(int argc, char **argv) {
     }
   };
 
-  // utils::print_edt_data(w.data);
 
   switch (parameters.task) {
   case core::arg::compute_graph:
     q = read_files(parameters, core::ed_string::q);
     w = read_files(parameters, core::ed_string::w);
-
-    // foo();
-
     do_graph(w, q, parameters);
     break;
   case core::arg::check_intersection:
     q = read_files(parameters, core::ed_string::q);
     w = read_files(parameters, core::ed_string::w);
-
-    foo();
+    if (parameters.verbosity > 0) { junctions::print_eds_info(w, q); }
     do_intersect(w, q, parameters);
     break;
   case core::arg::info:

@@ -35,13 +35,13 @@ int main(){
 
   // test_handle_epsilon();
   // test_contains_intersect();
-  //test_lacks_intersect();
+  // test_lacks_intersect();
   // test_contains_intersect_active_prefixes();
 
   // test_parse_ed_string();
 
-  test_string_matching();
-  //test_compute_graph();
+  // test_string_matching();
+  test_compute_graph();
 
   /*
     test_lacks_intersect();
@@ -119,8 +119,8 @@ void test_string_matching() {
           "CCGAACCCACGTGTGGTGAGTGGCCGGGCACAGAAGT";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  print_match_positions();
-  return;
+  //print_match_positions();
+  
 
   txt_strs = {"ABC", "DAGT"};
   text_slices = {slicex{.start = 0, .length = 3},
@@ -556,7 +556,24 @@ void test_string_matching() {
           "CCGAACCCACGTGTGGTGAGTGGCCGGGCACAGAAGT";
 
   match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
-  print_match_positions();
+  // print_match_positions();
+
+  // ------------------------
+
+  txt_strs = {"AG", "T"};
+  text_slices = {slicex{.start = 0, .length = 2},
+                 slicex{.start = 0, .length = 1}};
+
+  junctions::join(txt_strs, '$', text);
+  text += '_'; // add a terminator char
+  root = Create_suffix_tree(text.c_str(), text.length());
+  update_leaves(root, &text_slices);
+
+  query = "GTC";
+  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  // print_match_positions();
+
+  // ------------------------
 }
 
 void test_compute_graph() {
@@ -574,12 +591,12 @@ void test_compute_graph() {
 
     g = graph::compute_intersection_graph(eds_w, eds_q, params);
     g.print_dot();
+    //contains_intersect = improved::intersect(eds_w, eds_q, params);
     contains_intersect = improved::intersect(eds_w, eds_q, params) && naive::intersect(eds_w, eds_q, params);
     len = graph::longest_witness(g);
     IS_TRUE2(double_implication(len >= 0, contains_intersect), line);
   };
 
-  
 
   ed_string_w = "TTT"
                 "{A,}"
@@ -1169,8 +1186,7 @@ void test_handle_epsilon() {
   ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
   eds_w = parser::parse_ed_string(ed_string_w, params);
   eds_q = parser::parse_ed_string(ed_string_q, params);
-  IS_TRUE(naive::intersect(eds_w, eds_q, params) ==
-          improved::intersect(eds_w, eds_q, params));
+  IS_TRUE(naive::intersect(eds_w, eds_q, params) == improved::intersect(eds_w, eds_q, params));
 
   ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
   ed_string_q =

@@ -53,13 +53,13 @@ or -g to compute the intersection graph\n\n\n\
 \
 Example usage: \n\
 check whether the intersection exists\n\
-$ ./build/junctions -i -a=2 data/x.eds data/y.eds\n\
+$ ./bin/junctions -i -a=2 data/x.eds data/y.eds\n\
 compute the intersection graph\n\
-$ ./build/junctions -g -d data/x.eds data/y.eds");
+$ ./bin/junctions -g -d data/x.eds data/y.eds");
 
   cmd.setHelpOption("h", "help", "Print this help page");
 
-  cmd.defineOption("info", "print info about the ed string and exit");
+  cmd.defineOption("info", "print info about the given ed string(s) and exit");
   cmd.defineOptionAlternative("info", "e");
 
   cmd.defineOption("intersect", "check whether the intersection is non-empty");
@@ -88,10 +88,11 @@ longest = short/longest/1",
                    ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("witness", "w");
 
-  cmd.defineOption("match-stats-str", "matching stats ed string\n\
-T_1 = 1\n\
-T_2 = 2\n\
-[default: 1]",
+  cmd.defineOption("match-stats-str",
+                   "matching stats ed string\n" +
+                   junctions::T_1 + " = 1\n" +
+                   junctions::T_2 + " = 2\n" +
+                   "[default: 1]",
                    ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("match-stats-str", "T");
 

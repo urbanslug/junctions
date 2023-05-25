@@ -444,7 +444,8 @@ vector<junctions::extended_match> FindEndIndexesThree(const char *query, STverte
       // In the process of matching we find a $
       // and have not finished processing the query
       if (x[j] == '$') {
-        append_matches();
+        // std::cerr << "case 3\n";
+        append_matches(true);
         append_underscore_matches();
         return matches;
       }

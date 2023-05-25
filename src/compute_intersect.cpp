@@ -34,14 +34,13 @@ bool is_prev_letter_matched(int text_letter_idx, int query_letter_idx,
                             matrix const &text_matrix,
                             core::Parameters const &parameters) {
   if (parameters.verbosity > 2) {
-  std::cerr << utils::indent(1) << "DEBUG, [compute_intersect::prev_matched]"
-            << std::endl;
+    std::cerr << utils::indent(1) << "DEBUG, [compute_intersect::prev_matched]"
+              << std::endl;
   }
 
   // std::cerr << text_letter_idx << " " << query_letter_idx << std::endl;
 
-  if ( query_letter_idx == 0) { return true;
-}
+  if ( query_letter_idx == 0) { return true; }
   if (text_letter_idx == 0 && query_letter_idx == 0) { return true; }
 
   // TODO: ?
@@ -52,8 +51,6 @@ bool is_prev_letter_matched(int text_letter_idx, int query_letter_idx,
   if (query_letter_idx == 1 && text_letter_idx == 0 && query_eds.data[0].has_epsilon) {
     return true;
   }
-
-  
 
   int q =  query_letter_idx - 1;
 
@@ -75,61 +72,11 @@ bool is_prev_letter_matched(int text_letter_idx, int query_letter_idx,
     // std::cerr << utils::indent(2) << "[" << query_letter_idx << "][" << col_span->stop << "]: " << (text_matrix[query_letter_idx][col_span->stop]) << std::endl;
     if (text_matrix[query_letter_idx][col_span->stop]) { return true; };
   }
-  
 
   return false;
 }
 
-/**
- *
- * slices exist in l
- * @param[in]  queries           queries
- * @param[in]  text              text
- * @param[out] candidate_matches matches_found in the context of the degenerate letter and not N
-*/
-void match(std::vector<string> const &queries,
-           std::vector<slicex> const &txt_slices,
-           std::pair<STvertex, std::string> *text,
-           std::vector<junctions::match> *candidate_matches,
-           core::Parameters const &parameters) {
-  if (parameters.verbosity > 2) {
-    std::cerr << utils::indent(1) << "DEBUG, [compute_intersect::match]" << std::endl;
-  }
 
-  std::vector<junctions::extended_match> match_positions;
-  
-  // matches found for all queries
-  // slicex candidate_txt_str;
-
-  int match_len;
-  
-  for (size_t qry_str_idx = 0; qry_str_idx < queries.size(); qry_str_idx++) {
-    std::string qry_str = queries[qry_str_idx];
-    match_positions = FindEndIndexesThree(qry_str.c_str(), &text->first, text->second.c_str());
-
-    if (match_positions.empty()) { continue; }
-
-    for (auto match_pos : match_positions) {
-
-
-      match_len = match_pos.match_length;
-
-      if (parameters.verbosity > 3) {
-        std::cerr << junctions::indent(2) << "qry: " << qry_str
-                  << " txt: " << text->second << std::endl;
-        std::cerr << junctions::indent(2) << match_pos << std::endl;
-      }
-
-      candidate_matches->push_back(
-                                   junctions::match{.query_str_index = (int)qry_str_idx,
-                           .text_str_index = match_pos.str_idx,
-                           .text_char_index = match_pos.chr_idx ,
-                           .match_length = match_len,
-                           .beyond_txt = match_pos.beyond_text,
-                           .str = qry_str.substr(0, match_len)});
-    }
-  }
-}
 
 /**
  *
@@ -271,7 +218,6 @@ void update_matrices(std::vector<junctions::match> const &candidate_matches,
   }
 }
 /*
-
 Is there an intersection between ED strings W and Q?
 
                   T_2
@@ -288,7 +234,6 @@ Is there an intersection between ED strings W and Q?
          |--------------------|
          n_1
 */
-
 bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
   if (parameters.verbosity > 1) { std::cerr << "DEBUG, [improved::intersect]" << std::endl; }
 
@@ -318,10 +263,11 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
     std::cerr << "DEBUG, [improved::intersect] Generating suffix trees" << std::endl;
   }
 
+
+  
   gen_suffix_tree(eds_w, &w_suffix_trees);
   gen_suffix_tree(eds_q, &q_suffix_trees);
 
-  
   // std::thread t1(gen_suffix_tree, std::ref(eds_w), len_w, &w_suffix_trees);
   // std::thread t2(gen_suffix_tree, std::ref(eds_q), len_q, &q_suffix_trees);
   // t1.join();
@@ -344,16 +290,10 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
   // TODO: move this upwards
   std::vector<match_data> matches_found; // how many could these be?
   std::vector<suffix> w_suffixes, q_suffixes;
-  //  std::vector<span> const *letter_spans;
   std::vector<junctions::match> candidate_matches;
 
   bool prev_j = false, prev_i = false;
 
-  int max_i =0, max_j=0;
-
-  std::pair<int, int> stat;
-
-  std::string max_j_str, max_i_str;
 
   for (int i = 0; i < len_w; i++) {
     for (int j = 0; j < len_q; j++) {
@@ -390,7 +330,7 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
           }
         }
       }
-  
+
       if (eds_q.data[j].has_epsilon) {
         // copy right
         if (j > 0) {
@@ -411,43 +351,26 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
         }
       }
 
+      prev_j = is_prev_letter_matched(i, j, eds_q, eds_w, q_matrix, w_matrix, parameters);
+      prev_i = is_prev_letter_matched(j, i, eds_w, eds_q, w_matrix, q_matrix, parameters);
+
+      if (!(prev_i && prev_j) ) { continue; }
 
       // search for j_strs in i and update matrices
       if (parameters.verbosity > 3) {
-
         std::cerr << utils::indent(1) << "DEBUG, "
                   << "Text => T" << junctions::unicode_sub_1 << "[" << i << "] "
                   << "Query => T" << junctions::unicode_sub_2 << "[" << j << "]"
                   << std::endl;
       }
+      junctions::perform_matching(eds_q.data[j].data, eds_w.str_slices[i],
+                                  &w_suffix_trees[i], &candidate_matches,
+                                  parameters);
 
-      prev_j = is_prev_letter_matched(i, j, eds_q, eds_w, q_matrix, w_matrix,
-                                      parameters);
-      prev_i = is_prev_letter_matched(j, i, eds_w, eds_q, w_matrix, q_matrix,
-                                      parameters);
+      update_matrices(candidate_matches, eds_w.str_slices[i],
+                      eds_w.str_offsets[i], eds_q.str_offsets[j], &w_matrix,
+                      &q_matrix, j, i, parameters);
 
-      if (!prev_j || !prev_i) {
-        stat = std::make_pair(prev_i, prev_j);
-        
-        continue;
-      }
-
-      if (i > max_i) { max_i = i;}
-      if (j > max_j) {max_j = j; }
-
-
-      
-      
-      
-
-      if (prev_j) {
-        match(eds_q.data[j].data, eds_w.str_slices[i], &w_suffix_trees[i],
-                  &candidate_matches, parameters);
-
-        update_matrices(candidate_matches, eds_w.str_slices[i],
-                            eds_w.str_offsets[i], eds_q.str_offsets[j],
-                            &w_matrix, &q_matrix, j, i, parameters);
-      }
 
       candidate_matches.clear();
 
@@ -459,15 +382,13 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
                   << "Query => T" << junctions::unicode_sub_1 << "[" << i << "]"
                   << std::endl;
       }
-      // prev_i = is_prev_letter_matched(j, i, eds_w, eds_q, w_matrix, parameters);
-      if (prev_i) {
-        match(eds_w.data[i].data, eds_q.str_slices[j], &q_suffix_trees[j],
-                  &candidate_matches, parameters);
 
-        update_matrices(candidate_matches, eds_q.str_slices[j],
-                            eds_q.str_offsets[j], eds_w.str_offsets[i],
-                            &q_matrix, &w_matrix, i, j, parameters);
-      }
+      junctions::perform_matching(eds_w.data[i].data, eds_q.str_slices[j], &q_suffix_trees[j],
+                                  &candidate_matches, parameters);
+
+      update_matrices(candidate_matches, eds_q.str_slices[j],
+                      eds_q.str_offsets[j], eds_w.str_offsets[i],
+                      &q_matrix, &w_matrix, i, j, parameters);
 
       candidate_matches.clear();
 
@@ -476,31 +397,12 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
     }
   }
 
-  for (auto s : eds_w.data[max_i].data ) {
-    max_i_str += s+ '$';
-  }
-  if (eds_w.data[max_i].has_epsilon) {
-    max_i_str += 'e';
-  }
 
-  for (auto s : eds_q.data[max_j].data) {
-    max_j_str += s+ '$' ;
-  }
-  if (eds_q.data[max_j].has_epsilon) {
-    max_j_str += 'e';
-  }
+  size_t_vec q_cols = utils::compute_accepting_states(eds_q);
+  size_t_vec w_cols = utils::compute_accepting_states(eds_w);
 
-    std::cerr << "i: " << max_i << " j " << max_j << std::endl;
-    std::cerr << "i: " << max_i_str << " j " << max_j_str << std::endl;
-
-    std::cerr << stat.first<< " " << stat.second << std::endl;
-
-
-    size_t_vec q_cols = utils::compute_accepting_states(eds_q);
-    size_t_vec w_cols = utils::compute_accepting_states(eds_w);
-
-    bool accept_w, accept_q = false;
-    for (size_t col : q_cols) {
+  bool accept_w, accept_q = false;
+  for (size_t col : q_cols) {
     if (q_matrix[len_w - 1][col]) { accept_q = true; break; }
   }
 

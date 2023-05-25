@@ -3,6 +3,9 @@
 
 #include "core.hpp"
 
+
+
+
 ll nwd(ll a, ll b) { return !b ? a : nwd(b, a % b); }
 template <class T> inline T sqr(const T &a) { return a * a; }
 
@@ -35,6 +38,7 @@ bool logical_implication(bool p, bool q) { return !p || q; }
 /* <-> */
 bool double_implication(bool a, bool b) { return !(a && !b) && !(!a && b); }
 
+
 std::string indent(int level) {
   std::string repeat;
   for (int i = 0; i < level; i++) {
@@ -42,6 +46,21 @@ std::string indent(int level) {
   }
   return repeat;
 }
+
+// TODO: combine with loop
+// print (debug) info
+void print_eds_info(EDS const &w, EDS const &q) {
+std::cerr << "Input info {"
+          << std::endl << indent(1)
+          << "N"  << junctions::unicode_sub_1 << ": "<< w.size
+          << " m" << junctions::unicode_sub_1 << ": " << w.m
+          << " n" << junctions::unicode_sub_1 << ": " << w.length
+          << std::endl << indent(1)
+          << "N"  << junctions::unicode_sub_2 << ": " << q.size
+          << " m" << junctions::unicode_sub_2 << ": " << q.m
+          << " n" << junctions::unicode_sub_2 << ": " << q.length
+          << std::endl << "}" << std::endl;
+};
 
 /**
  * concatenate a vector of strings with a given characters interspersing them
@@ -60,6 +79,51 @@ void join(const vector<string> &v, char c, string &s) {
       s += c;
   }
 }
+
+/**
+ *
+ * slices exist in l
+ * @param[in]  queries           queries
+ * @param[in]  text              text
+ * @param[out] candidate_matches matches_found in the context of the degenerate letter and not N
+*/
+void perform_matching(std::vector<string> const &queries,
+           std::vector<slicex> const &txt_slices,
+           std::pair<STvertex, std::string> *text,
+           std::vector<junctions::match> *candidate_matches,
+           core::Parameters const &parameters) {
+  if (parameters.verbosity > 2) {
+    std::cerr << indent(1) << "DEBUG, [graph::match]" << std::endl;
+  }
+
+  std::vector<junctions::extended_match> match_positions;
+
+  for (int qry_str_idx = 0; qry_str_idx < queries.size(); qry_str_idx++) {
+    std::string qry_str = queries[qry_str_idx];
+    match_positions = FindEndIndexesThree(qry_str.c_str(), &text->first, text->second.c_str());
+    
+    for (auto match_pos : match_positions) {
+
+      if (parameters.verbosity > 3) {
+        std::cerr << indent(2) << "qry " << qry_str << std::endl
+                  << indent(2) << "txt " << text->second << std::endl
+                  << indent(2) << "txt str idx " << match_pos.str_idx << std::endl
+                  << indent(2) << "txt start " << match_pos.chr_idx << std::endl
+                  << indent(2) << "bynd txt " << match_pos.beyond_text << std::endl
+                  << indent(2) << "str: " << qry_str.substr(0, match_pos.match_length) << std::endl;
+      }
+
+      candidate_matches->push_back(
+        junctions::match{.query_str_index = (int)qry_str_idx,
+                         .text_str_index = match_pos.str_idx,
+                         .text_char_index = match_pos.chr_idx ,
+                         .match_length = match_pos.match_length,
+                         .beyond_txt = match_pos.beyond_text,
+                         .str = qry_str.substr(0, match_pos.match_length)});
+    }
+  }
+}
+
 
 // match locus
 // -----------
