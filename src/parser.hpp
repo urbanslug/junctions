@@ -41,7 +41,8 @@ std::string read_eds(std::string &file_path) {
 std::vector<std::string> read_msa(std::string &file_path) {
   std::string line;
   std::vector<std::string> msa_data;
-  bool has_header = false;
+  // TODO: remove unused
+  // bool has_header = false;
 
   int line_number = 0;
 
@@ -83,7 +84,8 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
   degenerate_letter letter;
   letter.has_epsilon = false;
 
-  size_t len;
+  // TODO: remove unused
+  // size_t len;
 
   std::string str;
   char prev_char = '\0'; // TODO: is this the best way to initialize?
@@ -203,7 +205,7 @@ EDS parse_ed_string(std::string &ed_string, core::Parameters &parameters) {
 }
 
 LinearizedEDS linearize(EDS &eds) {
-  if (DEBUG_LEVEL > 3) { std::cerr << "[utils::parser::foo]" << std::endl; }
+  if (utils::DEBUG_LEVEL > 3) { std::cerr << "[utils::parser::foo]" << std::endl; }
 
   size_t size = eds.str_offsets.back().back().stop + 1;
 
@@ -215,7 +217,7 @@ LinearizedEDS linearize(EDS &eds) {
 
   std::vector<int> prev_char;
   prev_char.reserve(100);
-  for (int k = 0; k < size; k++) {
+  for (size_t k = 0; k < size; k++) {
     prev_char.push_back(k-1);
     prev_m.push_back(prev_char);
     prev_char.clear();

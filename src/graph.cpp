@@ -159,10 +159,12 @@ struct Graph {
    * @return
    */
   int longest_frm_start(int start_node_idx) {
-    int stop_node = this->adj.size();
+    // TODO: remove
+    // int stop_node = this->adj.size();
 
     auto compute_table_idx = [&start_node_idx](int gr_idx) -> int { return gr_idx - start_node_idx; };
-    auto compute_graph_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
+    // TODO: remove
+    // auto compute_graph_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
     std::vector<int> dists(this->V, INT_MIN);
 
     int max = 0;
@@ -210,7 +212,8 @@ struct Graph {
    */
   int witness(int start_node_idx, int stop_node_idx) {
     auto tbl_idx = [&start_node_idx](int gr_idx) -> int { return gr_idx - start_node_idx; };
-    auto gr_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
+    // TODO: remove?
+    // auto gr_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
 
     // int size = stop_node_idx - start_node_idx + 1;
     std::vector<int> dists(this->V, INT_MIN);
@@ -250,7 +253,7 @@ struct Graph {
   /**
    * Using dijkstra with a min heap to compute the
    * shortest path from start_node_idx to stop_node_idx
-   * 
+   *
    *
    *
    * @param[in] start_node_idx
@@ -587,13 +590,16 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
 
     int match_end = -1; // TODO: declare earlier
 
+    // TODO we don't need this anymore, right? we get this from the ST correctly
     int m_len= -1; // the actual length of the match
 
     // where the match ends
-    int candidate_match_end = match_start_in_txt + candiate_match.match_length;
+    // TODO: can it be zero? should we use a smaller value?
+    // size_t is long unsigned int
+    std::size_t candidate_match_end = match_start_in_txt + candiate_match.match_length;
 
     // where the matched string actually ends
-    int txt_slice_end = txt_slice.start + txt_slice.length;
+    std::size_t txt_slice_end = txt_slice.start + txt_slice.length;
 
     if (parameters.verbosity > 3) {
       std::cerr << utils::indent(2)
@@ -669,6 +675,8 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
 
 
     std::string actual_match_str = candiate_match.str;
+    // TODO: make sure these types make sense
+    // TODO: we don't need this check either because we get this from match
     if (m_len < candiate_match.str.length()) {
       actual_match_str = candiate_match.str.substr(0, m_len);
     }
@@ -830,7 +838,7 @@ Graph compute_intersection_graph(EDS &eds_w,
             .qry_start = qry_boundary.first,
             .q_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
             .t_m = std::make_pair(junctions::match_type::exp, junctions::match_type::exp),
-            .len = 0, 
+            .len = 0,
             .str = ""});
 
         // std::cerr << "b->" << qry_boundary.first << "\n";
@@ -843,7 +851,7 @@ Graph compute_intersection_graph(EDS &eds_w,
         }
 
         if (false) {
-          for (auto row = 0; row < len_q; row++) {
+          for (int row = 0; row < len_q; row++) {
             for (int col = 0; col < size_w; col++)
               std::cerr << i_active_suffixes[row][col] << ", ";
             std::cerr << std::endl;
@@ -1103,27 +1111,6 @@ int match_stats(Graph &g, EDS &eds_w, EDS &eds_q, core::Parameters const &parame
 
 
   return max;
-}
-
-  // TODO: remove
-/**
- *
- *
- *
- *
- */
-void foobar(Graph g, EDS &eds_w, EDS &eds_q) {
-  int w_start, w_stop, q_start, q_stop;
-  int l, l_prime, k, k_prime;
-
-  l = compute_letter_boundaries(eds_w.str_offsets[w_start]).first;
-  l_prime = compute_letter_boundaries(eds_w.str_offsets[w_stop]).second;
-
-  k = compute_letter_boundaries(eds_q.str_offsets[w_start]).first;
-  k_prime = compute_letter_boundaries(eds_q.str_offsets[w_stop]).second;
-
-  // int start_node = g.compute_index(l-1, k-1, w_start, q_start);
-  // int end_node = g.compute_index(l + 1, k + 1, w_stop, q_stop);
 }
 
 int longest_witness(Graph g) {

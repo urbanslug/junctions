@@ -14,6 +14,7 @@ std::string utils::indent(int level) {
 
 
 namespace utils {
+
 void print_newline() { std::cerr << std::endl; }
 
 void print_degenerate_letter(degenerate_letter &d_letter) {

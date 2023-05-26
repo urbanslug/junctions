@@ -116,9 +116,6 @@ void update_leaves(STvertex *current_vertex, std::vector<slicex> const *text_off
 // C++ timer
 typedef std::chrono::high_resolution_clock Time;
 
-const uint8_t DEBUG_LEVEL = 0; // TODO: replace with verbosity in params
-
-
 typedef std::vector<std::vector<bool>> matrix; // TODO: remove
 typedef std::vector<std::vector<bool>> boolean_matrix;
 typedef std::vector<std::vector<int>> int_matrix;
@@ -159,115 +156,8 @@ struct LinearizedEDS {
   std::vector<std::vector<int>> prev_chars;
 };
 
-struct cell {
-  int j;
-  int i;
-};
-
-bool operator<(const cell &lhs, const cell &rhs);
-
-bool operator==(const cell &lhs, const cell &rhs);
-
-std::ostream & operator<<(std::ostream &os, const cell &value);
-
-struct suffix {
-  int query_letter_idx;
-  int str_idx;
-  int start_idx;
-
-  std::string to_string() const {
-    return "{ qry_ltr_idx " + std::to_string(query_letter_idx) +
-      ", str_idx " + std::to_string(str_idx) +
-      ", start_idx " + std::to_string(start_idx) +
-      " }";
-  }
-};
 
 
-std::ostream &operator<<(std::ostream &os, const suffix &value);
-
-bool operator<(const suffix &lhs, const suffix &rhs);
-
-bool operator==(const suffix &lhs, const suffix &rhs);
-
-class Hasher {
-public:
-  // We use predefined hash functions of strings
-  // and define our hash function as XOR of the
-  // hash values.
-  size_t operator()(const cell &c) const {
-    return (std::hash<int>()(c.i)) ^ (std::hash<int>()(c.j));
-  }
-
-  size_t operator()(const suffix &s) const {
-    return (std::hash<int>()(s.query_letter_idx)) ^
-           std::hash<int>()(s.str_idx) ^ (std::hash<int>()(s.start_idx));
-  }
-};
-
-struct spread {
-  int start;
-  int len;
-};
-
-
-std::ostream &operator<<(std::ostream &os, const spread &value);
-
-//
-
-struct match_info {
-  int str_idx;
-  int start_idx;
-};
-
-
-
-bool operator==(const match_info &lhs, const match_info &rhs);
-
-
-std::ostream &operator<<(std::ostream &os, const match_info &value);
-
-//
-
-struct match_data {
-  int text_str_idx;
-  int text_start_idx;
-
-  int query_str_idx;
-  int query_start_idx;
-
-  int length; // also the length of the match
-
-  /*
-  match_data() {
-    this->text_str_idx = -1;
-    this->text_start_idx = -1;
-    this->query_str_idx = -1;
-    this->query_start_idx = -1;
-    this->length = -1;
-  }
-
-  match_data(int  ){}
-*/
-
-  bool is_exp_exp() const { return query_start_idx == 0 && text_start_idx == 0; }
-
-  bool is_imp_exp() const { return query_start_idx > 0 && text_start_idx == 0; }
-
-  bool is_exp_imp() const { return query_start_idx == 0 && text_start_idx > 0; }
-};
-
-const match_data INVALID_MATCH = match_data{.text_str_idx = -1,
-                                            .text_start_idx = -1,
-                                            .query_str_idx = -1,
-                                            .query_start_idx = -1,
-                                            .length = -1};
-
-
-
-bool operator==(const match_data &lhs, const match_data &rhs);
-
-std::ostream &operator<<(std::ostream &os, const match_data &value);
 
 // ----
 // CLI

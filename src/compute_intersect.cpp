@@ -286,10 +286,12 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
     ---------------------
   */
 
+  // TODO: remove
   std::vector<int> match_positions;
-  // TODO: move this upwards
-  std::vector<match_data> matches_found; // how many could these be?
-  std::vector<suffix> w_suffixes, q_suffixes;
+  // TODO: remove move this upwards
+  // std::vector<match_data> matches_found; // how many could these be?
+  // TODO: remove
+  // std::vector<suffix> w_suffixes, q_suffixes;
   std::vector<junctions::match> candidate_matches;
 
   bool prev_j = false, prev_i = false;
@@ -391,9 +393,6 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
                       &q_matrix, &w_matrix, i, j, parameters);
 
       candidate_matches.clear();
-
-      q_suffixes.clear();
-      w_suffixes.clear();
     }
   }
 
