@@ -16,7 +16,7 @@ end of the intersection graph. Uses the `-w <witness_type>` where witness type
 is longest/long/1 or shortest/short/0.
 
 ### Size of the multiset
-Get the number of unique strings in the language of `T₁` and `T₂` using ` -m`.
+Get the number of unique strings in the language of `T₁` and `T₂` using `-m`.
 
 ### Matching statistics
 Find the length of the longest prefix of a string starting at some letter which
