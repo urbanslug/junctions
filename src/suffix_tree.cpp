@@ -104,38 +104,27 @@ void STDelete(STvertex *w) {
 }
 
 /**
- *
+ * Does a match exist
  *
  */
 bool Find(const char *query, STvertex *r, const char *x) {
   // from the start to end of the query
   int i = 0, query_len = strlen(query);
-  int end = -1;
+
   while (i < query_len) {
     if (r->g.find(query[i]) == r->g.end())
       return false;
     STedge e = r->g[query[i]];
 
-    // int start = e.l;
-    // int end = e.r;
-
-    // printf("i: %d start %d end %d \n", i, start, end);
-
     FOR(j, e.l, e.r) {
-      // printf("j %d\n", j);
-      end = j;
-      if (i == query_len) {
-        printf("j: %d\n", j);
-        // break
+      if (i == query_len)
         return true;
-      }
 
       if (query[i++] != x[j])
         return false;
     }
     r = e.v;
   }
-  printf("j -> %d\n", end);
   return true;
 }
 
@@ -204,11 +193,11 @@ std::vector<int> DFS(STvertex const *current_vertex) {
 }
 
 /**
+ * Like DFS
+ * given a vertex walk down the leaves and return all the match loci
  *
  *
  */
-// Like DFS
-// given a vertex walk down the leaves and return all the match loci
 std::vector<junctions::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
 
   std::set<STvertex const *> explored;
@@ -325,7 +314,7 @@ void update_leaves(STvertex *current_vertex, std::vector<slicex> const *text_off
  * @param[in] current_vertex  root of the suffix tree (can taeke another vertex)
  * @param[in] x the first char to the txt
  */
-vector<junctions::extended_match> FindEndIndexesThree(const char *query, STvertex *current_vertex, const char *x) {
+vector<junctions::extended_match> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
 
   std::vector<junctions::extended_match> matches;
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
@@ -473,244 +462,13 @@ vector<junctions::extended_match> FindEndIndexesThree(const char *query, STverte
   return matches;
 }
 
-junctions::query_result FindEndIndexesTwo(const char *query, STvertex *current_vertex, const char *x) {
-
-  STvertex* start_vertex = current_vertex;
-
-  // from the start to end of the query
-  int i = 0, query_len = strlen(query);
-  int match_length = 0;
-  // int end = -1;
-
-  // printf("%d\n", query_len);
-
-  // std::cerr << "qlen "  << query_len << std::endl;
-
-  // std::vector<junctions::match_locus> empty_vec;
-  // std::vector<junctions::match_locus> match_loci;
-
-  junctions::query_result res = junctions::query_result();
-
-  STvertex at_end;
-  STvertex* previous_vertex = NULL;
-
-  STvertex *last_with_underscore = NULL;
-
-  bool has_end = false;
-
-  auto foo = [&has_end](std::vector<junctions::match_locus> *results, STvertex* end_vertex) {
-    if (has_end) {
-      results->push_back(Get_Leaf_Data(end_vertex->g['_'].v).front());
-    }
-  };
-
-  while (i < query_len) {
-
-    // Found a match at the end of a ST
-    // TODO: explain more
-
-    // TODO: make these not be order dependent
-    if (current_vertex->g.find(query[i]) == current_vertex->g.end() &&
-        current_vertex->g.find('$') != current_vertex->g.end() && i > 0) {
-      STedge current_edge = current_vertex->g['$'];
-      res.match_length = match_length;
-      res.results = Get_Leaf_Data(current_edge.v);
-
-      res.beyond_text = true;
-      return res;
-    }
-
-    if (current_vertex->g.find(query[i]) == current_vertex->g.end() &&
-        current_vertex->g.find('_') != current_vertex->g.end() &&
-        i > 0) {
-
-      STedge current_edge;
-      current_edge = current_vertex->g['_'];
-
-      res.match_length = match_length;
-      res.results = Get_Leaf_Data(current_edge.v);
-
-      res.beyond_text = true;
-      return res;
-    }
-
-    if (current_vertex->g.find('_') != current_vertex->g.end() && i > 0) {
-      last_with_underscore = current_vertex;
-    }
-
-    if (current_vertex->g.find(query[i]) == current_vertex->g.end() &&
-        previous_vertex != NULL &&
-        previous_vertex->g.find('_') != previous_vertex->g.end()  &&
-        i > 0) {
-
-      STedge current_edge;
-      current_edge = previous_vertex->g['_'];
-
-      if (current_edge.v == NULL) { return res; }
-
-      res.match_length = match_length;
-      res.results = Get_Leaf_Data(current_edge.v);
-
-      res.beyond_text = true;
-      return res;
-    }
-
-
-    // matching failed
-    if (current_vertex->g.find(query[i]) == current_vertex->g.end()) {
-
-      // std::cerr << "1 " << std::endl;
-      return res;
-    }
-
-    has_end = current_vertex->g.find('_') != current_vertex->g.end() && start_vertex != current_vertex;
-
-    STedge current_edge = current_vertex->g[query[i]];
-
-    // std::cerr << "l: " << current_edge.l << " r: " << current_edge.r << std::endl;
-    // int start = e.l;
-    // int end = e.r;
-
-    // printf("i: %d start %d end %d \n", i, start, end);
-
-    // std::cerr << "branching query[i]: " << query[i] << std::endl;
-
-    FOR(j, current_edge.l, current_edge.r) {
-
-      // std::cerr << "x[j]: " << x[j] << std::endl;
-
-      // printf("j %d %c i: %d %c\n", j, x[j], i, query[i]);
-      // end = j;
-
-      // printf("match_length %d \n", i);
-
-      // we have finished matching the query
-      if (i == query_len) {
-        res.match_length = match_length;
-        res.results = Get_Leaf_Data(current_edge.v);
-
-        foo(&res.results, current_vertex);
-
-        return res;
-      }
-
-      // ends right at the end of the text
-      if ((x[j] == '_' || x[j] == '$') && ((i == query_len) || current_edge.l == j)) {
-        // printf("match_length %d \n", q);
-        // match_loci = Get_Leaf_Data(current_edge.v);
-        res.match_length = match_length;
-        res.results = Get_Leaf_Data(current_edge.v);
-
-
-        foo(&res.results, current_vertex);
-
-        // res.beyond_text = false;
-        return res;
-        // return Get_Leaf_Data(current_edge.v);
-      }
-
-      // we have finished matching the suffix tree
-      // but not the query
-      // TODO: check for different chars other than _
-
-      if (x[j] == '_' || x[j] == '$') {
-        // printf("i: %d qlen: %d\n", i, query_len);
-        // printf("match_length %d \n", q);
-        // match_loci = Get_Leaf_Data(current_edge.v);
-        res.match_length = match_length;
-        res.results = Get_Leaf_Data(current_edge.v);
-        // std::cerr << "here" << std::endl;
-
-        if (x[j] == '_') { res.beyond_text = true; }
-
-        foo(&res.results, current_vertex);
-
-        // foo(&res.results, current_vertex);
-
-        return res;
-        // return Get_Leaf_Data(current_edge.v);
-      }
-
-      // char o= query[i++];
-      // std::cerr << "===========" << o;
-      // found a mismatch
-      if (query[i++] != x[j]) {
-        // printf("match_length %d \n", q);
-        // std::cerr << "2 " << std::endl;
-
-        // TODO: remove?
-        if (last_with_underscore != NULL) {
-
-          // std::cerr << "case 4" << std::endl;
-
-          res.match_length = match_length;
-
-          // std::cerr << "here" << std::endl;
-          res.results = Get_Leaf_Data(last_with_underscore->g['_'].v);
-        }
-
-        return res;
-        // return empty_vec;
-      }
-
-      match_length += 1;
-    }
-
-    previous_vertex = current_vertex;
-    current_vertex = current_edge.v;
-  }
-
-  // printf("match_length %d \n", q);
-  // return Get_Leaf_Data(current_vertex);
-  res.match_length = match_length;
-  res.results = Get_Leaf_Data(current_vertex);
-  foo(&res.results, previous_vertex);
-
-  return res;
-}
-
-vector<int> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
-  // from the start to end of the query
-  int i = 0, query_len = strlen(query);
-  //int end = -1;
-
-  std::vector<int> empty_vec;
-
-  while (i < query_len) {
-    if (current_vertex->g.find(query[i]) == current_vertex->g.end()) {
-      return empty_vec;
-    }
-
-    STedge current_edge = current_vertex->g[query[i]];
-
-    // int start = e.l;
-    // int end = e.r;
-
-    // printf("i: %d start %d end %d \n", i, start, end);
-
-    FOR(j, current_edge.l, current_edge.r) {
-      // printf("j %d\n", j);
-      // end = j;
-      if (i == query_len) {
-        // printf("j: %d\n", j);
-        // break
-        // return j;
-        return DFS(current_edge.v);
-      }
-
-      if (query[i++] != x[j])
-        return empty_vec;
-    }
-
-    current_vertex = current_edge.v;
-  }
-
-  return DFS(current_vertex);
-}
-
+/**
+ *
+ *
+ */
 void gen_suffix_tree(
-    EDS const &eds,                                               //
-    std::vector<std::pair<STvertex, std::string>> *suffix_trees //
+    EDS const &eds,
+    std::vector<std::pair<STvertex, std::string>> *suffix_trees
 ) {
   std::vector<std::string> i_letter;
   std::vector<slicex> const *str_slices;

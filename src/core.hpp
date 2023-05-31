@@ -103,8 +103,6 @@ struct STedge {
 
 
 STvertex *Create_suffix_tree(const char *x, int n);
-vector<int> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x);
-// query_result FindEndIndexesTwo(const char *query, STvertex *current_vertex, const char *x);
 void update_leaves(STvertex *current_vertex, std::vector<slicex> const *text_offsets);
 
 // TODO: move graph stuff here
@@ -230,6 +228,19 @@ const std::string N_2 = "N\u2082";
 const std::string q_0 = "q\u2080";
 const std::string q_a = "q\u2090";
 
+struct match_locus {
+  int string_index; // rename to str_index
+  int char_index;   // is this always zero?
+                    // candidate active suffix match
+
+  bool candidate_asm() {
+    return !(this->char_index == 0);
+  }
+};
+
+bool operator<(const match_locus &lhs, const match_locus &rhs);
+typedef match_locus locus;
+
 std::string indent(int level);
 
 void print_eds_info(EDS const &w, EDS const &q);
@@ -280,42 +291,6 @@ struct graph_slice {
 
 std::ostream &operator<<(std::ostream &os, const junctions::graph_slice &s);
 
-// or match positon?
-struct match_locus {
-  int string_index; // rename to str_index
-  int char_index; // is this always zero?
-
-  // candidate active suffix match
-  bool candidate_asm() {
-    return !(this->char_index == 0);
-  }
-};
-
-bool operator<(const match_locus &lhs, const match_locus &rhs);
-
-typedef match_locus locus;
-
-struct query_result {
-  bool beyond_text; // there was a match but the query was longer than the text
-  int match_length;
-  std::vector<match_locus> results;
-
-  query_result() {
-    this->results = std::vector<match_locus>{};
-    this->match_length = -1;
-    this->beyond_text=false;
-  }
-
-  bool is_valid() { return this->match_length > 0 && !this->results.empty(); }
-
-  bool is_hit() { return this->match_length > 0 && !this->results.empty(); }
-
-  bool is_miss() { return !this->is_hit(); }
-};
-
-std::ostream &operator<<(std::ostream &os, const junctions::query_result &r);
-
-bool operator==(const junctions::query_result &lhs, const junctions::query_result &rhs);
 
 // generalization of query result and match locus above
 // replace query_result an match_locus with this
@@ -327,20 +302,12 @@ struct extended_match {
   // the match position in the conactenated string ignoring $
   // TODO: make this char idx in the actual txt string
   int chr_idx;
-
-  /*
-  extended_match() {
-    this->beyond_text = false;
-    this->match_length = -1;
-    this->str_idx = -1;
-    this->chr_idx = -1;
-  }*/
-
 };
 
 std::ostream &operator<<(std::ostream &os, const junctions::extended_match &r);
 
 bool operator==(const junctions::extended_match &lhs, const junctions::extended_match &rhs);
+
 
 struct match {
   int query_str_index;
@@ -353,32 +320,13 @@ struct match {
   bool beyond_txt;
 
   std::string str;
-  // std::string t_str;
-
-  // bool is_active_suffix_match;
-
-  // std::slice text_match;
-  // std::slice query_match;
-
-  // match constructor
-
-  match null_match() {
-    return {
-      .query_str_index = -1,
-      .text_str_index = -1,
-      .text_char_index = -1,
-      .match_length = -1,
-      .beyond_txt = false,
-      .str = "",
-    };
-  }
 };
 
 
 std::ostream &operator<<(std::ostream &os, const junctions::match &m);
 
-  // Functions
-  // --------
+// Functions
+// --------
 void perform_matching(std::vector<string> const &queries,
                      std::vector<slicex> const &txt_slices,
                      std::pair<STvertex, std::string> *text,
@@ -387,6 +335,6 @@ void perform_matching(std::vector<string> const &queries,
 
 } // namespace junctions
 
-vector<junctions::extended_match> FindEndIndexesThree(const char *query, STvertex *current_vertex, const char *x);
+vector<junctions::extended_match> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x);
 
 #endif

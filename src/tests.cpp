@@ -118,7 +118,7 @@ void test_string_matching() {
           "TAGCACGCTTCGTCCGTTTCCGGTAACAGAATGGACCACAAACACCATTTTACGTTGGGGGGCG"
           "CCGAACCCACGTGTGGTGAGTGGCCGGGCACAGAAGT";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   //print_match_positions();
   
 
@@ -128,7 +128,7 @@ void test_string_matching() {
   setup();
 
   query = "AB";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
 
   exp = {
     junctions::extended_match{.beyond_text = false, .match_length = 2, .str_idx = 0, .chr_idx = 0}
@@ -139,7 +139,7 @@ void test_string_matching() {
   // ---------------------
 
   query = "jk";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
   exp = {};
 
@@ -152,7 +152,7 @@ void test_string_matching() {
   // reset();
   // setup();
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
   exp = {
@@ -169,7 +169,7 @@ void test_string_matching() {
 
   query = "ABCDAGTA";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
 
   //print_match_positions();
 
@@ -184,7 +184,7 @@ void test_string_matching() {
 
   query = "GTA";
   //reset();
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   //print_match_positions();
 
   exp = {
@@ -197,7 +197,7 @@ void test_string_matching() {
 
   query = "GT";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   exp = {
@@ -220,7 +220,7 @@ void test_string_matching() {
 
   query = "G";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   exp = {
@@ -239,7 +239,7 @@ void test_string_matching() {
 
   query = "TCG";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   exp = {
@@ -256,7 +256,7 @@ void test_string_matching() {
   setup();
 
   query = "CA";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
 
 
   // print_match_positions(match_positions);
@@ -278,7 +278,7 @@ void test_string_matching() {
 
   query = "GTC";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   exp = {
@@ -296,7 +296,7 @@ void test_string_matching() {
 
   query = "GAGG";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
 
@@ -315,7 +315,7 @@ void test_string_matching() {
 
   query = "TT";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   exp = {
@@ -331,7 +331,7 @@ void test_string_matching() {
   setup();
 
   query = "T";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   exp = {
@@ -348,7 +348,7 @@ void test_string_matching() {
   setup();
   query = "CC";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
   exp = {
@@ -367,7 +367,7 @@ void test_string_matching() {
 
   query = "TG";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
   // print_match_positions();
 
@@ -387,7 +387,7 @@ void test_string_matching() {
 
   query = "TG";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
   exp = {
@@ -407,7 +407,7 @@ void test_string_matching() {
   setup();
   query = "GAACA";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
 
@@ -421,7 +421,7 @@ void test_string_matching() {
 
   query = "G";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
   exp = {
@@ -451,7 +451,7 @@ void test_string_matching() {
   query = "TAC";
   // query = "TGCTACGCGTGGG";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
   // --------------------------
@@ -468,7 +468,7 @@ void test_string_matching() {
   query = "TGC";
   // query = "TGCTACGCGTGGG";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
   // --------------------------
@@ -481,7 +481,7 @@ void test_string_matching() {
 
   query = "TGCTACGCGTGGGCAGTGTTGTTAA";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions(match_positions);
 
   // --------------------------
@@ -498,7 +498,7 @@ void test_string_matching() {
   setup();
 
   query = "GAT";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // --------------------------
 
   txt_strs = {"A", "G"};
@@ -510,7 +510,7 @@ void test_string_matching() {
   setup();
   
   query = "GAT";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
   // ------------------------
 
@@ -523,7 +523,7 @@ void test_string_matching() {
   update_leaves(root, &text_slices);
 
   query = "T";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   // ------------------------
@@ -537,7 +537,7 @@ void test_string_matching() {
   update_leaves(root, &text_slices);
 
   query = "ACAT";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   // ------------------------
@@ -555,7 +555,7 @@ void test_string_matching() {
           "TAGCACGCTTCGTCCGTTTCCGGTAACAGAATGGACCACAAACACCATTTTACGTTGGGGGGCG"
           "CCGAACCCACGTGTGGTGAGTGGCCGGGCACAGAAGT";
 
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   // ------------------------
@@ -570,7 +570,7 @@ void test_string_matching() {
   update_leaves(root, &text_slices);
 
   query = "GTC";
-  match_positions = FindEndIndexesThree(query.c_str(), root, text.c_str());
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
   // print_match_positions();
 
   // ------------------------
