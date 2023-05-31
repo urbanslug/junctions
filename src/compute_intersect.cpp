@@ -38,8 +38,6 @@ bool is_prev_letter_matched(int text_letter_idx, int query_letter_idx,
               << std::endl;
   }
 
-  // std::cerr << text_letter_idx << " " << query_letter_idx << std::endl;
-
   if ( query_letter_idx == 0) { return true; }
   if (text_letter_idx == 0 && query_letter_idx == 0) { return true; }
 
@@ -154,13 +152,27 @@ void update_matrices(std::vector<junctions::match> const &candidate_matches,
         // int in_N = in_txt_N(candiate_match.text_char_index); wrong
       // do we need to confirm t_start_in_N - 1
       valid_as = ((*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1] == 1);
+      int idx { 1 };
+      int pos{};
+
+      for (; (pos = (*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1 + idx]) &&
+             idx < candiate_match.match_length;
+           idx++){}
+
+      if (pos) {
+        pos = idx;
+        match_start_in_txt += pos;
+        candiate_match.text_char_index += pos;
+        candiate_match.match_length -= pos;
+        candiate_match.str = candiate_match.str.substr(pos);
+        valid_as = true;
+      }
     }
 
     // is an exp - exp match
     // or valid active suffix
     // txt start is not valid so skip
     if (match_start_in_txt > 0 && !valid_as) { continue; }
-
 
     /*
       evaluate the END of the match
@@ -217,6 +229,7 @@ void update_matrices(std::vector<junctions::match> const &candidate_matches,
     (*q_matrix)[txt_letter_idx] [q_start_in_N + candiate_match.match_length - 1] = 1;
   }
 }
+
 /*
 Is there an intersection between ED strings W and Q?
 
@@ -296,7 +309,6 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
 
   bool prev_j = false, prev_i = false;
 
-
   for (int i = 0; i < len_w; i++) {
     for (int j = 0; j < len_q; j++) {
 
@@ -365,6 +377,7 @@ bool intersect(EDS &eds_w, EDS &eds_q, core::Parameters parameters) {
                   << "Query => T" << junctions::unicode_sub_2 << "[" << j << "]"
                   << std::endl;
       }
+
       junctions::perform_matching(eds_q.data[j].data, eds_w.str_slices[i],
                                   &w_suffix_trees[i], &candidate_matches,
                                   parameters);

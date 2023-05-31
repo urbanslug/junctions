@@ -18,7 +18,6 @@
 
 namespace utils {
 const uint8_t DEBUG_LEVEL = 0; // TODO: replace with verbosity in params
-
 std::string indent(int level);
 void print_edt(EDS &ed_string);
 boolean_matrix gen_matrix(size_t rows, size_t cols);

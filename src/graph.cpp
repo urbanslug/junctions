@@ -568,14 +568,30 @@ void filter_matches(std::vector<junctions::match> const &candidate_matches,
         // is valid active suffix
         // int in_N = in_txt_N(candiate_match.text_char_index); wrong
       valid_as = ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N] == 1);
+      bool shorter_match{false};
+      int pos;
+      for (int idx{1}; idx < candiate_match.match_length; idx++) {
+        if ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N + idx] == 1) {
+          pos = idx;
+          shorter_match = true;
+          break;
+        }
+      }
+
+      if (shorter_match) {
+        t_start_in_N += pos;
+        match_start_in_txt += pos;
+        candiate_match.text_char_index += pos;
+        candiate_match.match_length -= pos;
+        candiate_match.str = candiate_match.str.substr(pos);
+        valid_as = true;
+      }
     }
 
     // is an exp - exp match
     // or valid active suffix
     // txt start is not valid so skip
     if (match_start_in_txt > 0 && !valid_as) { continue; }
-
-
 
     if (match_start_in_txt == 0) {
       t_m_start = junctions::match_type::exp;
