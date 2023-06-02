@@ -58,6 +58,11 @@ git clone https://github.com/urbanslug/junctions && cd junctions
 make
 ```
 
+```
+cmake -S . -B build
+cmake --build build -- -j 3 
+```
+
 Run
 
 ```
