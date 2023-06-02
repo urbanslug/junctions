@@ -33,23 +33,17 @@ struct Edge {
 
   Edge(std::size_t d, std::size_t w, std::string s, bool b);
 };
-
-
 bool operator==(const Edge &lhs, const Edge &rhs);
   //bool operator<(const Edge &lhs, const Edge &rhs);
 bool operator<(Edge const &lhs, Edge const &rhs);
 std::ostream &operator<<(std::ostream &os, const Edge &e);
- 
-    // TODO: move to a more central location
+
+// TODO: move to a more central location
 struct compare_by_weight {
   bool operator()(const std::pair<std::size_t, std::size_t> &l,
-                  const std::pair<std::size_t, std::size_t> &r) {
-    return l.second > r.second;
-  }
+                  const std::pair<std::size_t, std::size_t> &r);
 
-  bool operator()(const graph::Edge &l, const graph::Edge &r) {
-    return l.weight > r.weight;
-  }
+  bool operator()(const graph::Edge &l, const graph::Edge &r);
 };
 
   // TODO: use unordered set

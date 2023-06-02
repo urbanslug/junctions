@@ -19,21 +19,31 @@
 graph::Edge::Edge(std::size_t d, std::size_t w, std::string s, bool b)
   : dest(d), weight(w), str(s), is_eps(b) {}
 
-bool operator==(const graph::Edge &lhs, const graph::Edge &rhs) {
+bool graph::operator==(const graph::Edge &lhs, const graph::Edge &rhs) {
   return std::tie(lhs.dest, lhs.weight, lhs.str, lhs.is_eps) ==
          std::tie(rhs.dest, rhs.weight, rhs.str, rhs.is_eps);
 }
 
-bool operator<(graph::Edge const &lhs, graph::Edge const &rhs) {
+bool graph::operator<(graph::Edge const &lhs, graph::Edge const &rhs) {
   return std::tie(lhs.dest, lhs.weight, lhs.str, lhs.is_eps) <
          std::tie(rhs.dest, rhs.weight, rhs.str, rhs.is_eps);
 }
 
-std::ostream &operator<<(std::ostream &os, const graph::Edge &e) {
+std::ostream &graph::operator<<(std::ostream &os, const graph::Edge &e) {
   os << "Edge {"
      << "dest: " << e.dest << " qry start: " << e.str << "len: " << e.weight
      << " str: " << e.is_eps << "}" << std::endl;
   return os;
+}
+
+bool graph::compare_by_weight::operator()(const std::pair<std::size_t, std::size_t> &l,
+                const std::pair<std::size_t, std::size_t> &r) {
+  return l.second > r.second;
+}
+
+bool graph::compare_by_weight::operator()(const graph::Edge &l,
+                                          const graph::Edge &r) {
+  return l.weight > r.weight;
 }
 
 // initialize a struct with default values
