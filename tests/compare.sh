@@ -9,7 +9,7 @@ RUNS=$7
 if [ -z "$6" ]
   then
     # echo ""
-    OUT_DIR=/tmp/junctions
+    OUT_DIR=tmp/junctions
   else
 	  OUT_DIR=$6
 fi
@@ -26,6 +26,7 @@ if [ -z "$7" ]
     RUNS=3
 fi
 
+DATA_DIR="/home/sluggie/src/CWI/junctions/data/simulated_d1/"
 
 
 #d=d$d
@@ -34,8 +35,8 @@ fi
 # w=w${W}k
 OUT=${OUT_DIR}/out.d$D.s$S.l$L.w${W}k.time
 
-w=x1.d$D.s$S.l$L.w${W}k.eds
-q=x2.d$D.s$S.l$L.w${W}k.eds
+w=${DATA_DIR}x1.d$D.s$S.l$L.w${W}k.eds
+q=${DATA_DIR}x2.d$D.s$S.l$L.w${W}k.eds
 now=$(date "+%Y-%m-%dT%H:%M:%S")
 
 echo "w: ${w}"
@@ -46,5 +47,7 @@ for (( c=1; c<=$RUNS; c++ ))
 do
 	echo $now >> $OUT
 	# $( /usr/bin/time -f"%S\t%M" junctions -v=1 -a=$ALGO -w $w -q $q 2>&1 | tail -n 4 >> $OUT )
-	$( /usr/bin/time -f"%S\t%M" junctions -v=1 -a=$ALGO -w $w -q $q 2>&1 | cat >> $OUT )
+	#$( /usr/bin/time -f"%S\t%M" junctions -i -v 1 -a=$ALGO $w $q 2>&1 | cat >> $OUT )
+  # $( junctions -i -v 1 -a=$ALGO $w $q 2>&1 | cat >> $OUT )
+  $( junctions -i -v 1 -a=$ALGO $w $q 2>&1 | cat >> $OUT )
 done

@@ -274,7 +274,11 @@ int main(int argc, char **argv) {
 
   cli::parseandSave(argc, argv, cmd, parameters);
 
-  if (parameters.verbosity > 1) { std::cerr << "DEBUG [junctions::main]" << std::endl; }
+#if DEBUG
+  if (parameters.verbosity > 1) {
+    std::cerr << "DEBUG [junctions::main]" << std::endl;
+  }
+#endif
 
   EDS q, w;
 

@@ -35,9 +35,9 @@
 #include <utility>
 #include <vector>
 
+#include "./eds/eds.hpp"
 
-
-using namespace std;
+// using namespace std;
 
 // TODO: replace with std::slice
 struct slicex {
@@ -64,14 +64,14 @@ struct slicex {
 #define FORE(I, C) for (VAR(I, (C).begin()); I != (C).end(); I++)
 #define SIZE(x) ((int)(x).size())
 
-typedef vector<int> VI;
-typedef pair<int, int> PII;
+typedef std::vector<int> VI;
+typedef std::pair<int, int> PII;
 typedef long long ll;
-typedef vector<string> VS;
+typedef std::vector<std::string> VS;
 
 ll nwd(ll a, ll b);
 
-VS parse(string s);
+VS parse(std::string s);
 
 int toi(char ch);
 
@@ -86,7 +86,7 @@ int los(int m);
 
 struct STedge;
 struct STvertex {
-  map<char, STedge> g; /* edges to children */
+  std::map<char, STedge> g; /* edges to children */
   STvertex *f;         /* suffix link */
   // suffix number
   // (0 is an inch word, -1 means that the vertex is not a leaf)
@@ -147,6 +147,9 @@ struct EDS {
 // TODO: reorder
 void gen_suffix_tree(
     EDS const &eds,
+    std::vector<std::pair<STvertex, std::string>> *suffix_trees);
+void gen_suffix_tree_new(
+    eds::EDS& eds,
     std::vector<std::pair<STvertex, std::string>> *suffix_trees);
 
 struct LinearizedEDS {
@@ -246,7 +249,7 @@ std::string indent(int level);
 void print_eds_info(EDS const &w, EDS const &q);
 
 
-void join(const vector<string> &v, char c, string &s);
+  void join(const std::vector<std::string> &v, char c, std::string &s);
 
 /**
  * ->
@@ -327,14 +330,30 @@ std::ostream &operator<<(std::ostream &os, const junctions::match &m);
 
 // Functions
 // --------
-void perform_matching(std::vector<string> const &queries,
+// TODO deprecated
+void perform_matching(std::vector<std::string> const &queries,
                      std::vector<slicex> const &txt_slices,
                      std::pair<STvertex, std::string> *text,
                      std::vector<match> *candidate_matches,
                      core::Parameters const &parameters);
 
+// new
+void perform_matching(std::vector<std::string> const &queries,
+                      std::pair<STvertex, std::string> *text,
+                      std::vector<match> *candidate_matches,
+                      core::Parameters const &parameters);
+
 } // namespace junctions
 
-vector<junctions::extended_match> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x);
+std::vector<junctions::extended_match> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x);
+
+namespace utils {
+const uint8_t DEBUG_LEVEL = 0; // TODO: replace with verbosity in params
+std::string indent(int level);
+void print_edt(EDS &ed_string);
+boolean_matrix gen_matrix(size_t rows, size_t cols);
+void print_matrix(boolean_matrix const &m);
+std::vector<std::size_t> compute_accepting_states(EDS &eds);
+} // namespace utils
 
 #endif
