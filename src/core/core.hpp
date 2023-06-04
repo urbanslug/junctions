@@ -41,6 +41,10 @@ namespace n_core {
 typedef std::vector<std::vector<bool>> bool_matrix;
 bool_matrix gen_matrix(size_t rows, size_t cols);
 
+// C++ timer
+typedef std::chrono::high_resolution_clock Time;
+
+
 enum file_format {
   msa, // msa in PIR format
   eds, // eds file
@@ -186,13 +190,16 @@ struct STedge {
 std::vector<n_core::extended_match> FindEndIndexes(const char *query,
                                                    STvertex *current_vertex,
                                                    const char *x);
-  
+
 STvertex *Create_suffix_tree(const char *x, int n);
 
-void gen_suffix_tree_new(eds::EDS &eds,
-                         std::vector<std::pair<STvertex, std::string>> *suffix_trees);
+void gen_suffix_tree(eds::EDS &eds,
+                     std::vector<std::pair<STvertex, std::string>> *suffix_trees);
+
 void update_leaves(STvertex *current_vertex,
-                   std::vector<eds::slice_eds> const &text_offsets);
+                   std::vector<eds::slice_eds> const &text_offsets,
+                   eds::EDS& eds,
+                   std::size_t letter_idx);
 
 } // namespace match
 

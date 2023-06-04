@@ -19,7 +19,6 @@
 #include "../eds/eds.hpp"
 #include "../core/core.hpp"
 
-//using namespace std;
 
 namespace graph {
 /**
@@ -113,7 +112,7 @@ public:
    * @param[in] stop_node_idx
    * @return
    */
-  std::size_t witness(std::size_t start_node_idx, std::size_t stop_node_idx);
+  int witness(std::size_t start_node_idx, std::size_t stop_node_idx);
 
   /**
    * Using dijkstra with a min heap to compute the
@@ -125,7 +124,7 @@ public:
    * @param[in] stop_node_idx
    * @return
    */
-  std::size_t dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx);
+  int dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx);
 
 
   void create_edge(std::vector<n_junctions::graph_slice> const &valid_matches,
@@ -176,8 +175,8 @@ Graph compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 int match_stats(Graph &g, eds::EDS &eds_w, eds::EDS &eds_q,
                 n_core::Parameters const &parameters);
 
-int longest_witness(Graph g);
+int longest_witness(Graph& g);
 
-int shortest_witness(Graph g);
+int shortest_witness(Graph& g);
 } // namespace graph
 #endif

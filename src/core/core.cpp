@@ -127,6 +127,8 @@ void perform_matching(std::vector<std::string> const &queries,
 
   for (int qry_str_idx = 0; qry_str_idx < queries.size(); qry_str_idx++) {
     std::string qry_str = queries[qry_str_idx];
+    
+
     match_positions = match_st::FindEndIndexes(qry_str.c_str(), &text->first, text->second.c_str());
     
     for (auto match_pos : match_positions) {

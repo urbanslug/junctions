@@ -279,22 +279,24 @@ std::size_t graph::Graph::longest_frm_start(std::size_t start_node_idx) {
  * @param[in] stop_node_idx
  * @return
  */
-std::size_t graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_node_idx) {
-  auto tbl_idx = [&start_node_idx](int gr_idx) -> int { return gr_idx - start_node_idx; };
+int graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_node_idx) {
+  auto tbl_idx = [&start_node_idx](std::size_t gr_idx) -> std::size_t { return gr_idx - start_node_idx; };
   // TODO: remove?
   // auto gr_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
 
   // int size = stop_node_idx - start_node_idx + 1;
   std::vector<int> dists(this->V, INT_MIN);
 
-  std::stack<int> to_visit;
-  std::set<int> visited;
+  std::stack<std::size_t> to_visit;
+  std::set<std::size_t> visited;
   std::set<Edge> out;
-  int current_dist;
+  int current_dist{};
+  bool end_reached{false};
 
-  int current_node = start_node_idx;
+  std::size_t current_node = start_node_idx;
   dists[current_node] = 0;
   to_visit.push(current_node);
+
 
   while (!to_visit.empty()) {
     current_node = to_visit.top();
@@ -306,7 +308,9 @@ std::size_t graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_n
     current_dist = dists[current_node];
 
     for (auto e : out) {
-      if (dists[tbl_idx(e.dest)] < current_dist + e.weight ) {
+
+      if (dists[tbl_idx(e.dest)] < current_dist + static_cast<int>(e.weight)) {
+        if (e.dest == stop_node_idx) { end_reached = true; }
         dists[tbl_idx(e.dest)] = current_dist + e.weight;
       }
 
@@ -315,7 +319,11 @@ std::size_t graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_n
     visited.insert(current_node);
   }
 
-  return dists[tbl_idx(stop_node_idx)];
+  if (end_reached) {
+    return dists[tbl_idx(stop_node_idx)];
+  } else {
+    return -1;
+  }
 }
 
 
@@ -330,11 +338,13 @@ std::size_t graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_n
  * @param[in] stop_node_idx
  * @return
  */
-std::size_t graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx) {
+int graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx) {
 
   // a vector of distances from start_node_idx to every other node
-  std::vector<std::size_t> dists(this->V, INT_MAX);
+  std::vector<int> dists(this->V, INT_MAX);
   std::vector<bool> explored(this->V, false);
+
+  bool end_reached{false};
 
   std::priority_queue<std::pair<std::size_t, std::size_t>, std::vector<std::pair<std::size_t, std::size_t>>,
                       compare_by_weight>
@@ -364,6 +374,7 @@ std::size_t graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_
 
       // relax
       if (dists[i] + ej.weight < dists[ej.dest]) {
+        if (ej.dest == stop_node_idx) { end_reached = true; }
         dists[ej.dest] = dists[i] + ej.weight;
       }
 
@@ -374,8 +385,14 @@ std::size_t graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_
     }
   }
 
-  return dists[stop_node_idx];
+  if (end_reached) {
+    return dists[stop_node_idx];
+  } else {
+    return -1;
+  }
+
 }
+
 void graph::Graph::dbg_print(int indent_level = 0) {
   std::cerr << n_junctions::indent(indent_level)
             << "Graph info {" << std::endl
@@ -496,20 +513,17 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
 
   for (auto candiate_match : candidate_matches) {
 
-    // make this a method? get_local_slice?
-    int str_local_start = txt_offsets[0].start - txt_offsets[candiate_match.text_str_index].start;
-    
-    eds::slice_eds txt_slice = eds::slice_eds(
-        str_local_start, txt_offsets[candiate_match.text_str_index].length,
-        txt_offsets[candiate_match.text_str_index].eps_slice);
-    //slicex txt_slice = txt_slices[candiate_match.text_str_index];
+    eds::slice_eds txt_slice =
+      txt_eds.get_str_slice_local(txt_letter_idx, candiate_match.text_str_index);
+
+    txt_eds.str_start_local(txt_letter_idx, candiate_match.text_str_index);
 
     /*
       candiate_match.text_char_index: the start of the position of text within the concatenated txt
      */
 
     // this is the start position of the char within the specific string in the txt set
-    int match_start_in_txt = candiate_match.text_char_index -  txt_slice.start;
+    int match_start_in_txt = candiate_match.text_char_index - txt_slice.start;
 
 
     /*
@@ -527,14 +541,6 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
     // TODO: rename t_start in N to something like match_start_in_N
     int t_start_in_N = in_txt_N(candiate_match.text_char_index);
 
-    if (parameters.verbosity > 3) {
-      std::cerr << n_junctions::indent(2)
-                << "txt_str_idx: " << candiate_match.text_str_index
-                << " start char in concat l: " << candiate_match.text_char_index
-                << " start char in l:  " << match_start_in_txt
-                << " char start in N (not concat): " << t_start_in_N
-                << std::endl;
-    }
 
     // int txt_end = txt_slice.start + txt_slice.length;
 
@@ -554,7 +560,7 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
         }
       }
 
-      if (shorter_match) {
+      if (!valid_as && shorter_match) {
         t_start_in_N += pos;
         match_start_in_txt += pos;
         candiate_match.text_char_index += pos;
@@ -751,8 +757,8 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
   std::vector<std::pair<match_st::STvertex, std::string>> q_suffix_trees;
   q_suffix_trees.reserve(len_q);
 
-  gen_suffix_tree_new(eds_w, &w_suffix_trees);
-  gen_suffix_tree_new(eds_q, &q_suffix_trees);
+  gen_suffix_tree(eds_w, &w_suffix_trees);
+  gen_suffix_tree(eds_q, &q_suffix_trees);
 
   /*
    *
@@ -930,9 +936,11 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                   << std::endl;
       }
 
-      n_junctions::perform_matching(eds_q.get_strs(j),
-                                 &w_suffix_trees[i], &candidate_matches,
-                                 parameters);
+      n_junctions::perform_matching(
+                                    eds_q.get_strs(j),
+                                    &w_suffix_trees[i],
+                                    &candidate_matches,
+                                    parameters);
 
       filter_matches(candidate_matches, eds_w, eds_w.get_slice(i), eds_q.get_slice(j),
                      &i_active_suffixes, &j_active_suffixes, j, i,
@@ -956,8 +964,10 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
        // Query => T_1[i]
        // Text => T_2[j]
-       n_junctions::perform_matching(eds_w.get_strs(i),
-                                  &q_suffix_trees[j], &candidate_matches,
+       n_junctions::perform_matching(
+                                     eds_w.get_strs(i),
+                                  &q_suffix_trees[j],
+                                     &candidate_matches,
                                   parameters);
 
        filter_matches(candidate_matches, eds_q, eds_q.get_slice(j), eds_w.get_slice(i),
@@ -985,17 +995,14 @@ int match_stats(graph::Graph &g, eds::EDS &eds_w, eds::EDS &eds_q,
   int max = INT_MIN;
   int letter = parameters.match_stats_letter_idx;
 
-  
-
   return max;
 }
 
-int longest_witness(graph::Graph g) {
+int graph::longest_witness(graph::Graph &g) {
   return g.witness(0, g.get_size() - 1 );
 }
 
-int shortest_witness(graph::Graph g) {
+int graph::shortest_witness(graph::Graph& g) {
   return g.dijkstra(0, g.get_size() - 1);
 }
-
 

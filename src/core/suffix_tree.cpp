@@ -251,7 +251,10 @@ std::vector<n_core::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
  * @param[in]
  * @param[in]
  */
-void update_leaves(STvertex *current_vertex, std::vector<eds::slice_eds>const& text_offsets) {
+// Can we avoid passing the eds and letter idx?
+void update_leaves(STvertex *current_vertex,
+                   std::vector<eds::slice_eds> const &text_offsets,
+                   eds::EDS& eds, std::size_t letter_idx) {
 
   std::set<STvertex*> explored;
   std::stack<STvertex*> visited;
@@ -281,7 +284,7 @@ void update_leaves(STvertex *current_vertex, std::vector<eds::slice_eds>const& t
 
         for (size_t i = 0; i < text_offsets.size(); i++) {
 
-          string_start = text_offsets.at(i).start;
+          string_start = eds.to_local_idx(letter_idx, text_offsets.at(i).start);
 
           string_start += i; // account for $ separators
 
@@ -312,8 +315,68 @@ void update_leaves(STvertex *current_vertex, std::vector<eds::slice_eds>const& t
   // return leaves;
 }
 
+  void update_leaves(STvertex *current_vertex,
+                   std::vector<eds::slice_eds> const &text_offsets_local
+                   ) {
+
+  std::set<STvertex*> explored;
+  std::stack<STvertex*> visited;
+
+  std::vector<int> leaves;
+  int string_start;
+
+  visited.push(current_vertex);
+
+  while (!visited.empty()) {
+    current_vertex = visited.top();
+
+    if (explored.find(current_vertex) != explored.end()) { continue; }
+
+    std::vector<STvertex *> temp_store;
+
+    for (auto k = current_vertex->g.begin(); k != current_vertex->g.end(); k++) {
+      STvertex *vv = k->second.v;
+      if (explored.find(vv) == explored.end()) { temp_store.push_back(vv); }
+    }
+
+    if (temp_store.empty()) {
+      explored.insert(current_vertex);
+      visited.pop();
+
+      if (is_leaf(current_vertex)) {
+
+        for (size_t i = 0; i < text_offsets_local.size(); i++) {
+
+          string_start = string_start = text_offsets_local.at(i).start;
+
+          string_start += i; // account for $ separators
 
 
+          // in the middle
+          if (current_vertex->numer < string_start) {
+            current_vertex->string_id = i - 1;
+            break;
+          }
+
+          // suffix starts at an entire string
+          // or
+          // we are at the end of text offsets
+          if (string_start == current_vertex->numer || i == text_offsets_local.size() - 1) {
+            current_vertex->string_id = (int)i;
+            break;
+          }
+        }
+      }
+
+    } else {
+      for (auto a : temp_store) {
+        visited.push(a);
+      }
+    }
+  }
+
+  // return leaves;
+}
 
 /**
  *
@@ -328,8 +391,8 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
   std::vector<n_core::extended_match> matches;
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
 
-  // TODO : rename i to q_idx or q_pos
-  int i = 0; // the query position of the match
+    // TODO : rename i to q_idx or q_pos
+    int i = 0; // the query position of the match
   int query_len = strlen(query);
   int match_length = 0;
   int d = -1;
@@ -476,7 +539,7 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
  *
  *
  */
-void gen_suffix_tree_new(
+void gen_suffix_tree(
     eds::EDS& eds,
     std::vector<std::pair<STvertex, std::string>> *suffix_trees) {
 
@@ -500,7 +563,7 @@ void gen_suffix_tree_new(
     root = Create_suffix_tree(text.c_str(), text.length());
 
     // add string ids
-    update_leaves(root, str_slices);
+    update_leaves(root, str_slices, eds, i);
 
     suffix_trees->push_back(std::make_pair(*root, text));
   }

@@ -15,10 +15,19 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
+if (MSVC)
+    # warning level 4
+    add_compile_options(/W4)
+else()
+    # additional warnings
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 ADD_LIBRARY(LibsModule
   src/eds/eds.cpp
   src/core/core.cpp
   src/graph/graph.cpp
+  src/intersect/improved.cpp
   src/core/suffix_tree.cpp
   src/utils.cpp
   src/core.cpp

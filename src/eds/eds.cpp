@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <format>
 #include <fstream>
@@ -330,9 +331,73 @@ EDS::EDS() {
   epsilons = 0;
   str_count = 0;
   length = 0;
+
+  str = std::string{};
+  prev_chars = std::vector<std::vector<std::size_t>>{};
 }
 
+void EDS::linearize() {
+  std::size_t expected_size = this->get_size() + this->get_eps_count();
+  this->str.reserve(expected_size);
+  this->prev_chars.reserve(expected_size);
+
+
+  // current and previous eds slice
+  std::vector<slice_eds> c_sl{};
+  std::vector<slice_eds> p_sl{};
+  bool p_eps{false};
+
+  for (std::size_t i{}; i < this->get_length(); i++){
+    // populate strings
+    for (auto s :this->get_strs(i)) { this->str.append(s); }
+    if (this->is_letter_eps(i)) { this->str += '*'; }
+
+    // populate previous char indexes
+    std::pair<std::size_t, std::size_t> bounds = this->get_letter_boundaries(i);
+    c_sl = this->get_slice(i);
+
+    std::size_t k = bounds.first;
+    for (; k <= bounds.second; k++) {
+      this->prev_chars.push_back(std::vector<std::size_t>{});
+      std::vector<slice_eds>::iterator it;
+      it = std::find_if(c_sl.begin(), c_sl.end(),
+                     [k](slice_eds s) {return s.start == k;} );
+
+      if (it == c_sl.end()) {
+        prev_chars.at(k).push_back(k - 1);
+      } else {
+        for (slice_eds p_s: p_sl) {
+          this->prev_chars.at(k).push_back(p_s.start + p_s.length - 1);
+        }
+
+        if (p_eps) {
+          this->prev_chars.at(k).push_back(this->get_global_eps_idx(i-1));
+        }
+      }
+    }
+
+    p_eps = this->is_letter_eps(i);
+    p_sl = c_sl;
+  }
+}
+
+
 // getters
+std::vector<std::size_t>& EDS::get_prev_char_idx(std::size_t char_idx) {
+  return this->prev_chars.at(char_idx);
+}
+
+  char EDS::get_char_at(std::size_t char_idx) {
+    try {
+    return this->str.at(char_idx);
+    } catch (const std::out_of_range &) {
+      std::cerr << "-----" << char_idx;
+      exit(-1);
+    }
+    //return this->str.at(char_idx);
+}
+
+
 std::size_t EDS::get_size() { return this->size; }
 std::size_t EDS::get_length() const { return this->data.size(); }
 std::size_t EDS::get_eps_count() { return this->epsilons; }
@@ -350,6 +415,25 @@ std::vector<slice_eds>& EDS::get_slice(std::size_t letter_idx){
   return this->slices.at(letter_idx);
 }
 
+std::vector<std::size_t> EDS::get_letter_ends_global(std::size_t letter_idx) {
+  std::vector<slice_eds>& sls = this->get_slice(letter_idx);
+  bool e = this->is_letter_eps(letter_idx);
+  std::vector<std::size_t> v;
+  // TODO use a better iterator some kind of accumulator
+
+  for (auto it = sls.begin(); it != sls.end(); it++) {
+    if (e && it == sls.end() - 1) {
+      // we are at an epsilon slice
+      v.push_back(it->start + it->length);
+    }  else {
+      // TODO: take care of 0 + 0 - 1
+      v.push_back(it->start + it->length - 1);
+    }
+  }
+  return v;
+}
+
+
 bool EDS::is_letter_eps(std::size_t letter_idx) const {
     return this->data.at(letter_idx).is_eps();
 }
@@ -361,12 +445,25 @@ std::size_t EDS::to_global_idx(std::size_t letter_idx, std::size_t local_idx) {
   return local_idx + this->get_slices().at(letter_idx).front().start;
 }
 
+std::size_t EDS::str_start_local(std::size_t letter_idx, std::size_t str_idx) {
+  std::vector<slice_eds> &sl = this->get_slice(letter_idx);
+  return sl.at(str_idx).start - sl.front().start;
+}
+
+eds::slice_eds EDS::get_str_slice_local(std::size_t letter_idx, std::size_t str_idx) {
+  std::vector<slice_eds> &sl = this->get_slice(letter_idx);
+  eds::slice_eds local_sl = sl.at(str_idx);
+  local_sl.start = sl.at(str_idx).start - sl.front().start;
+  return local_sl;
+}
+
 std::size_t EDS::get_local_eps_idx(std::size_t letter_idx) {
   size_t gl_idx = this->get_global_eps_idx(letter_idx);
   return this->to_local_idx(letter_idx, gl_idx);
 }
+
 std::size_t EDS::get_global_eps_idx(std::size_t letter_idx) {
-  if (this->get_d_letter(letter_idx).is_eps()) {
+  if (!this->get_d_letter(letter_idx).is_eps()) {
 #if __cplusplus >= 202002L
     throw std::domain_error(
         std::format("letter {} does not have an eps", letter_idx));
@@ -380,6 +477,8 @@ std::size_t EDS::get_global_eps_idx(std::size_t letter_idx) {
   return this->get_slice(letter_idx).back().start;
 }
 
+
+
 void EDS::inc_size() { ++this->size; }
 
 void EDS::inc_epsilons() { ++this->epsilons; }
@@ -391,6 +490,7 @@ std::vector<std::string>& EDS::get_strs(std::size_t letter_idx) {
   return this->get_d_letter(letter_idx).get_strs();
   ;
 }
+
 
 std::pair<std::size_t, std::size_t>
 EDS::get_letter_boundaries(std::size_t letter_idx){
@@ -406,7 +506,6 @@ EDS::get_letter_boundaries(std::size_t letter_idx){
     // TODO: right should never be zero if so throw an exception
     return std::make_pair(left, right-1);
   }
-                             
 };
 
 // TODO: clean up and move magic numbers to constants
@@ -459,6 +558,7 @@ void EDS::print_properties() {
 }
 
 
+
 // Parser
 // ------
 
@@ -474,6 +574,12 @@ EDS Parser::from_eds(const std::string &fp) {
 
   parse_data(raw_string, &n);
 
+  return n;
+}
+
+EDS Parser::from_string(const std::string &raw_string) {
+  EDS n;
+  parse_data(raw_string, &n);
   return n;
 }
 

@@ -217,6 +217,8 @@ LinearizedEDS linearize(EDS &eds) {
 
   std::vector<int> prev_char;
   prev_char.reserve(100);
+
+
   for (size_t k = 0; k < size; k++) {
     prev_char.push_back(k-1);
     prev_m.push_back(prev_char);

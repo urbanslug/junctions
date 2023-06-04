@@ -565,35 +565,4 @@ void gen_suffix_tree(
 
     suffix_trees->push_back(std::make_pair(*root, text));
   }
-};
-
-void gen_suffix_tree_new(
-    eds::EDS& eds,
-    std::vector<std::pair<STvertex, std::string>> *suffix_trees) {
-
-  // std::vector<std::string>& i_letter;
-  // const std::vector<std::string>& i_letter{};
-
-  // std::vector<slicex> const *str_slices;
-   std::string text;
-  STvertex *root;
-
-  for (size_t i = 0; i < eds.get_length(); i++) {
-    text.clear();
-
-    std::vector<std::string>& i_letter = eds.get_d_letter(i).get_strs();
-    std::vector<eds::slice_eds>& str_slices = eds.get_slice(i); //&eds.str_slices[i];
-
-
-    junctions::join(i_letter, '$', text); // concat the strings with dollar sign
-    text += '_';                          // add a terminator char
-
-    // Create the suffix tree
-    root = Create_suffix_tree(text.c_str(), text.length());
-
-    // add string ids
-    update_leaves(root, str_slices);
-
-    suffix_trees->push_back(std::make_pair(*root, text));
-  }
-};
+}

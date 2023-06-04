@@ -40,8 +40,8 @@ int main(){
 
   // test_parse_ed_string();
 
-  // test_string_matching();
-  test_compute_graph();
+  test_string_matching();
+  //test_compute_graph();
 
   /*
     test_lacks_intersect();
@@ -499,6 +499,7 @@ void test_string_matching() {
 
   query = "GAT";
   match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
+
   // --------------------------
 
   txt_strs = {"A", "G"};
@@ -508,10 +509,27 @@ void test_string_matching() {
   };
 
   setup();
-  
+
   query = "GAT";
   match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
-  // print_match_positions();
+  //print_match_positions();
+
+  // --------------------------
+
+  txt_strs = {"A", "G", "CAT"};
+  text_slices = {
+      slicex{.start = 0, .length = 1},
+      slicex{.start = 1, .length = 1},
+      slicex{.start = 2, .length = 3},
+  };
+
+  setup();
+  
+  query = "GAT";
+  query = "AT";
+  match_positions = FindEndIndexes(query.c_str(), root, text.c_str());
+  print_match_positions();
+  return;
   // ------------------------
 
   txt_strs = {"AT"};
