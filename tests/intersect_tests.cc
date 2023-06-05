@@ -11,13 +11,14 @@ TEST(IntersectionTest, LacksIntersection) {
   std::string ed_string_w, ed_string_q;
   bool res; // result
   n_core::Parameters params;
-  params.verbosity = 0;
+  params.set_verbosity(0); // TODO: remove
+  
 
   auto setup_and_run = [&]() {
     w = eds::Parser::from_string(ed_string_w);
     q = eds::Parser::from_string(ed_string_q);
 
-    res = intersect::improved::has_intersection(w, q, params);
+    res = intersect::improved::has_intersection(w, q);
     // TODO: call naive
     //res = intersect::improved(w, q, params);
   };
@@ -36,13 +37,13 @@ TEST(IntersectionTest, ActiveSuffixes) {
   std::string ed_string_w, ed_string_q;
   bool res; // result
   n_core::Parameters params;
-  params.verbosity = 0;
+  params.set_verbosity(0); // TODO: remove
 
   auto setup_and_run = [&]() {
     w = eds::Parser::from_string(ed_string_w);
     q = eds::Parser::from_string(ed_string_q);
 
-    res = intersect::improved::has_intersection(w, q, params);
+    res = intersect::improved::has_intersection(w, q);
     // TODO: call naive
     //res = intersect::improved(w, q, params);
   };
@@ -66,13 +67,13 @@ TEST(IntersectionTest, Epsilons) {
   std::string ed_string_w, ed_string_q;
   bool res; // result
   n_core::Parameters params;
-  params.verbosity = 0;
+  params.set_verbosity(0); // TODO: remove
 
   auto setup_and_run = [&]() {
     w = eds::Parser::from_string(ed_string_w);
     q = eds::Parser::from_string(ed_string_q);
 
-    res = intersect::improved::has_intersection(w, q, params);
+    res = intersect::improved::has_intersection(w, q);
     // TODO: call naive
     //res = intersect::improved(w, q, params);
   };

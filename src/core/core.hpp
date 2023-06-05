@@ -79,7 +79,7 @@ enum task {
  */
 struct Parameters {
   algorithm algo;
-  int verbosity;
+  unsigned char v; // verbosity
   std::string w_file_path; // reference sequence(s)
   file_format w_format;
   std::string q_file_path; // query sequence(s)
@@ -88,13 +88,13 @@ struct Parameters {
   task t;
 
   // we assume input is in eds?
+  // TODO: make file format and string a struct
   std::vector<std::pair<file_format, std::string>> input_files;
-
 
   bool output_dot;
   bool size_of_multiset;
   // witness
-  bool compute_witness;
+  bool w;
   witness witness_choice;
   // matching stats
   bool compute_match_stats;
@@ -114,6 +114,19 @@ struct Parameters {
   void set_algo(algorithm a);
   // is the current task tsk?
   bool is_algo(algorithm a);
+
+  //fp (file path)
+  std::pair<file_format, std::string> get_w_fp() const;
+  std::pair<file_format, std::string> get_q_fp() const;
+
+  void set_witness(bool b);
+  void set_verbosity(unsigned char v);
+
+  bool gen_dot() const;
+  bool compute_witness() const;
+  bool multiset() const;
+  enum witness get_witness_choice() const;
+  unsigned char verbosity() const;
 };
 
  // TODO: remove

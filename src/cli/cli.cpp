@@ -78,8 +78,8 @@ void handle_info(n_core::Parameters const &params) {
  */
 void handle_intersection(n_core::Parameters const &params) {
   eds::EDS w, q;
-  w = eds::Parser::from_eds(params.w_file_path);
-  q = eds::Parser::from_eds(params.q_file_path);
+  w = eds::Parser::from_eds(params.get_w_fp().second);
+  q = eds::Parser::from_eds(params.get_q_fp().second);
 
   bool res_i{false}, res_n{false};
   std::chrono::duration<double> timeRefRead;
@@ -87,20 +87,20 @@ void handle_intersection(n_core::Parameters const &params) {
   auto report_res = [](bool res) {
     std::cout << "INFO "
               << (res ? "intersection exists" : "no intersection")
-              << std::endl;
+              << "\n";
   };
 
   auto err = [&]() {
     std::cerr << "INFO incompatible results "
               << "(naive " << res_n << " improved " << res_i
-              << "). Please report as a bug." << std::endl;
+              << "). Please report as a bug.\n";
     exit(1);
   };
 
   auto report_time = [&](std::string const& n) {
-    if (params.verbosity > 0) {
+    if (params.verbosity() > 0) {
       std::cerr << "INFO Time spent by " + n + " algorithm: "
-                << timeRefRead.count() << " sec" << std::endl;
+                << timeRefRead.count() << " sec\n";
     }
   };
 
@@ -151,88 +151,80 @@ void handle_intersection(n_core::Parameters const &params) {
 // -----
 // graph
 // -----
-
 /**
- * Compute Intersection Graph
+ * Compute Intersection Graph and...
  *
- *
- * TODO: rename this function
  */
-void do_graph(eds::EDS w, eds::EDS q, n_core::Parameters const &parameters) {
-  auto t0 = n_core::Time::now();
-  std::chrono::duration<double> timeRefRead;
+void handle_graph(n_core::Parameters const &params) {
+  eds::EDS w, q;
+  w = eds::Parser::from_eds(params.get_w_fp().second);
+  q = eds::Parser::from_eds(params.get_q_fp().second);
 
-  if (parameters.verbosity > 0) {
-    std::cerr << "INFO [junctions::main::do_graph] computing intersection graph " << std::endl;
+  std::chrono::duration<double> timeRefRead;
+  auto t0 = n_core::Time::now();
+
+  if (params.verbosity() > 0) {
+    std::cerr << "INFO computing intersection graph\n";
   }
 
-  graph::Graph g = graph::compute_intersection_graph(w, q, parameters);
-
+  graph::Graph g = graph::compute_intersection_graph(w, q, params);
   timeRefRead = n_core::Time::now() - t0;
 
-  if (parameters.verbosity > 0) {
-    std::cerr
-        << "INFO [junctions::main::do_graph] Time spent computing intersection graph: "
-        << timeRefRead.count() << " sec" << std::endl;
+  if (params.verbosity() > 0) {
+    std::cerr << "INFO Time spent computing intersection graph: "
+              << timeRefRead.count() << " sec\n";
   }
 
   // dot
-  if (parameters.output_dot) {
-    if (parameters.verbosity > 0) {
-      std::cerr
-          << "INFO [junctions::main::do_graph] generating graph in dot format"
-          << std::endl;
+  if (params.gen_dot()) {
+    if (params.verbosity() > 0) {
+      std::cerr << "INFO generating graph in dot format\n";
     }
       g.print_dot();
   }
 
-  if (parameters.size_of_multiset) {
-      if (parameters.verbosity > 0) {
-      std::cerr
-          << "INFO [junctions::main::do_graph] computing the size of the multiset"
-          << std::endl;
+  if (params.multiset()) {
+    if (params.verbosity() > 0) {
+      std::cerr << "INFO computing the size of the multiset\n";
       }
-    std::cout << "Size of the mutlitset: " << g.multiset_size() << std::endl;
+    std::cout << "Size of the mutlitset: " << g.multiset_size() << "\n";
   }
 
-  if (parameters.compute_witness) {
+  if (params.compute_witness()) {
     int witness_len;
-    // TODO: confirm that an intersection exists
-    switch (parameters.witness_choice) {
+    switch (params.get_witness_choice()) {
     case n_core::witness::longest:
-      if (parameters.verbosity > 0) {
-        std::cerr << "INFO [junctions::main] computing the longest witness " <<  std::endl;
+      if (params.verbosity() > 0) {
+        std::cerr << "INFO computing the longest witness\n";
       }
 
       t0 = n_core::Time::now();
       witness_len = graph::longest_witness(g);
       timeRefRead = n_core::Time::now() - t0;
 
-      std::cout << "longest witness is: " << witness_len << " chars long." << std::endl;
+      std::cout << "longest witness is: " << witness_len << " chars long.\n";
 
-      if (parameters.verbosity > 0) {
-        std::cerr << "INFO [junctions::main] Time spent computing the longest "
-                     "witness: "
-                  << timeRefRead.count() << " sec" << std::endl;
+      if (params.verbosity() > 0) {
+        std::cerr << "INFO Time spent computing the longest witness: "
+                  << timeRefRead.count() << " sec\n";
       }
 
       break;
 
     case n_core::witness::shortest:
-      if (parameters.verbosity > 0) {
-        std::cerr << "INFO [junctions::main] computing the shortest witness " << std::endl;
+      if (params.verbosity() > 0) {
+        std::cerr << "INFO computing the shortest witness\n";
       }
 
       t0 = n_core::Time::now();
       witness_len =  graph::shortest_witness(g);
       timeRefRead = n_core::Time::now() - t0;
 
-      std::cout << "shortests witness is: " << witness_len << " chars long." <<  std::endl;
+      std::cout << "shortests witness is: " << witness_len << " chars long.\n";
 
-      if (parameters.verbosity > 0) {
-        std::cerr << "INFO [junctions::main] Time spent computing the shortest "
-                     "witness: "
-                  << timeRefRead.count() << " sec" << std::endl;
+      if (params.verbosity() > 0) {
+        std::cerr << "INFO Time spent computing the shortest witness: "
+                  << timeRefRead.count() << " sec\n";
       }
       break;
 
@@ -240,15 +232,6 @@ void do_graph(eds::EDS w, eds::EDS q, n_core::Parameters const &parameters) {
       break;
     }
   }
-
-  //if (parameters.compute_match_stats) { graph::match_stats(g, w, q, parameters); }
 }
 
-/**
- * 
- */
-void handle_graph(n_core::Parameters const &params) {}
-
 } // namespace app
-
-

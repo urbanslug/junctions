@@ -17,7 +17,7 @@ TEST(GraphTest, ComputeGraph) {
   std::string ed_string_w, ed_string_q;
   
   n_core::Parameters params;
-  params.verbosity = 0;
+  params.set_verbosity(0);
 
   auto setup_and_run = [&]() {
     w = eds::Parser::from_string(ed_string_w);

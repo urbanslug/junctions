@@ -162,9 +162,9 @@ public:
 * @param[in] parameters
 * return
 */
-Graph compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
+Graph compute_intersection_graph(eds::EDS &eds_w,
+                                 eds::EDS &eds_q,
                                  n_core::Parameters const &parameters);
-
 
 /**
  *
@@ -172,7 +172,9 @@ Graph compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
  *
  *
  */
-int match_stats(Graph &g, eds::EDS &eds_w, eds::EDS &eds_q,
+int match_stats(Graph &g,
+                eds::EDS &eds_w,
+                eds::EDS &eds_q,
                 n_core::Parameters const &parameters);
 
 int longest_witness(Graph& g);

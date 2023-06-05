@@ -29,8 +29,10 @@ ADD_LIBRARY(LibsModule
   src/graph/graph.cpp
   src/intersect/improved.cpp
   src/core/suffix_tree.cpp
-  src/utils.cpp
-  src/core.cpp
+  src/intersect/naive.cpp 
+  src/cli/cli.cpp
+  src/cli/argvparser.cpp 
+  src/cli/parseCmdArgs.cpp 
 )
 
 set(SOURCE_FILES

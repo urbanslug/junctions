@@ -497,13 +497,7 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
                     n_core::bool_matrix *txt_active_suffixes,
                     n_core::bool_matrix *qry_active_suffixes,
                     int qry_letter_idx,
-                    int txt_letter_idx, std::vector<n_junctions::graph_slice> *v,
-                    n_core::Parameters const &parameters) {
-
-  if (parameters.verbosity > 2) {
-    std::cerr << n_junctions::indent(1) << "DEBUG, [graph::filter_matches]"
-              << std::endl;
-  }
+                    int txt_letter_idx, std::vector<n_junctions::graph_slice> *v) {
 
 
   //int txt_start_in_N = txt_offsets[0].start;
@@ -599,14 +593,6 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
     // where the matched string actually ends
     std::size_t txt_slice_end = txt_slice.start + txt_slice.length;
 
-    if (parameters.verbosity > 3) {
-      std::cerr << n_junctions::indent(2)
-                << "txt_slice.start " << txt_slice.start
-                << " candidate_match_end " << candidate_match_end
-                << " txt_slice_end " << txt_slice_end
-                << std::endl;
-    }
-
     // find where the match ends within the txt string
     if (txt_slice.start + candidate_match_end >= txt_slice_end) {
       // the match went beyond the txt so we limit it to the end
@@ -644,10 +630,6 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
     // in the query
     int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
 
-    if (parameters.verbosity > 3) {
-      std::cerr << n_junctions::indent(2) << " q in N " << q_start_in_N << std::endl;
-    }
-
     // std::make_pair(q_start_in_N, t_start_in_N, m_len);
 
     // the query is always spelt to the end or past it
@@ -661,13 +643,7 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
       (*qry_active_suffixes)[txt_letter_idx][q_start_in_N + candiate_match.match_length] = 1;
     }
 
-    if (parameters.verbosity > 3) {
-      std::cerr << n_junctions::indent(2)
-                << "beyond txt: " << candiate_match.beyond_txt
-                << " (txt): " << t_m_start << ", " << t_m_stop
-                << " (qry) " << q_m_start << ", " << q_m_stop
-                << std::endl;
-    }
+    
 
     n_junctions::graph_slice s =
         n_junctions::graph_slice{.txt_start = t_start_in_N,
@@ -677,8 +653,6 @@ void filter_matches(std::vector<n_junctions::match> const &candidate_matches,
                                .len = candiate_match.match_length,
                                .str = candiate_match.str};
 
-    if (parameters.verbosity > 3) {
-      s.dbg_print(2); }
 
       v->push_back(s);
   }
@@ -695,10 +669,6 @@ void graph::Graph::create_edge(std::vector<n_junctions::graph_slice> const &vali
                                std::pair<std::size_t, std::size_t> txt_boundary,
                                n_core::Parameters const &parameters,
                                bool eps_edge = false) {
-  if (parameters.verbosity > 2) {
-    std::cerr << n_junctions::indent(1) << "DEBUG, [graph::create_edge]"
-              << std::endl;
-  }
 
   int eps_side = 0;
 
@@ -737,9 +707,6 @@ void graph::Graph::create_edge(std::vector<n_junctions::graph_slice> const &vali
 */
 graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                                  n_core::Parameters const &parameters) {
-  if (parameters.verbosity > 1) { std::cerr << "DEBUG [graph::compute_intersection_graph]" << std::endl; }
-  // TODO implement cleaner somewhere
-  // if (parameters.verbosity > 0) { n_junctions::print_eds_info(eds_w, eds_q); }
 
   size_t size_w = eds_w.get_size();
   size_t size_q = eds_q.get_size();
@@ -787,7 +754,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
   graph::Graph g = graph::Graph(eds_w.get_size() + eds_w.get_eps_count(),
                                 eds_q.get_size() + eds_q.get_eps_count());
 
-  if (parameters.verbosity > 0) { g.dbg_print(); }
+  if (parameters.verbosity() > 0) { g.dbg_print(); }
 
   std::pair<std::size_t, std::size_t> j_boundary;
   std::pair<std::size_t, std::size_t> i_boundary;
@@ -800,24 +767,11 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
       j_boundary = eds_q.get_letter_boundaries(j);
       i_boundary = eds_w.get_letter_boundaries(i);
 
-      if (parameters.verbosity > 2) {
-        std::cerr << std::endl
-                  << n_junctions::indent(1) << "i: " << i << " j: " << j << std::endl
-                  << n_junctions::indent(1) << "--------------" << std::endl;
-      }
 
       // T_2[j] has epsilon
       // T_1[i] is the query
       if (eds_q.is_letter_eps(j)) {
 
-#if DEBUG
-        if (parameters.verbosity > 4) {
-          std::cerr << n_junctions::indent(1)
-                    << "DEBUG [graph::compute_intersection_graph] "
-                    << n_junctions::unicode_eps << " at "
-                    << n_junctions::T_2 << "[" << j << "]" << std::endl;
-        }
-#endif
 
         //int eps_idx = eds_q.str_offsets[j].back().start;
         // TOOD: make size_t
@@ -834,12 +788,10 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
             .len = 0,
             .str = ""});
 
-        // std::cerr << "b->" << qry_boundary.first << "\n";
 
         // the last letter in T_1
         if (i == len_w - 1) {
           std::pair<int, int>  accept_qry_boundary = std::make_pair(i_boundary.second + 1, i_boundary.second + 1);
-          // std::cerr << "------ "<< qry_boundary.second << std::endl;
           g.create_edge(valid_matches, 1, accept_qry_boundary, j_boundary, parameters, true);
         }
 
@@ -870,14 +822,6 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
       // T_1[i] has epsilon
       // T_2[j] is the query
       if (eds_w.is_letter_eps(i)) {
-
-        if (parameters.verbosity > 4) {
-          std::cerr << n_junctions::indent(1)
-                    << "DEBUG [graph::compute_intersection_graph] "
-                    << n_junctions::unicode_eps << " at "
-                    << n_junctions::T_1 << "[" << i << "]" << std::endl;
-        }
-
 
         int eps_idx = eds_w.get_global_eps_idx(i);
 
@@ -929,12 +873,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
       // Query => T_2[j]
       // Text => T_1[i]
-      if (parameters.verbosity > 3) {
-        std::cerr << n_junctions::indent(1)
-                  << "Query => T" << n_junctions::unicode_sub_2 << "[" << j << "] "
-                  << "Text => T" << n_junctions::unicode_sub_1 << "[" << i << "]"
-                  << std::endl;
-      }
+      
 
       n_junctions::perform_matching(
                                     eds_q.get_strs(j),
@@ -943,7 +882,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
       filter_matches(candidate_matches, eds_w, eds_w.get_slice(i), eds_q.get_slice(j),
                      &i_active_suffixes, &j_active_suffixes, j, i,
-                     &valid_matches, parameters);
+                     &valid_matches);
 
 
       g.create_edge(valid_matches, 2, j_boundary, i_boundary, parameters);
@@ -954,13 +893,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
        // Search for i_strs in T_2[j]
        // ---------------------------
 
-       if (parameters.verbosity > 3) {
-         std::cerr << n_junctions::indent(1)
-                   << "Query => T" << n_junctions::unicode_sub_1 << "[" << i << "] "
-                   << "Text => T" << n_junctions::unicode_sub_2 << "[" << j << "]"
-                   << std::endl;
-       }
-
+       
        // Query => T_1[i]
        // Text => T_2[j]
        n_junctions::perform_matching(
@@ -970,7 +903,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
        filter_matches(candidate_matches, eds_q, eds_q.get_slice(j), eds_w.get_slice(i),
                       &j_active_suffixes, &i_active_suffixes, i, j,
-                      &valid_matches, parameters);
+                      &valid_matches);
 
        g.create_edge(valid_matches, 1, i_boundary, j_boundary, parameters);
 

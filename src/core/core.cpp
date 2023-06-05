@@ -1,4 +1,5 @@
 #include "./core.hpp"
+#include <utility>
 #include <vector>
 
 
@@ -13,6 +14,23 @@ bool Parameters::is_task(task tsk) { return this->t == tsk; }
 algorithm Parameters::get_algo() const { return this->algo; }
 void Parameters::set_algo(algorithm a){ this->algo = a; }
 bool Parameters::is_algo(algorithm a) { return this->algo == a; }
+
+void Parameters::set_verbosity(unsigned char v) { this->v = v; };
+void Parameters::set_witness(bool b) { this->w = b; };
+
+bool Parameters::gen_dot() const { return this->output_dot; }
+bool Parameters::compute_witness() const { return this->w; }
+bool Parameters::multiset() const { return this->size_of_multiset; }
+witness Parameters::get_witness_choice() const { return this->witness_choice; }
+unsigned char Parameters::verbosity() const { return this->v; }
+
+std::pair<file_format, std::string> Parameters::get_w_fp() const {
+  return std::make_pair(this->w_format, this->w_file_path);
+}
+
+std::pair<file_format, std::string> Parameters::get_q_fp() const {
+  return std::make_pair(this->q_format, this->q_file_path);
+}
 
 
 bool_matrix gen_matrix(std::size_t rows, std::size_t cols) { 

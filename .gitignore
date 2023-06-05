@@ -3,7 +3,7 @@
 *.png
 *.svg
 out
-
+Testing/
 bin/
 build/
 target/
