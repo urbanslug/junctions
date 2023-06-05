@@ -6,6 +6,15 @@ namespace n_core {
 Parameters::Parameters() {
 }
 
+task Parameters::get_task() const { return this->t; }
+void Parameters::set_task(task tsk){ this->t = tsk; }
+bool Parameters::is_task(task tsk) { return this->t == tsk; }
+
+algorithm Parameters::get_algo() const { return this->algo; }
+void Parameters::set_algo(algorithm a){ this->algo = a; }
+bool Parameters::is_algo(algorithm a) { return this->algo == a; }
+
+
 bool_matrix gen_matrix(std::size_t rows, std::size_t cols) { 
   // rows
   std::vector<bool> row(cols);
@@ -120,8 +129,7 @@ std::ostream &operator<<(std::ostream &os, const graph_slice &s) {
  */
 void perform_matching(std::vector<std::string> const &queries,
                       std::pair<match_st::STvertex, std::string> *text,
-                      std::vector<match> *candidate_matches,
-                      n_core::Parameters const &parameters) {
+                      std::vector<match> *candidate_matches) {
 
   std::vector<n_core::extended_match> match_positions;
 

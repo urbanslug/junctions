@@ -387,14 +387,8 @@ std::vector<std::size_t>& EDS::get_prev_char_idx(std::size_t char_idx) {
   return this->prev_chars.at(char_idx);
 }
 
-  char EDS::get_char_at(std::size_t char_idx) {
-    try {
-    return this->str.at(char_idx);
-    } catch (const std::out_of_range &) {
-      std::cerr << "-----" << char_idx;
-      exit(-1);
-    }
-    //return this->str.at(char_idx);
+char EDS::get_char_at(std::size_t char_idx) {
+  return this->str.at(char_idx);
 }
 
 
@@ -550,10 +544,10 @@ std::ostream& operator<<(std::ostream &os, EDS& e) {
 }
 
 void EDS::print_properties() {
-  std::cerr << "size: " << this->get_size()
-            << " length: " << this->get_length()
-            << " str count: " << this->get_str_count()
-            << " epsilons: " << this->get_eps_count()
+  std::cerr << "size (N): " << this->get_size()
+            << " length (n): " << this->get_length()
+            << " str count (m): " << this->get_str_count()
+            << " number of epsilons: " << this->get_eps_count()
             << "\n";
 }
 

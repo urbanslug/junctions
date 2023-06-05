@@ -939,8 +939,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
       n_junctions::perform_matching(
                                     eds_q.get_strs(j),
                                     &w_suffix_trees[i],
-                                    &candidate_matches,
-                                    parameters);
+                                    &candidate_matches);
 
       filter_matches(candidate_matches, eds_w, eds_w.get_slice(i), eds_q.get_slice(j),
                      &i_active_suffixes, &j_active_suffixes, j, i,
@@ -967,8 +966,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
        n_junctions::perform_matching(
                                      eds_w.get_strs(i),
                                   &q_suffix_trees[j],
-                                     &candidate_matches,
-                                  parameters);
+                                     &candidate_matches);
 
        filter_matches(candidate_matches, eds_q, eds_q.get_slice(j), eds_w.get_slice(i),
                       &j_active_suffixes, &i_active_suffixes, i, j,

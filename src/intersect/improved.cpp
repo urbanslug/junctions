@@ -28,13 +28,7 @@ namespace improved {
 bool is_prev_letter_matched(int text_letter_idx, int query_letter_idx,
                             eds::EDS& query_eds, eds::EDS& text_eds,
                             n_core::bool_matrix const &query_matrix,
-                            n_core::bool_matrix const &text_matrix,
-                            n_core::Parameters const &parameters) {
-  if (parameters.verbosity > 2) {
-    std::cerr << n_junctions::indent(1) << "DEBUG, [compute_intersect::prev_matched]"
-              << std::endl;
-  }
-
+                            n_core::bool_matrix const &text_matrix) {
   if ( query_letter_idx == 0) { return true; }
   if (text_letter_idx == 0 && query_letter_idx == 0) { return true; }
 
@@ -84,8 +78,7 @@ void update_matrices(std::vector<n_junctions::match> const &candidate_matches,
                      n_core::bool_matrix *t_matrix,
                      n_core::bool_matrix *q_matrix,
                      int qry_letter_idx,
-                     int txt_letter_idx,
-                     n_core::Parameters const &parameters) {
+                     int txt_letter_idx) {
   auto in_txt_N = [&](int k) -> int { return txt_offsets[0].start + k; };
   auto in_txt_N_2 = [&](int idx, int k) -> int { return txt_offsets[idx].start + k; };
 
@@ -220,9 +213,8 @@ Is there an intersection between ED strings W and Q?
          |--------------------|
          n_1
 */
-bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q, n_core::Parameters parameters) {
-  if (parameters.verbosity > 1) { std::cerr << "DEBUG, [improved::intersect]" << std::endl; }
-
+bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
+  
   size_t size_w = eds_w.get_size();
   size_t size_q = eds_q.get_size();
 
@@ -245,10 +237,6 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q, n_core::Parameters param
   auto t0 = n_core::Time::now();
   std::chrono::duration<double> timeRefRead;
 
-  if (parameters.verbosity > 5) {
-    std::cerr << "DEBUG, [improved::intersect] Generating suffix trees" << std::endl;
-  }
-
   gen_suffix_tree(eds_w, &w_suffix_trees);
   gen_suffix_tree(eds_q, &q_suffix_trees);
 
@@ -258,12 +246,6 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q, n_core::Parameters param
   // t2.join();
 
   timeRefRead = n_core::Time::now() - t0;
-
-  if (parameters.verbosity > 5) {
-    std::cerr
-      << "DEBUG, [improved::intersect] Time spent generating suffix trees: "
-      << timeRefRead.count() << " sec" << std::endl;
-  }
 
   /*
     Find the intersection
@@ -337,8 +319,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q, n_core::Parameters param
         }
       }
 
-      prev_j = is_prev_letter_matched(i, j, eds_q, eds_w, q_matrix, w_matrix, parameters);
-      prev_i = is_prev_letter_matched(j, i, eds_w, eds_q, w_matrix, q_matrix, parameters);
+      prev_j = is_prev_letter_matched(i, j, eds_q, eds_w, q_matrix, w_matrix);
+      prev_i = is_prev_letter_matched(j, i, eds_w, eds_q, w_matrix, q_matrix);
 
       if (!(prev_i && prev_j) ) {
         continue;
@@ -348,46 +330,29 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q, n_core::Parameters param
       // Search for j_strs in T_1[i] and update matrices
       // ----------------------------------------------
 
-      if (parameters.verbosity > 3) {
-        std::cerr << n_junctions::indent(1) << "DEBUG, "
-                  << "Text => T" << n_junctions::unicode_sub_1 << "[" << i << "] "
-                  << "Query => T" << n_junctions::unicode_sub_2 << "[" << j << "]"
-                  << std::endl;
-      }
-
       n_junctions::perform_matching(
           eds_q.get_strs(j),
           &w_suffix_trees[i],
-          &candidate_matches,
-          parameters);
+          &candidate_matches);
 
       update_matrices(candidate_matches,
                       eds_w,
                       eds_w.get_slice(i),
                       eds_q.get_slice(j),
                       &w_matrix, &q_matrix,
-                      j, i,
-                      parameters);
+                      j, i);
 
       candidate_matches.clear();
 
       // Search for i_strs in T_2[j] and update matrices
       // -----------------------------------------------
 
-      if (parameters.verbosity > 3) {
-
-        std::cerr << n_junctions::indent(1) << "DEBUG, "
-                  << "Text => T" << n_junctions::unicode_sub_2 << "[" << j << "] "
-                  << "Query => T" << n_junctions::unicode_sub_1 << "[" << i << "]"
-                  << std::endl;
-      }
 
 
       n_junctions::perform_matching(
           eds_w.get_strs(i),
           &q_suffix_trees[j],
-          &candidate_matches,
-          parameters);
+          &candidate_matches);
 
 
       update_matrices(candidate_matches,
@@ -395,8 +360,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q, n_core::Parameters param
                       eds_q.get_slice(j),
                       eds_w.get_slice(i),
                       &q_matrix, &w_matrix,
-                      i, j,
-                      parameters);
+                      i, j);
 
       candidate_matches.clear();
     }

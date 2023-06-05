@@ -56,14 +56,23 @@ enum ed_string { w, q };
 
 std::ostream &operator<<(std::ostream &os, const ed_string &value);
 
-enum algorithm { naive, improved, both };
+// for use with intersection check
+enum algorithm {
+  naive,    //
+  improved, //
+  both      //
+};
 
 enum witness {shortest, longest};
 
   //std::ostream &operator<<(std::ostream &os, const core::witness &value);
 
 
-enum arg {check_intersection, compute_graph, info};
+enum task {
+  check_intersection, // do EDSI TODO: rename?
+  compute_graph,      // compute the intersection graph
+  info                // print info about the eds file
+};
 
 /**
  * @brief   parameters for cli args
@@ -76,7 +85,7 @@ struct Parameters {
   std::string q_file_path; // query sequence(s)
   file_format q_format;
   //
-  arg task;
+  task t;
 
   // we assume input is in eds?
   std::vector<std::pair<file_format, std::string>> input_files;
@@ -93,6 +102,18 @@ struct Parameters {
   int match_stats_letter_idx;
 
   Parameters();
+  // task
+  task get_task() const;
+  void set_task(task tsk);
+  // is the current task tsk?
+  bool is_task(task tsk);
+
+  // algo
+  // for intersection
+  algorithm get_algo() const;
+  void set_algo(algorithm a);
+  // is the current task tsk?
+  bool is_algo(algorithm a);
 };
 
  // TODO: remove
@@ -273,8 +294,7 @@ std::ostream &operator<<(std::ostream &os, const match &m);
 // new
 void perform_matching(std::vector<std::string> const &queries,
                       std::pair<match_st::STvertex, std::string> *text,
-                      std::vector<match> *candidate_matches,
-                      n_core::Parameters const &parameters);
+                      std::vector<match> *candidate_matches);
 
 } // namespace junctions
 

@@ -8,9 +8,10 @@
 namespace intersect {
 
   namespace improved {
-    bool has_intersection(eds::EDS &eds_w,
-                          eds::EDS &eds_q,
-                          n_core::Parameters parameters);
+  bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q);
+
+  bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q,
+                        n_core::Parameters parameters);
     } // namespace improved
 
     namespace naive {

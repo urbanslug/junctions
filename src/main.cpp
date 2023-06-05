@@ -292,7 +292,6 @@ int main(int argc, char **argv) {
     }
   };
 
-
   switch (parameters.task) {
   case core::arg::compute_graph:
     q = read_files(parameters, core::ed_string::q);
@@ -311,7 +310,6 @@ int main(int argc, char **argv) {
   default:
     std::cerr << "Unhandled task: report a bug" << std::endl;
   }
-
 
   return 0;
 }
