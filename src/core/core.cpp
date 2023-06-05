@@ -53,7 +53,7 @@ std::ostream &operator<<(std::ostream &os, const ed_string &value) {
   return os;
 }
 
-  // TODO remove
+// TODO remove
 // match locus
 // -----------
 bool operator<(const match_locus &lhs,
@@ -73,9 +73,9 @@ bool operator==(const match_locus &lhs,
 
 bool operator==(const extended_match &lhs,
                 const extended_match &rhs) {
-  return std::tie(lhs.beyond_text, lhs.match_length, lhs.str_idx,
-                  lhs.chr_idx) ==
-         std::tie(lhs.beyond_text, lhs.match_length, lhs.str_idx, lhs.chr_idx);
+  return
+    std::tie(lhs.beyond_text, lhs.match_length, lhs.str_idx, lhs.chr_idx) ==
+    std::tie(rhs.beyond_text, rhs.match_length, rhs.str_idx, rhs.chr_idx);
 }
 
 std::ostream &operator<<(std::ostream &os, const extended_match &r) {
@@ -136,6 +136,16 @@ std::ostream &operator<<(std::ostream &os, const graph_slice &s) {
   return os;
 }
 
+void graph_slice::dbg_print(int indent_level = 0) {
+  std::cerr << indent(indent_level) << "Graph slice {" << std::endl
+            << indent(indent_level + 1) << "txt start " << this->txt_start << std::endl
+            << indent(indent_level + 1) << "qry start " << this->qry_start << std::endl
+            << indent(indent_level + 1) << "q_m(" << this->q_m.first << ", " << this->q_m.second << ")" << std::endl
+            << indent(indent_level + 1) << "t_m(" << this->t_m.first << ", " << this->t_m.second << ")" << std::endl
+            << indent(indent_level + 1) << "len " << this->len << std::endl
+            << indent(indent_level + 1) << "str " << this->str << std::endl
+            << indent(indent_level) << "}" << std::endl;
+}
 
 /**
  *
@@ -151,21 +161,22 @@ void perform_matching(std::vector<std::string> const &queries,
 
   std::vector<n_core::extended_match> match_positions;
 
-  for (int qry_str_idx = 0; qry_str_idx < queries.size(); qry_str_idx++) {
+  for (std::size_t qry_str_idx = 0; qry_str_idx < queries.size(); qry_str_idx++) {
     std::string qry_str = queries[qry_str_idx];
-    
 
-    match_positions = match_st::FindEndIndexes(qry_str.c_str(), &text->first, text->second.c_str());
-    
+    match_positions = match_st::FindEndIndexes(qry_str.c_str(),
+                                               &text->first,
+                                               text->second.c_str());
+
     for (auto match_pos : match_positions) {
 
       candidate_matches->push_back(
         n_junctions::match{.query_str_index = (int)qry_str_idx,
-                         .text_str_index = match_pos.str_idx,
-                         .text_char_index = match_pos.chr_idx ,
-                         .match_length = match_pos.match_length,
-                         .beyond_txt = match_pos.beyond_text,
-                         .str = qry_str.substr(0, match_pos.match_length)});
+                           .text_str_index = match_pos.str_idx,
+                           .text_char_index = match_pos.chr_idx ,
+                           .match_length = match_pos.match_length,
+                           .beyond_txt = match_pos.beyond_text,
+                           .str = qry_str.substr(0, match_pos.match_length)});
     }
   }
 }

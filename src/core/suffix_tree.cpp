@@ -347,7 +347,7 @@ void update_leaves(STvertex *current_vertex,
 
         for (size_t i = 0; i < text_offsets_local.size(); i++) {
 
-          string_start = string_start = text_offsets_local.at(i).start;
+          string_start = text_offsets_local.at(i).start;
 
           string_start += i; // account for $ separators
 

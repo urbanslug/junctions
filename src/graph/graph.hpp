@@ -131,7 +131,6 @@ public:
                    int qry,
                    std::pair<std::size_t, std::size_t> qry_boundary,
                    std::pair<std::size_t, std::size_t> txt_boundary,
-                   n_core::Parameters const &parameters,
                    bool eps_edge);
 
       // function to add an edge to the graph
@@ -143,7 +142,7 @@ public:
                    std::pair<n_junctions::match_type, n_junctions::match_type> w_m,
                    std::pair<n_junctions::match_type, n_junctions::match_type> q_m,
                    std::size_t weight, std::string str,
-                   n_core::Parameters const &parameters, int eps_side);
+                   int eps_side);
 
   // constructor to initialize the graph
   Graph(std::size_t N_1, std::size_t N_2);

@@ -116,7 +116,7 @@ void update_matrices(std::vector<n_junctions::match> const &candidate_matches,
         // int in_N = in_txt_N(candiate_match.text_char_index); wrong
       // do we need to confirm t_start_in_N - 1
       valid_as = ((*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1] == 1);
-      int idx { 1 };
+      // int idx { 1 };
       int pos{};
       bool shorter_match{false};
 
@@ -180,12 +180,6 @@ void update_matrices(std::vector<n_junctions::match> const &candidate_matches,
 
     // determine match start and ends in N
 
-    if (match_start_in_txt == 0 &&
-        txt_offsets[candiate_match.text_char_index].length == candiate_match.match_length &&
-        !candiate_match.beyond_txt
-        ){
-      //std::cout << txt_letter_idx << " " << qry_letter_idx << "\n" ;
-    }
 
     // in the query
          int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;

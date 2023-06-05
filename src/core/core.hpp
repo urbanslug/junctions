@@ -165,11 +165,10 @@ bool operator==(const extended_match &lhs, const extended_match &rhs);
 
 
 namespace match_st {
-  /*
-  Suffix tree
-  ----
+/*
+Suffix Tree
+-----------
 */
-
 
 #define FOR(I, A, B) for (int I = (A); I <= (B); I++)
 #define FORD(I, A, B) for (int I = (A); I >= (B); I--)
@@ -227,8 +226,8 @@ std::vector<n_core::extended_match> FindEndIndexes(const char *query,
 
 STvertex *Create_suffix_tree(const char *x, int n);
 
-void gen_suffix_tree(eds::EDS &eds,
-                     std::vector<std::pair<STvertex, std::string>> *suffix_trees);
+void gen_suffix_tree(
+    eds::EDS &eds, std::vector<std::pair<STvertex, std::string>> *suffix_trees);
 
 void update_leaves(STvertex *current_vertex,
                    std::vector<eds::slice_eds> const &text_offsets,
@@ -275,16 +274,8 @@ struct graph_slice {
   int len;
   std::string str;
 
-  void dbg_print(int indent_level = 0) {
-    std::cerr << indent(indent_level) << "Graph slice {" << std::endl
-              << indent(indent_level + 1) << "txt start " << this->txt_start << std::endl
-              << indent(indent_level + 1) << "qry start " << this->qry_start << std::endl
-              << indent(indent_level + 1) << "q_m(" << this->q_m.first << ", " << this->q_m.second << ")" << std::endl
-              << indent(indent_level + 1) << "t_m(" << this->t_m.first << ", " << this->t_m.second << ")" << std::endl
-              << indent(indent_level + 1) << "len " << this->len << std::endl
-              << indent(indent_level + 1) << "str " << this->str << std::endl
-              << indent(indent_level) << "}" << std::endl;
-  }
+  // methods
+  void dbg_print(int indent_level = 0);
 };
 
 std::ostream &operator<<(std::ostream &os, const graph_slice &s);

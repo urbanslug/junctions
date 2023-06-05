@@ -5,9 +5,7 @@
 
 
 TEST(IntersectionTest, LacksIntersection) {
-
   eds::EDS w, q;
-  int shortest, longest;
   std::string ed_string_w, ed_string_q;
   bool res; // result
   n_core::Parameters params;
@@ -31,9 +29,7 @@ TEST(IntersectionTest, LacksIntersection) {
 
 
 TEST(IntersectionTest, ActiveSuffixes) {
-
   eds::EDS w, q;
-  int shortest, longest;
   std::string ed_string_w, ed_string_q;
   bool res; // result
   n_core::Parameters params;
@@ -61,9 +57,7 @@ TEST(IntersectionTest, ActiveSuffixes) {
 
 
 TEST(IntersectionTest, Epsilons) {
-
   eds::EDS w, q;
-  int shortest, longest;
   std::string ed_string_w, ed_string_q;
   bool res; // result
   n_core::Parameters params;
