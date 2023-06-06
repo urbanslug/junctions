@@ -153,7 +153,7 @@ void update_leaves(STvertex *current_vertex,
 
 } // namespace match
 
-namespace n_core {
+namespace core {
 typedef std::vector<std::vector<bool>> bool_matrix;
 bool_matrix gen_matrix(size_t rows, size_t cols);
 
@@ -246,37 +246,6 @@ struct Parameters {
 };
 
 
- // TODO: remove
-struct match_locus {
-  int string_index; // rename to str_index
-  int char_index;   // is this always zero?
-                    // candidate active suffix match
-
-  bool candidate_asm() { return !(this->char_index == 0); }
-};
-
-bool operator<(const match_locus &lhs, const match_locus &rhs);
-typedef match_locus locus;
-
-
-// TODO remove
-
-// generalization of query result and match locus above
-// replace query_result an match_locus with this
-struct extended_match {
-  bool beyond_text; // there was a match but the query was longer than the text
-  int match_length; // the length of the match
-  int str_idx; // the index of the text string
- 
-  // the match position in the conactenated string ignoring $
-  // TODO: make this char idx in the actual txt string
-  int chr_idx;
-};
-
-std::ostream &operator<<(std::ostream &os, const extended_match &r);
-
-bool operator==(const extended_match &lhs, const extended_match &rhs);
-
 // TODO call this an eds match and move to core?
 struct EDSMatch : public match_st::STQueryResult{
   std::size_t query_str_index;
@@ -324,13 +293,10 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
                       std::vector<std::string> const &queries,
                       std::vector<EDSMatch> *candidate_matches);
 
-} // namespace core
+void join(const std::vector<std::string> &v, char c, std::string &s);
+std::string indent(int level);
 
 
-
-
-namespace n_junctions {
-// TODO move to core
 const std::string unicode_eps = "\u03B5";
 const std::string unicode_sub_1 = "\u2081";
 const std::string unicode_sub_2 = "\u2082";
@@ -342,54 +308,9 @@ const std::string N_2 = "N\u2082";
 const std::string q_0 = "q\u2080";
 const std::string q_a = "q\u2090";
 
-
-std::string indent(int level);
-
-  // TODO move to ST
-void join(const std::vector<std::string> &v, char c, std::string &s);
-
-/**
- *
- * Is a match explicit or implicit
- *
- */
-enum match_type { exp, imp };
-
-// typedef std::pair<match_pe, match_type> vertex_type;
-
-struct graph_slice {
-  int txt_start;
-  int qry_start;
-
-  std::pair<match_type, match_type> q_m;
-  std::pair<match_type, match_type> t_m;
-
-  int len;
-  std::string str;
-
-  // methods
-  void dbg_print(int indent_level);
-};
-
-std::ostream &operator<<(std::ostream &os, const graph_slice &s);
-
-struct match {
-  int query_str_index;
-
-  int text_str_index;
-  int text_char_index;
-
-  int match_length;
-  bool beyond_txt;
-
-  std::string str;
-
-};
-
-std::ostream &operator<<(std::ostream &os, const match &m);
-
-
-} // namespace junctions
+const char string_separator = '$';
+const char terminator_char = '_';
+} // namespace core
 
 
 #endif

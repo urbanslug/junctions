@@ -27,8 +27,8 @@ namespace improved {
  */
 bool is_prev_letter_matched(int text_letter_idx, int query_letter_idx,
                             eds::EDS& query_eds, eds::EDS& text_eds,
-                            n_core::bool_matrix const &query_matrix,
-                            n_core::bool_matrix const &text_matrix) {
+                            core::bool_matrix const &query_matrix,
+                            core::bool_matrix const &text_matrix) {
   if ( query_letter_idx == 0) { return true; }
   if (text_letter_idx == 0 && query_letter_idx == 0) { return true; }
 
@@ -71,31 +71,17 @@ bool is_prev_letter_matched(int text_letter_idx, int query_letter_idx,
  * qry_offsets exist in N start and stop indexes of a str in N
  * return
  */
-void update_matrices(std::vector<n_core::EDSMatch> const &candidate_matches,
+void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
                      eds::EDS &txt_eds,
-                     std::vector<eds::slice_eds> const &txt_offsets,
                      std::vector<eds::slice_eds> const &qry_offsets,
-                     n_core::bool_matrix *t_matrix,
-                     n_core::bool_matrix *q_matrix,
+                     core::bool_matrix *t_matrix,
+                     core::bool_matrix *q_matrix,
                      int qry_letter_idx,
                      int txt_letter_idx) {
-  auto in_txt_N = [&](int k) -> int { return txt_offsets[0].start + k; };
-  auto in_txt_N_2 = [&](int idx, int k) -> int { return txt_offsets[idx].start + k; };
-
   for (auto candiate_match : candidate_matches) {
 
-    //slicex txt_slice = txt_slices[candiate_match.text_str_index];
-    // eds::slice_eds txt_slice =
-    //  txt_eds.get_str_slice_local(txt_letter_idx, candiate_match.text_str_index);
     eds::slice_eds local_txt_slice = txt_eds.get_str_slice_local(
         txt_letter_idx, candiate_match.get_txt_str_idx());
-
-    /*
-      candiate_match.text_char_index: the start of the position of text within the concatenated txt
-     */
-
-    // this is the start position of the char within the specific string in the txt set
-    //int match_start_in_txt = candiate_match.text_char_index -  txt_slice.start;
 
     /*
       evaluate the start of the match
@@ -106,27 +92,21 @@ void update_matrices(std::vector<n_core::EDSMatch> const &candidate_matches,
     bool valid_as = false;
 
     // TODO: rename t_start in N to something like match_start_in_N
-    //int t_start_in_N = in_txt_N(candiate_match.text_char_index);
     int t_start_in_N =
         txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) +
       local_txt_slice.start;
-    
-
-
-    // int txt_end = txt_slice.start + txt_slice.length;
 
     // the match starts within a string in the text
     // second condition because actv suff can only be extended ...
     if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
-        // is valid active suffix
-        // int in_N = in_txt_N(candiate_match.text_char_index); wrong
+      // is valid active suffix
       // do we need to confirm t_start_in_N - 1
       valid_as = ((*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1] == 1);
-      // int idx { 1 };
+
       int pos{};
       bool shorter_match{false};
 
-      for (int idx{1}; !valid_as && idx < candiate_match.get_match_length(); idx++) {
+      for (std::size_t idx{1}; !valid_as && idx < candiate_match.get_match_length(); idx++) {
         if ((*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1 + idx]) {
           pos = idx;
           shorter_match = true;
@@ -134,19 +114,10 @@ void update_matrices(std::vector<n_core::EDSMatch> const &candidate_matches,
         }
       }
 
-      /*
-      for (; (pos = (*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1 + idx]) &&
-             idx < candiate_match.match_length;
-           idx++){}
-      */
-
       if (!valid_as && shorter_match) {
         t_start_in_N += pos;
-        // match_start_in_txt += pos;
         candiate_match.get_txt_char_idx_mut() += pos;
-        // candiate_match.text_char_index += pos;
         candiate_match.get_match_length_mut() -= pos;
-        //candiate_match.match_length -= pos;
         candiate_match.get_str_mut() = candiate_match.str.substr(pos);
         valid_as = true;
       }
@@ -162,25 +133,14 @@ void update_matrices(std::vector<n_core::EDSMatch> const &candidate_matches,
       ===============================
     */
 
-
+    // mark the end of the match as reachable in N_1 and N_2
+    // match end in N
     // where the match ends locally
     std::size_t candidate_match_end =
       candiate_match.get_char_idx() + candiate_match.get_match_length();
 
-    //int candidate_match_end = match_start_in_txt + candiate_match.match_length;
-
-    // where the matched string actually ends
-    // int txt_slice_end = txt_slice.start + txt_slice.length;
-
-
-    // mark the end of the match as reachable in N_1 and N_2
-
     // in the txt
-
-    int in_N = in_txt_N_2(candiate_match.get_txt_str_idx(), candidate_match_end);
-      //int in_N = in_txt_N_2(candiate_match.text_str_index, candidate_match_end);
-
-    // std::cerr << utils::indent(2) << "save as: " << qry_letter_idx << in_N;
+    std::size_t in_N = txt_eds.to_global_idx(txt_letter_idx, candidate_match_end);
 
     (*t_matrix)[qry_letter_idx][in_N-1] = 1;
 
@@ -191,15 +151,13 @@ void update_matrices(std::vector<n_core::EDSMatch> const &candidate_matches,
       queries always start at 0 so we don't need to do any additional stuff
      */
 
-    // determine match start and ends in N
-
-
-    // in the query
-         int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
+    // determine match start and ends in N in the query EDS
+    int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
 
      // mark the qry as reachable
-     (*q_matrix)[txt_letter_idx]
-                [q_start_in_N + candiate_match.get_match_length() - 1] = 1;
+     (*q_matrix)
+       [txt_letter_idx]
+       [q_start_in_N + candiate_match.get_match_length() - 1] = 1;
   }
 }
 
@@ -228,8 +186,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   int len_w = eds_w.get_length();
   int len_q = eds_q.get_length();
 
-  n_core::bool_matrix w_matrix = n_core::gen_matrix(len_q, size_w + eds_w.get_eps_count());
-  n_core::bool_matrix q_matrix = n_core::gen_matrix(len_w, size_q + eds_q.get_eps_count());
+  core::bool_matrix w_matrix = core::gen_matrix(len_q, size_w + eds_w.get_eps_count());
+  core::bool_matrix q_matrix = core::gen_matrix(len_w, size_q + eds_q.get_eps_count());
 
   /*
     Generate suffix trees
@@ -241,7 +199,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   std::vector<std::pair<match_st::STvertex, std::string>> q_suffix_trees;
   q_suffix_trees.reserve(len_q);
 
-  auto t0 = n_core::Time::now();
+  auto t0 = core::Time::now();
   std::chrono::duration<double> timeRefRead;
 
   gen_suffix_tree(eds_w, &w_suffix_trees);
@@ -252,7 +210,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   // t1.join();
   // t2.join();
 
-  timeRefRead = n_core::Time::now() - t0;
+  timeRefRead = core::Time::now() - t0;
 
   /*
     Find the intersection
@@ -266,7 +224,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   // TODO: remove
   // std::vector<suffix> w_suffixes, q_suffixes;
   //
-  std::vector<n_core::EDSMatch> candidate_matches;
+  std::vector<core::EDSMatch> candidate_matches;
 
   bool prev_j = false, prev_i = false;
 
@@ -338,7 +296,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
       // Search for j_strs in T_1[i] and update matrices
       // ----------------------------------------------
 
-      n_core::perform_matching(
+      core::perform_matching(
           eds_w,
           i,
           &w_suffix_trees[i],
@@ -347,7 +305,6 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 
       update_matrices(candidate_matches,
                       eds_w,
-                      eds_w.get_slice(i),
                       eds_q.get_slice(j),
                       &w_matrix, &q_matrix,
                       j, i);
@@ -359,7 +316,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
       // Text => T_2[j]
       // -----------------------------------------------
 
-      n_core::perform_matching(
+      core::perform_matching(
           eds_q,
           j,
           &q_suffix_trees[j],
@@ -369,7 +326,6 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 
       update_matrices(candidate_matches,
                       eds_q,
-                      eds_q.get_slice(j),
                       eds_w.get_slice(i),
                       &q_matrix, &w_matrix,
                       i, j);

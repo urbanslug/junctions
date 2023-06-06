@@ -1,7 +1,7 @@
 #include "../core/core.hpp"
 
 namespace app {
-void dispatch(n_core::Parameters const& params);
+void dispatch(core::Parameters const& params);
 } //  namespace app
 
 namespace CommandLineProcessing
@@ -311,5 +311,5 @@ namespace cli {
 void initCmdParser(CommandLineProcessing::ArgvParser &cmd);
 void parseandSave(int argc, char **argv,
                   CommandLineProcessing::ArgvParser &cmd,
-                  n_core::Parameters &parameters);
+                  core::Parameters &parameters);
 } // namespace cli

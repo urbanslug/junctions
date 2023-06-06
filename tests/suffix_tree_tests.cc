@@ -20,7 +20,7 @@ TEST(SuffixTreeTest, Matching) {
 
   auto setup = [&]() {
     text.clear();
-    n_junctions::join(txt_strs, '$', text);
+    core::join(txt_strs, '$', text);
     text += '_'; // add a terminator char
     root = match_st::Create_suffix_tree(text.c_str(), text.length());
     update_leaves(root, text_slices);

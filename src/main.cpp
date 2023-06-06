@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   cli::initCmdParser(cmd);
 
   // Parse command line arguments
-  n_core::Parameters parameters;
+  core::Parameters parameters;
   cli::parseandSave(argc, argv, cmd, parameters);
 
   app::dispatch(parameters);

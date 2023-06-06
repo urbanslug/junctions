@@ -13,26 +13,17 @@ TEST(GraphTest, ComputeGraph) {
 
   eds::EDS w, q;
   std::string input_string{""};
-  int shortest, longest;
   std::string ed_string_w, ed_string_q;
-  
-  n_core::Parameters params;
+
+  core::Parameters params;
   params.set_verbosity(0);
 
   auto setup_and_run = [&]() {
     w = eds::Parser::from_string(ed_string_w);
     q = eds::Parser::from_string(ed_string_q);
     graph::Graph g = graph::compute_intersection_graph(w, q, params);
-    longest = graph::longest_witness(g);
-    shortest = graph::longest_witness(g);
   };
 
-  ed_string_w = "CT{G,C}CACC";
-  ed_string_q = "C{TG,AT,A}CACC";
-  setup_and_run();
-  EXPECT_EQ(longest, 7);
-  EXPECT_EQ(shortest, 7);
-  //EXPECT_EQ(shortest, longest);
 
   ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
   ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
@@ -54,20 +45,6 @@ TEST(GraphTest, ComputeGraph) {
   ed_string_w = "{AGG}{A,}{GAGG}";
   ed_string_q = "{AGGAG}{A,}{GG}";
   setup_and_run();
-
-  ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCCGCGCGGTGG}";
-  ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCCGCGCGGTGGT}";
-  setup_and_run();
-  EXPECT_EQ(longest, -1);
-  EXPECT_EQ(shortest, -1);
-  //EXPECT_NE(shortest, longest);
-
-  ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCC}";
-  ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCC}";
-  setup_and_run();
-  EXPECT_EQ(longest, 16);
-  EXPECT_EQ(shortest, 16);
-  //EXPECT_EQ(shortest, longest);
 
   ed_string_w = "AATCAGTGCTTCTAGCTCTTGGAGGGCTTGTACATTAACGGAACT{G,C}CA";
   ed_string_q = "AATCAGTGCTTCTAGCTCTTGGAGGGCTTGTACATTAACGGAAC{TG,AT,A}CA";
@@ -99,13 +76,16 @@ TEST(GraphTest, ComputeGraph) {
   ed_string_q = "{TC,G}{CT,T}";
   setup_and_run();
 
-  // active suffixes
+  /*
+  active suffixes
+  ---------------
+  */
+
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "{TC,G}{CT,T}";
   setup_and_run();
-  EXPECT_EQ(longest, 3);
-  EXPECT_EQ(shortest, 3);
-  //EXPECT_EQ(shortest, longest);
+  //EXPECT_EQ(longest, 3);
+  //EXPECT_EQ(shortest, 3);
 
   /*
   epsilons
@@ -115,11 +95,11 @@ TEST(GraphTest, ComputeGraph) {
   ed_string_w = "{T}{C}";
   ed_string_q = "T{,G}{C}";
   setup_and_run();
-  EXPECT_EQ(longest, 2);
-  EXPECT_EQ(shortest, 2);
-  EXPECT_EQ(shortest, longest);
+  //EXPECT_EQ(longest, 2);
+  //EXPECT_EQ(shortest, 2);
+  //EXPECT_EQ(shortest, longest);
 
-  
+
 
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "TC{,G}{CT,T}";
@@ -183,9 +163,9 @@ TEST(GraphTest, ComputeGraph) {
   ed_string_q = "{T}{CG,}{TCG}";
   setup_and_run();
   // TODO: figure out this test
-  EXPECT_EQ(longest, -1);
-  EXPECT_EQ(shortest, -1);
-  
+  // EXPECT_EQ(longest, -1);
+  // EXPECT_EQ(shortest, -1);
+
 
   ed_string_w = "C{TG,AT,A}C";
   ed_string_q = "CT{G,C}C";
@@ -223,4 +203,114 @@ TEST(GraphTest, ComputeGraph) {
   ed_string_q = "C{TG,AT,A}CACC";
   setup_and_run();
 
+}
+
+TEST(GraphTest, Witness) {
+  eds::EDS w, q;
+  std::string input_string{""};
+  int shortest, longest;
+  std::string ed_string_w, ed_string_q;
+
+  core::Parameters params;
+  params.set_verbosity(0);
+
+  auto setup_and_run = [&]() {
+    w = eds::Parser::from_string(ed_string_w);
+    q = eds::Parser::from_string(ed_string_q);
+    graph::Graph g = graph::compute_intersection_graph(w, q, params);
+    longest = graph::longest_witness(g);
+    shortest = graph::longest_witness(g);
+  };
+
+  ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCCGCGCGGTGG}";
+  ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCCGCGCGGTGGT}";
+  setup_and_run();
+  EXPECT_EQ(longest, -1);
+  EXPECT_EQ(shortest, -1);
+
+  /*
+    active suffixes
+    ---------------
+  */
+
+  ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCC}";
+  ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCC}";
+  setup_and_run();
+  EXPECT_EQ(longest, 16);
+  EXPECT_EQ(shortest, 16);
+  // EXPECT_EQ(shortest, longest);
+
+
+  ed_string_w = "CT{G,C}CACC";
+  ed_string_q = "C{TG,AT,A}CACC";
+  setup_and_run();
+  EXPECT_EQ(longest, 7);
+  EXPECT_EQ(shortest, 7);
+  // EXPECT_EQ(shortest, longest);
+
+  /*
+    full matches
+    ------------
+  */
+
+  // active suffixes
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "{TC,G}{CT,T}";
+  setup_and_run();
+  EXPECT_EQ(longest, 3);
+  EXPECT_EQ(shortest, 3);
+  // EXPECT_EQ(shortest, longest);
+
+  /*
+  epsilons
+  --------
+ */
+
+  ed_string_w = "{T}{C}";
+  ed_string_q = "T{,G}{C}";
+  setup_and_run();
+  EXPECT_EQ(longest, 2);
+  EXPECT_EQ(shortest, 2);
+  EXPECT_EQ(shortest, longest);
+
+
+  ed_string_w = "{TC}{G,}{G}";
+  ed_string_q = "{T}{CG,}{TCG}";
+  setup_and_run();
+  // TODO: figure out this test
+  EXPECT_EQ(longest, -1);
+  EXPECT_EQ(shortest, -1);
+}
+
+
+TEST(GraphTest, Multiset) {
+  eds::EDS w, q;
+  std::string input_string{""};
+  size_t multiset_size;
+  std::string ed_string_w, ed_string_q;
+
+  core::Parameters params;
+  params.set_verbosity(0);
+
+  auto setup_and_run = [&]() {
+    w = eds::Parser::from_string(ed_string_w);
+    q = eds::Parser::from_string(ed_string_q);
+    graph::Graph g = graph::compute_intersection_graph(w, q, params);
+    multiset_size = graph::multiset(g);
+  };
+
+  ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCCGCGCGGTGG}";
+  ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCCGCGCGGTGGT}";
+  setup_and_run();
+  EXPECT_EQ(multiset_size, 0);
+
+  /*
+  epsilons
+  --------
+ */
+
+  ed_string_w = "T{C,}AG";
+  ed_string_q = "TC{A,}G";
+  setup_and_run();
+  EXPECT_EQ(multiset_size, 1);
 }

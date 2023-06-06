@@ -230,7 +230,6 @@ public:
   void print_dot();
 };
 
-
 /**
 *
 *
@@ -241,7 +240,7 @@ public:
 */
 Graph compute_intersection_graph(eds::EDS &eds_w,
                                  eds::EDS &eds_q,
-                                 n_core::Parameters const &parameters);
+                                 core::Parameters const &parameters);
 
 /**
  *
@@ -252,7 +251,9 @@ Graph compute_intersection_graph(eds::EDS &eds_w,
 int match_stats(Graph &g,
                 eds::EDS &eds_w,
                 eds::EDS &eds_q,
-                n_core::Parameters const &parameters);
+                core::Parameters const &parameters);
+
+std::size_t multiset(graph::Graph &g);
 
 int longest_witness(Graph& g);
 

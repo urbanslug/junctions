@@ -17,19 +17,19 @@
 
 namespace cli {
   // TODO: move this to eds
-n_core::file_format extract_extension(std::string file_path) {
+core::file_format extract_extension(std::string file_path) {
   auto const pos = file_path.find_last_of('.');
-  n_core::file_format f;
+  core::file_format f;
 
   if (file_path.substr(pos + 1) == "eds") {
-    f = n_core::eds;
+    f = core::eds;
   } else if (file_path.substr(pos + 1) == "msa") {
-    f = n_core::msa;
+    f = core::msa;
   } else {
-    f = n_core::unknown;
+    f = core::unknown;
   }
 
-  if (f == n_core::unknown) {
+  if (f == core::unknown) {
     std::cerr << "ERROR,Could not determine the format of "
               << file_path
               << "\nThis input should be an ED-string file in .eds format"
@@ -90,8 +90,8 @@ longest = short/longest/1",
   cmd.defineOptionAlternative("witness", "w");
 
   cmd.defineOption("match-stats-str",
-                   "matching stats ed string\n" + n_junctions::T_1 + " = 1\n" +
-                       n_junctions::T_2 + " = 2\n" + "[default: 1]",
+                   "matching stats ed string\n" + core::T_1 + " = 1\n" +
+                       core::T_2 + " = 2\n" + "[default: 1]",
                    CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("match-stats-str", "T");
 
@@ -108,24 +108,24 @@ longest = short/longest/1",
    * @brief                   Print the parsed cmd line options
    * @param[in]  parameters   parameters parsed from command line
    */
-  void printCmdOptions(n_core::Parameters &parameters) {
+  void printCmdOptions(core::Parameters &parameters) {
 
-    auto algo_string =[](n_core::algorithm algo) -> std::string {
+    auto algo_string =[](core::algorithm algo) -> std::string {
       switch (algo) {
-      case n_core::algorithm::improved:
+      case core::algorithm::improved:
         return "improved";
-      case n_core::algorithm::naive:
+      case core::algorithm::naive:
         return "naive";
-      case n_core::algorithm::both:
+      case core::algorithm::both:
         return "both";
       }
       return "uknown";
     };
 
-    // n_core params
+    // core params
 
     // TODO: use method to check for the task
-    if (parameters.get_task() == n_core::task::info ) {
+    if (parameters.get_task() == core::task::info ) {
       std::cerr << "Input files: ";
       for (auto f: parameters.input_files) {
         std::cerr << f.second << " (format: " << (f.first == 0 ? "msa" : "eds")
@@ -145,45 +145,47 @@ longest = short/longest/1",
               << ")" << std::endl;
     }
 
+    std::cerr << "Task(s):\n";
     switch (parameters.get_task()) {
-    case n_core::task::compute_graph:
-    std::cerr << "task: compute intersection graph" << std::endl;
+    case core::task::compute_graph:
+    std::cerr << core::indent(1) << "compute intersection graph\n";
     break;
-    case n_core::task::check_intersection:
-    std::cerr << "task: check intersection" << std::endl;
-    std::cerr << "algorithm = " << algo_string(parameters.algo) << std::endl;
+    case core::task::check_intersection:
+    std::cerr << core::indent(1) << "check intersection\n";
+    std::cerr << core::indent(1) << "algorithm = " << algo_string(parameters.algo) << "\n";
     break;
-    case n_core::task::info:
-    std::cerr << "task: print info" << std::endl;
+    case core::task::info:
+    std::cerr << core::indent(1) << "print info\n";
     break;
     default:
-    std::cerr << "unhandled task: report a bug"  << std::endl;
+    std::cerr << "unhandled task: report a bug\n";
     }
 
     if (parameters.output_dot) {
-      std::cerr << "print dot" << std::endl;
+      std::cerr << core::indent(1) << "print dot\n";
     }
 
     if (parameters.size_of_multiset) {
-      std::cerr << "compute the size of the multiset" << std::endl;
+      std::cerr << core::indent(1) << "compute the size of the multiset" << std::endl;
     }
 
     if (parameters.compute_witness()) {
-      std::cerr << "witness choice = "
-                << (parameters.witness_choice == n_core::witness::longest ? "longest" : "shortest")
-
-                << std::endl;
+      std::cerr << core::indent(1)
+                << "witness choice = "
+                << (parameters.witness_choice == core::witness::longest ? "longest" : "shortest")
+                << "\n";
     }
 
     if (parameters.compute_match_stats) {
       if (parameters.match_stats_str == 1 || parameters.match_stats_str == 2) {
-        std::cerr << "match stats: str = " << parameters.match_stats_str
+        std::cerr << core::indent(1)
+                  << "match stats: str = " << parameters.match_stats_str
                   << " letter index = " << parameters.match_stats_letter_idx
-                  << std::endl;
+                  << "\n";
       }
     }
 
-    std::cerr << "verbosity = " << parameters.verbosity() << std::endl;
+    std::cerr << "verbosity = " << parameters.verbosity() << "\n";
 
     std::cerr << std::endl;
   }
@@ -195,7 +197,7 @@ longest = short/longest/1",
    */
   void parseandSave(int argc, char** argv,
                     CommandLineProcessing::ArgvParser &cmd,
-                    n_core::Parameters &parameters)
+                    core::Parameters &parameters)
   {
     int result = cmd.parse(argc, argv);
 
@@ -224,7 +226,7 @@ longest = short/longest/1",
      */
 
     if (cmd.foundOption("info")) {
-      parameters.set_task(n_core::task::info);
+      parameters.set_task(core::task::info);
     }
 
     /*
@@ -233,7 +235,7 @@ longest = short/longest/1",
      */
 
     if (cmd.foundOption("intersect")) {
-      parameters.set_task(n_core::task::check_intersection);
+      parameters.set_task(core::task::check_intersection);
     }
 
     // Algorithm
@@ -245,16 +247,16 @@ longest = short/longest/1",
       str >> algo_str_arg;
 
       if (algo_str_arg == "0") {
-        parameters.algo = n_core::improved;
+        parameters.algo = core::improved;
       } else if (algo_str_arg == "1") {
-        parameters.algo = n_core::naive;
+        parameters.algo = core::naive;
       } else if (algo_str_arg == "2") {
-        parameters.algo = n_core::both;
+        parameters.algo = core::both;
       } else {
-        parameters.algo = n_core::improved;
+        parameters.algo = core::improved;
       }
     } else
-      parameters.algo = n_core::improved;
+      parameters.algo = core::improved;
     str.clear();
 
     /*
@@ -265,7 +267,7 @@ longest = short/longest/1",
     // Compute Graph
     // -------------
     if (cmd.foundOption("graph")) {
-      parameters.set_task(n_core::task::compute_graph);
+      parameters.set_task(core::task::compute_graph);
     } 
 
     // Matching stats
@@ -299,11 +301,11 @@ longest = short/longest/1",
       parameters.set_witness(true);
 
       if (str.str() == "shortest" || str.str() == "short" || str.str() == std::to_string(0)) {
-        parameters.witness_choice = n_core::witness::shortest;
+        parameters.witness_choice = core::witness::shortest;
       }
 
       if (str.str() == "longest" || str.str() == "long" || str.str() == std::to_string(1)) {
-        parameters.witness_choice = n_core::witness::longest;
+        parameters.witness_choice = core::witness::longest;
       }
     } else
       parameters.set_witness(false);
@@ -354,7 +356,7 @@ longest = short/longest/1",
 
     std::vector<std::string> args = cmd.allArguments();
 
-    if (parameters.is_task(n_core::task::info)) {
+    if (parameters.is_task(core::task::info)) {
 
       for (auto arg: args) {
         parameters.input_files.push_back(std::make_pair(extract_extension(arg), arg));

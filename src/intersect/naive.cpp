@@ -47,7 +47,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   size_t last_row = eds_w.get_size() + eds_w.get_eps_count();
   size_t last_col = eds_q.get_size() + eds_q.get_eps_count();
 
-  n_core::bool_matrix dp_matrix = n_core::gen_matrix(last_row, last_col);
+  core::bool_matrix dp_matrix = core ::gen_matrix(last_row, last_col);
   
   // TODO: pass row and col as size_t
   auto prev_matched =

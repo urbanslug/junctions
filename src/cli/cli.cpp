@@ -16,19 +16,19 @@
 
 namespace app {
 
-void handle_graph(n_core::Parameters const &params);
-void handle_intersection(n_core::Parameters const &params);
-void handle_info(n_core::Parameters const &params);
+void handle_graph(core::Parameters const &params);
+void handle_intersection(core::Parameters const &params);
+void handle_info(core::Parameters const &params);
 
-void dispatch(n_core::Parameters const& params) {
+void dispatch(core::Parameters const& params) {
   switch (params.get_task()) {
-  case n_core::task::compute_graph:
+  case core::task::compute_graph:
     handle_graph(params);
     break;
-  case n_core::task::check_intersection:
+  case core::task::check_intersection:
     handle_intersection(params);
     break;
-  case n_core::task::info:
+  case core::task::info:
     handle_info(params);
     break;
   default:
@@ -44,7 +44,7 @@ void dispatch(n_core::Parameters const& params) {
 /**
  *
  */
-void handle_info(n_core::Parameters const &params) {
+void handle_info(core::Parameters const &params) {
   eds::EDS e;
   // TODO: file format?
   // TODO: which is the right place to check the file format?
@@ -76,7 +76,7 @@ void handle_info(n_core::Parameters const &params) {
 /**
  * Compute intersection
  */
-void handle_intersection(n_core::Parameters const &params) {
+void handle_intersection(core::Parameters const &params) {
   eds::EDS w, q;
   w = eds::Parser::from_eds(params.get_w_fp().second);
   q = eds::Parser::from_eds(params.get_q_fp().second);
@@ -104,34 +104,34 @@ void handle_intersection(n_core::Parameters const &params) {
     }
   };
 
-  auto t0 = n_core::Time::now();
+  auto t0 = core::Time::now();
 
   switch (params.get_algo()) {
-  case n_core::algorithm::improved: {
+  case core::algorithm::improved: {
     res_i = intersect::improved::has_intersection(w, q);
-    timeRefRead = n_core::Time::now() - t0;
+    timeRefRead = core::Time::now() - t0;
     report_res(res_i);
     report_time("improved");
   }
     break;
-  case n_core::algorithm::naive: {
+  case core::algorithm::naive: {
     res_n = intersect::naive::has_intersection(w, q);
-    timeRefRead = n_core::Time::now() - t0;
+    timeRefRead = core::Time::now() - t0;
     report_res(res_n);
     report_time("naive");
   }
     break;
-  case n_core::algorithm::both: {
+  case core::algorithm::both: {
     // Both (for tests & benchmarks)
     // -----------------------------
     res_i = intersect::improved::has_intersection(w, q);
-    timeRefRead = n_core::Time::now() - t0;
+    timeRefRead = core::Time::now() - t0;
     report_res(res_i);
     report_time("improved");
 
-    t0 = n_core::Time::now();
+    t0 = core::Time::now();
     res_n = intersect::naive::has_intersection(w, q);
-    timeRefRead = n_core::Time::now() - t0;
+    timeRefRead = core::Time::now() - t0;
 
     if (res_i != res_n) { err(); }
 
@@ -155,20 +155,20 @@ void handle_intersection(n_core::Parameters const &params) {
  * Compute Intersection Graph and...
  *
  */
-void handle_graph(n_core::Parameters const &params) {
+void handle_graph(core::Parameters const &params) {
   eds::EDS w, q;
   w = eds::Parser::from_eds(params.get_w_fp().second);
   q = eds::Parser::from_eds(params.get_q_fp().second);
 
   std::chrono::duration<double> timeRefRead;
-  auto t0 = n_core::Time::now();
+  auto t0 = core::Time::now();
 
   if (params.verbosity() > 0) {
     std::cerr << "INFO computing intersection graph\n";
   }
 
   graph::Graph g = graph::compute_intersection_graph(w, q, params);
-  timeRefRead = n_core::Time::now() - t0;
+  timeRefRead = core::Time::now() - t0;
 
   if (params.verbosity() > 0) {
     std::cerr << "INFO Time spent computing intersection graph: "
@@ -187,20 +187,20 @@ void handle_graph(n_core::Parameters const &params) {
     if (params.verbosity() > 0) {
       std::cerr << "INFO computing the size of the multiset\n";
       }
-    std::cout << "Size of the mutlitset: " << g.multiset_size() << "\n";
+    std::cout << "Size of the mutlitset: " << graph::multiset(g) << "\n";
   }
 
   if (params.compute_witness()) {
     int witness_len;
     switch (params.get_witness_choice()) {
-    case n_core::witness::longest:
+    case core::witness::longest:
       if (params.verbosity() > 0) {
         std::cerr << "INFO computing the longest witness\n";
       }
 
-      t0 = n_core::Time::now();
+      t0 = core::Time::now();
       witness_len = graph::longest_witness(g);
-      timeRefRead = n_core::Time::now() - t0;
+      timeRefRead = core::Time::now() - t0;
 
       std::cout << "longest witness is: " << witness_len << " chars long.\n";
 
@@ -211,14 +211,14 @@ void handle_graph(n_core::Parameters const &params) {
 
       break;
 
-    case n_core::witness::shortest:
+    case core::witness::shortest:
       if (params.verbosity() > 0) {
         std::cerr << "INFO computing the shortest witness\n";
       }
 
-      t0 = n_core::Time::now();
+      t0 = core::Time::now();
       witness_len =  graph::shortest_witness(g);
-      timeRefRead = n_core::Time::now() - t0;
+      timeRefRead = core::Time::now() - t0;
 
       std::cout << "shortests witness is: " << witness_len << " chars long.\n";
 

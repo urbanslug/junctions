@@ -29,10 +29,10 @@ ADD_LIBRARY(LibsModule
   src/graph/graph.cpp
   src/intersect/improved.cpp
   src/core/suffix_tree.cpp
-  src/intersect/naive.cpp 
+  src/intersect/naive.cpp
   src/cli/cli.cpp
-  src/cli/argvparser.cpp 
-  src/cli/parseCmdArgs.cpp 
+  src/cli/argvparser.cpp
+  src/cli/parseCmdArgs.cpp
 )
 
 set(SOURCE_FILES
@@ -46,6 +46,14 @@ ${SOURCE_FILES}
 
 target_link_libraries(junctions LibsModule)
 
+set(BINARY_DIR ./bin)
+
+file(MAKE_DIRECTORY ${BINARY_DIR}/)
+
+
+add_custom_command(TARGET junctions
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:junctions> ../${BINARY_DIR}/)
 
 add_executable( junctions_test
   tests/main_tests.cc
