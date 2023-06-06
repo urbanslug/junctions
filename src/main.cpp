@@ -12,6 +12,7 @@
 #include "./cli/cli.hpp"
 
 int main(int argc, char **argv) {
+
   // CLI
   CommandLineProcessing::ArgvParser cmd;
 

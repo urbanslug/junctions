@@ -204,13 +204,12 @@ std::vector<int> DFS(STvertex const *current_vertex) {
  *
  *
  */
-std::vector<n_core::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
+std::vector<match_st::LeafData> Get_Leaf_Data(STvertex const *current_vertex) {
 
   std::set<STvertex const *> explored;
   std::stack<STvertex const *> visited;
 
-  // std::vector<std::pair<int, int>> leaves;
-  std::vector<n_core::match_locus> leaves;
+  std::vector<match_st::LeafData> leaves;
 
   visited.push(current_vertex);
 
@@ -232,10 +231,12 @@ std::vector<n_core::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
       explored.insert(current_vertex);
       visited.pop();
 
+      // TODO why sub string id?
       if (is_leaf(current_vertex)) {
-        leaves.push_back(n_core::match_locus{
-            .string_index = current_vertex->string_id,
-            .char_index = current_vertex->numer - current_vertex->string_id});
+        leaves.push_back(
+           match_st::LeafData(current_vertex->string_id,
+                              current_vertex->numer)
+           );
       }
     } else {
       for (auto a : temp_store) { visited.push(a); }
@@ -255,7 +256,6 @@ std::vector<n_core::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
 void update_leaves(STvertex *current_vertex,
                    std::vector<eds::slice_eds> const &text_offsets,
                    eds::EDS& eds, std::size_t letter_idx) {
-
   std::set<STvertex*> explored;
   std::stack<STvertex*> visited;
 
@@ -315,10 +315,8 @@ void update_leaves(STvertex *current_vertex,
   // return leaves;
 }
 
-  void update_leaves(STvertex *current_vertex,
-                   std::vector<eds::slice_eds> const &text_offsets_local
-                   ) {
-
+void update_leaves(STvertex *current_vertex,
+                   std::vector<eds::slice_eds> const &text_offsets_local) {
   std::set<STvertex*> explored;
   std::stack<STvertex*> visited;
 
@@ -385,31 +383,31 @@ void update_leaves(STvertex *current_vertex,
  * @param[in] current_vertex  root of the suffix tree (can taeke another vertex)
  * @param[in] x the first char to the txt
  */
-// TODO: use junctions::extended_match
-vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
+std::vector<match_st::STQueryResult>
+FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
 
-  std::vector<n_core::extended_match> matches;
+  std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
 
-    // TODO : rename i to q_idx or q_pos
-    int i = 0; // the query position of the match
+  // TODO : rename i to q_idx or q_pos
+  int i = 0; // the query position of the match
   int query_len = strlen(query);
   int match_length = 0;
   int d = -1;
 
-  std::vector<n_core::match_locus> l_data;
+  std::vector<match_st::LeafData> l_data;
   STvertex *last_with_underscore = NULL;
   STedge current_edge;
   bool has_dollar = false, has_underscore = false,
     has_qry_char = false, matched_a_char = false;
 
-  auto looper = [&](std::vector<n_core::match_locus>& l_data, bool b = false, bool a = false) {
+  // TODO: read the value of l_data from scope
+  auto looper = [&](std::vector<match_st::LeafData> l_data, bool b = false, bool a = false) {
     for (auto l : l_data) {
-      matches.push_back(
-          n_core::extended_match{.beyond_text = b,
-                                    .match_length = (a ? d : match_length),
-                                    .str_idx = l.string_index,
-                                    .chr_idx = l.char_index});
+      match_st::STQueryResult q =
+          match_st::STQueryResult(b, (a ? d : match_length), l);
+      matches.push_back(q
+        );
     }
   };
 

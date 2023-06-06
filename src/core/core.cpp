@@ -2,7 +2,7 @@
 #include <utility>
 #include <vector>
 
-
+// #include "../eds/eds.hpp"
 namespace n_core {
 Parameters::Parameters() {
 }
@@ -84,6 +84,52 @@ std::ostream &operator<<(std::ostream &os, const extended_match &r) {
   return os;
 }
 
+/**
+ *
+ * slices exist in l
+ * @param[in]  queries           queries
+ * @param[in]  text              text
+ * @param[out] candidate_matches matches_found in the context of the degenerate
+ * letter and not N
+ */
+  void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
+                        std::pair<match_st::STvertex, std::string> *text,
+                        std::vector<std::string> const &queries,
+                        std::vector<EDSMatch>* candidate_matches) {
+
+  std::vector<match_st::STQueryResult> match_positions;
+
+  for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
+    std::string qry_str = queries[qry_str_idx];
+
+    match_positions = match_st::FindEndIndexes(qry_str.c_str(),
+                                               &text->first,
+                                               text->second.c_str());
+
+    for (auto match_pos : match_positions) {
+
+      eds::slice_eds local_txt_slice = txt_eds.get_str_slice_local(
+          txt_letter_idx,
+          match_pos.get_txt_str_idx());
+
+      // TODO: ??
+      //txt_eds.str_start_local(txt_letter_idx, match_pos.get_str_idx()); 
+
+      // subtruct number of dollar signs which correspond to str idx
+      // subtruct local slice start position
+
+      match_pos.get_txt_char_idx_mut() -= (match_pos.get_txt_str_idx() + local_txt_slice.start);
+      // match_pos.set_char_idx(c_idx);
+
+      candidate_matches->push_back(
+        EDSMatch(qry_str_idx,
+                 qry_str.substr(0, match_pos.get_match_length()),
+                 match_pos)
+        );
+    }
+  }
+}
+
 } // namespace core
 
 namespace n_junctions {
@@ -147,38 +193,5 @@ void graph_slice::dbg_print(int indent_level = 0) {
             << indent(indent_level) << "}" << std::endl;
 }
 
-/**
- *
- * slices exist in l
- * @param[in]  queries           queries
- * @param[in]  text              text
- * @param[out] candidate_matches matches_found in the context of the degenerate
- * letter and not N
- */
-void perform_matching(std::vector<std::string> const &queries,
-                      std::pair<match_st::STvertex, std::string> *text,
-                      std::vector<match> *candidate_matches) {
-
-  std::vector<n_core::extended_match> match_positions;
-
-  for (std::size_t qry_str_idx = 0; qry_str_idx < queries.size(); qry_str_idx++) {
-    std::string qry_str = queries[qry_str_idx];
-
-    match_positions = match_st::FindEndIndexes(qry_str.c_str(),
-                                               &text->first,
-                                               text->second.c_str());
-
-    for (auto match_pos : match_positions) {
-
-      candidate_matches->push_back(
-        n_junctions::match{.query_str_index = (int)qry_str_idx,
-                           .text_str_index = match_pos.str_idx,
-                           .text_char_index = match_pos.chr_idx ,
-                           .match_length = match_pos.match_length,
-                           .beyond_txt = match_pos.beyond_text,
-                           .str = qry_str.substr(0, match_pos.match_length)});
-    }
-  }
-}
 
 } // namespace junctions

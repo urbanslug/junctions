@@ -148,11 +148,11 @@ TEST(IntersectionTest, Epsilons) {
   setup_and_run();
   EXPECT_EQ(res, true);
 
-  ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
   // ed_string_w = "{GCG}{TTA,}{TC}{G,T}";
-  ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
   // ed_string_w = "{GCG}{TTA,}";
   // ed_string_q = "{GCGTT}";
+  ed_string_w = "{GCG}{TTA,}{GTC}{G,T}";
+  ed_string_q = "{GCGTT}{AG,T}{T}{AC,CG}";
   setup_and_run();
   EXPECT_EQ(res, true);
 

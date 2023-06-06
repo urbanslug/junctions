@@ -22,6 +22,84 @@
 
 namespace graph {
 /**
+ * @brief Is a match explicit or implicit
+ */
+enum match_type { exp, imp };
+
+class MatchTypePair{
+  match_type l;
+  match_type r;
+public:
+  MatchTypePair(match_type l, match_type r) : l(l), r(r) {}
+  match_type left() const {return this->l;}
+  match_type right() const {return this->r;}
+
+  bool is_imp_imp() const {
+    return l == match_type::imp && r == match_type::imp;
+  }
+
+  bool is_imp_exp() const {
+    return l == match_type::imp && r == match_type::exp;
+  }
+
+  bool is_exp_imp() const {
+    return l == match_type::exp && r == match_type::imp;
+  }
+
+  bool is_exp_ext() const {
+    return l == match_type::exp && r == match_type::exp;
+  }
+
+  std::string to_string() const {
+    return std::string(l == match_type::exp ? "exp" : "imp") + "-" + std::string(r == match_type::exp ? "exp" : "imp");
+  }
+};
+
+class GraphSlice {
+  std::size_t txt_start; // text start in N
+  std::size_t qry_start; // query start in N
+
+  MatchTypePair qry_match_typ; // match type of the qry
+  MatchTypePair txt_match_typ; // match type of the txt
+
+  std::size_t match_length;
+  std::string str;
+
+public:
+  // TODO: Constructor with initialization list
+  GraphSlice(std::size_t txt_start,
+             std::size_t qry_start,
+             MatchTypePair qry_match_typ,
+             MatchTypePair txt_match_typ,
+             std::size_t match_length,
+             std::string str)
+    : txt_start(txt_start),
+      qry_start(qry_start),
+      qry_match_typ(qry_match_typ),
+      txt_match_typ(txt_match_typ),
+      match_length(match_length),
+      str(str) {}
+
+    GraphSlice(std::size_t txt_start,
+             std::size_t qry_start,
+             MatchTypePair qry_match_typ,
+             MatchTypePair txt_match_typ)
+    : txt_start(txt_start),
+      qry_start(qry_start),
+      qry_match_typ(qry_match_typ),
+      txt_match_typ(txt_match_typ),
+      match_length(0),
+      str(std::string{}) {}
+
+    std::size_t get_txt_start() const { return this->txt_start; }
+    std::size_t get_qry_start() const { return this->qry_start; }
+    MatchTypePair get_qry_match_typ() const { return this->qry_match_typ; }
+    MatchTypePair get_txt_match_typ() const { return this->txt_match_typ; }
+    std::size_t get_match_length() const { return this->match_length; }
+    std::string const& get_str() { return this->str; }
+};
+
+/**
  * edge struct to represent a weighted edge
  */
 struct Edge {
@@ -127,7 +205,7 @@ public:
   int dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx);
 
 
-  void create_edge(std::vector<n_junctions::graph_slice> const &valid_matches,
+  void create_edge(std::vector<GraphSlice> const &valid_matches,
                    int qry,
                    std::pair<std::size_t, std::size_t> qry_boundary,
                    std::pair<std::size_t, std::size_t> txt_boundary,
@@ -139,8 +217,8 @@ public:
       void add_edge(std::size_t N_1, std::size_t N_2,
                    std::pair<std::size_t, std::size_t> i_boundary,
                    std::pair<std::size_t, std::size_t> j_boundary,
-                   std::pair<n_junctions::match_type, n_junctions::match_type> w_m,
-                   std::pair<n_junctions::match_type, n_junctions::match_type> q_m,
+                   graph::MatchTypePair w_m,
+                   graph::MatchTypePair q_m,
                    std::size_t weight, std::string str,
                    int eps_side);
 

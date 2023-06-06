@@ -12,7 +12,7 @@ TEST(SuffixTreeTest, Matching) {
   std::string qry, text;
 
   // actual and expected query results
-  vector<n_core::extended_match> match_positions, exp;
+  std::vector<match_st::STQueryResult> match_positions, exp;
 
   std::vector<std::string> txt_strs;
   std::vector<eds::slice_eds> text_slices;
