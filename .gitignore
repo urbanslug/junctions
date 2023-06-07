@@ -3,6 +3,8 @@
 *.png
 *.svg
 out
+data/ignore/
+tmp/
 Testing/
 bin/
 build/
