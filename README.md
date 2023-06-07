@@ -12,8 +12,8 @@ These only work with `-g`.
 
 ### Longest or shortest witness
 If an intersection exists get the length of the longest string from the start to
-end of the intersection graph. Uses the `-w <witness_type>` where witness type
-is longest/long/1 or shortest/short/0.
+end of the intersection graph.<br>
+Uses the `-w <witness_type>` where witness type is longest/long/1 or shortest/short/0.
 
 ### Size of the multiset
 Get the number of unique strings in the language of `T₁` and `T₂` using `-m`.
@@ -30,17 +30,13 @@ or `--print-dot` option.
 
 For example:
 
-`junctions -g -d data/x.eds data/y.eds > x.dot`
+```
+junctions -g -d data/x.eds data/y.eds > x.dot
+```
 
 This can later be visualized using  `dot -Tsvg -o x.svg x.dot` or
 `dot -Tpng -o x.png x.dot`
 
-For larger graphs use the experimental `scripts/dot2gfa.py` script to convert the insersection graph 
-into gfa.
-
-```
-cat x.dot | python scripts/dot2gfa.py > x.gfa
-```
 
 For larger graphs you may want to visualize them in
 [bandage](https://github.com/rrwick/Bandage/) so there's a quick
@@ -53,7 +49,6 @@ cat x.dot | python scripts/dot2gfa.py > x.gfa
 
 ## Compile and Run
 
-
 ### Download the source code
 using git
 ```sh
@@ -61,7 +56,7 @@ git clone https://github.com/urbanslug/junctions
 cd junctions
 ```
 
-using zip
+using curl and zip
 ```
 curl -LO https://github.com/urbanslug/junctions/archive/refs/heads/master.zip
 unzip master.zip
@@ -140,10 +135,9 @@ Available options
 ```
 
 ## Running Tests and Debugging
+Assuming a user is in the `junctions/` dir create a debug build
 ```sh
-# before compilation
-# from the junctions/ dir
-cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build 
+cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
 cmake --build build -- -j 3
 cd build
 ```
