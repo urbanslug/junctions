@@ -19,9 +19,86 @@
 #include "../eds/eds.hpp"
 #include "../core/core.hpp"
 
-//using namespace std;
 
 namespace graph {
+/**
+ * @brief Is a match explicit or implicit
+ */
+enum match_type { exp, imp };
+
+class MatchTypePair{
+  match_type l;
+  match_type r;
+public:
+  MatchTypePair(match_type l, match_type r) : l(l), r(r) {}
+  match_type left() const {return this->l;}
+  match_type right() const {return this->r;}
+
+  bool is_imp_imp() const {
+    return l == match_type::imp && r == match_type::imp;
+  }
+
+  bool is_imp_exp() const {
+    return l == match_type::imp && r == match_type::exp;
+  }
+
+  bool is_exp_imp() const {
+    return l == match_type::exp && r == match_type::imp;
+  }
+
+  bool is_exp_ext() const {
+    return l == match_type::exp && r == match_type::exp;
+  }
+
+  std::string to_string() const {
+    return std::string(l == match_type::exp ? "exp" : "imp") + "-" + std::string(r == match_type::exp ? "exp" : "imp");
+  }
+};
+
+class GraphSlice {
+  std::size_t txt_start; // text start in N
+  std::size_t qry_start; // query start in N
+
+  MatchTypePair qry_match_typ; // match type of the qry
+  MatchTypePair txt_match_typ; // match type of the txt
+
+  std::size_t match_length;
+  std::string str;
+
+public:
+  // TODO: Constructor with initialization list
+  GraphSlice(std::size_t txt_start,
+             std::size_t qry_start,
+             MatchTypePair qry_match_typ,
+             MatchTypePair txt_match_typ,
+             std::size_t match_length,
+             std::string str)
+    : txt_start(txt_start),
+      qry_start(qry_start),
+      qry_match_typ(qry_match_typ),
+      txt_match_typ(txt_match_typ),
+      match_length(match_length),
+      str(str) {}
+
+    GraphSlice(std::size_t txt_start,
+             std::size_t qry_start,
+             MatchTypePair qry_match_typ,
+             MatchTypePair txt_match_typ)
+    : txt_start(txt_start),
+      qry_start(qry_start),
+      qry_match_typ(qry_match_typ),
+      txt_match_typ(txt_match_typ),
+      match_length(0),
+      str(std::string{}) {}
+
+    std::size_t get_txt_start() const { return this->txt_start; }
+    std::size_t get_qry_start() const { return this->qry_start; }
+    MatchTypePair get_qry_match_typ() const { return this->qry_match_typ; }
+    MatchTypePair get_txt_match_typ() const { return this->txt_match_typ; }
+    std::size_t get_match_length() const { return this->match_length; }
+    std::string const& get_str() { return this->str; }
+};
+
 /**
  * edge struct to represent a weighted edge
  */
@@ -33,23 +110,17 @@ struct Edge {
 
   Edge(std::size_t d, std::size_t w, std::string s, bool b);
 };
-
-
 bool operator==(const Edge &lhs, const Edge &rhs);
   //bool operator<(const Edge &lhs, const Edge &rhs);
 bool operator<(Edge const &lhs, Edge const &rhs);
 std::ostream &operator<<(std::ostream &os, const Edge &e);
- 
-    // TODO: move to a more central location
+
+// TODO: move to a more central location
 struct compare_by_weight {
   bool operator()(const std::pair<std::size_t, std::size_t> &l,
-                  const std::pair<std::size_t, std::size_t> &r) {
-    return l.second > r.second;
-  }
+                  const std::pair<std::size_t, std::size_t> &r);
 
-  bool operator()(const graph::Edge &l, const graph::Edge &r) {
-    return l.weight > r.weight;
-  }
+  bool operator()(const graph::Edge &l, const graph::Edge &r);
 };
 
   // TODO: use unordered set
@@ -119,7 +190,7 @@ public:
    * @param[in] stop_node_idx
    * @return
    */
-  std::size_t witness(std::size_t start_node_idx, std::size_t stop_node_idx);
+  int witness(std::size_t start_node_idx, std::size_t stop_node_idx);
 
   /**
    * Using dijkstra with a min heap to compute the
@@ -131,14 +202,13 @@ public:
    * @param[in] stop_node_idx
    * @return
    */
-  std::size_t dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx);
+  int dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx);
 
 
-  void create_edge(std::vector<n_junctions::graph_slice> const &valid_matches,
+  void create_edge(std::vector<GraphSlice> const &valid_matches,
                    int qry,
                    std::pair<std::size_t, std::size_t> qry_boundary,
                    std::pair<std::size_t, std::size_t> txt_boundary,
-                   n_core::Parameters const &parameters,
                    bool eps_edge);
 
       // function to add an edge to the graph
@@ -147,10 +217,10 @@ public:
       void add_edge(std::size_t N_1, std::size_t N_2,
                    std::pair<std::size_t, std::size_t> i_boundary,
                    std::pair<std::size_t, std::size_t> j_boundary,
-                   std::pair<n_junctions::match_type, n_junctions::match_type> w_m,
-                   std::pair<n_junctions::match_type, n_junctions::match_type> q_m,
+                   graph::MatchTypePair w_m,
+                   graph::MatchTypePair q_m,
                    std::size_t weight, std::string str,
-                   n_core::Parameters const &parameters, int eps_side);
+                   int eps_side);
 
   // constructor to initialize the graph
   Graph(std::size_t N_1, std::size_t N_2);
@@ -160,7 +230,6 @@ public:
   void print_dot();
 };
 
-
 /**
 *
 *
@@ -169,9 +238,9 @@ public:
 * @param[in] parameters
 * return
 */
-Graph compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
-                                 n_core::Parameters const &parameters);
-
+Graph compute_intersection_graph(eds::EDS &eds_w,
+                                 eds::EDS &eds_q,
+                                 core::Parameters const &parameters);
 
 /**
  *
@@ -179,11 +248,15 @@ Graph compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
  *
  *
  */
-int match_stats(Graph &g, eds::EDS &eds_w, eds::EDS &eds_q,
-                n_core::Parameters const &parameters);
+int match_stats(Graph &g,
+                eds::EDS &eds_w,
+                eds::EDS &eds_q,
+                core::Parameters const &parameters);
 
-int longest_witness(Graph g);
+std::size_t multiset(graph::Graph &g);
 
-int shortest_witness(Graph g);
+int longest_witness(Graph& g);
+
+int shortest_witness(Graph& g);
 } // namespace graph
 #endif

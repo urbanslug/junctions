@@ -52,13 +52,35 @@ cat x.dot | python scripts/dot2gfa.py > x.gfa
 ```
 
 ## Compile and Run
-Compile
+
+
+### Download the source code
+using git
 ```sh
-git clone https://github.com/urbanslug/junctions && cd junctions
-make
+git clone https://github.com/urbanslug/junctions
+cd junctions
 ```
 
-Run
+using zip
+```
+curl -LO https://github.com/urbanslug/junctions/archive/refs/heads/master.zip
+unzip master.zip
+cd junctions
+```
+
+### Compile
+```
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+cmake --build build -- -j 3 
+```
+
+### Run
+
+```
+./bin/junctions
+```
+
+## Usage
 
 ```
 $ ./bin/junctions
@@ -117,13 +139,22 @@ Available options
     amount of debug information [default : 0]
 ```
 
-## Test and Debug
+## Running Tests and Debugging
 ```sh
-make test
-./bin/test
+# before compilation
+# from the junctions/ dir
+cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build 
+cmake --build build -- -j 3
+cd build
 ```
 
+Run [googletest](https://github.com/google/googletest) tests
+```
+ctest
+```
+
+both of these assume you're within build/
 ```sh
-make debug
-gdb bin/test_debug
+gdb junctions # to debug the binary without tests
+gdb junctions_test # to debug the tests binary
 ```

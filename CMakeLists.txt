@@ -15,13 +15,24 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
+if (MSVC)
+    # warning level 4
+    add_compile_options(/W4)
+else()
+    # additional warnings
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 ADD_LIBRARY(LibsModule
   src/eds/eds.cpp
   src/core/core.cpp
   src/graph/graph.cpp
+  src/intersect/improved.cpp
   src/core/suffix_tree.cpp
-  src/utils.cpp
-  src/core.cpp
+  src/intersect/naive.cpp
+  src/cli/cli.cpp
+  src/cli/argvparser.cpp
+  src/cli/parseCmdArgs.cpp
 )
 
 set(SOURCE_FILES
@@ -35,6 +46,14 @@ ${SOURCE_FILES}
 
 target_link_libraries(junctions LibsModule)
 
+set(BINARY_DIR ./bin)
+
+file(MAKE_DIRECTORY ${BINARY_DIR}/)
+
+
+add_custom_command(TARGET junctions
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:junctions> ../${BINARY_DIR}/)
 
 add_executable( junctions_test
   tests/main_tests.cc

@@ -5,3 +5,5 @@
 
 #include "./eds_tests.cc"
 #include "./graph_tests.cc"
+#include "./suffix_tree_tests.cc"
+#include "./intersect_tests.cc"

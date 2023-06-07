@@ -1,12 +1,36 @@
 #include "./core.hpp"
+#include <utility>
 #include <vector>
 
+namespace core {
+Parameters::Parameters() {}
 
-namespace n_core {
-Parameters::Parameters() {
+task Parameters::get_task() const { return this->t; }
+void Parameters::set_task(task tsk){ this->t = tsk; }
+bool Parameters::is_task(task tsk) { return this->t == tsk; }
+
+algorithm Parameters::get_algo() const { return this->algo; }
+void Parameters::set_algo(algorithm a){ this->algo = a; }
+bool Parameters::is_algo(algorithm a) { return this->algo == a; }
+
+void Parameters::set_verbosity(unsigned char v) { this->v = v; };
+void Parameters::set_witness(bool b) { this->w = b; };
+
+bool Parameters::gen_dot() const { return this->output_dot; }
+bool Parameters::compute_witness() const { return this->w; }
+bool Parameters::multiset() const { return this->size_of_multiset; }
+witness Parameters::get_witness_choice() const { return this->witness_choice; }
+unsigned char Parameters::verbosity() const { return this->v; }
+
+std::pair<file_format, std::string> Parameters::get_w_fp() const {
+  return std::make_pair(this->w_format, this->w_file_path);
 }
 
-bool_matrix gen_matrix(std::size_t rows, std::size_t cols) { 
+std::pair<file_format, std::string> Parameters::get_q_fp() const {
+  return std::make_pair(this->q_format, this->q_file_path);
+}
+
+bool_matrix gen_matrix(std::size_t rows, std::size_t cols) {
   // rows
   std::vector<bool> row(cols);
   fill(row.begin(), row.end(), false);
@@ -26,41 +50,45 @@ std::ostream &operator<<(std::ostream &os, const ed_string &value) {
   return os;
 }
 
-  // TODO remove
-// match locus
-// -----------
-bool operator<(const match_locus &lhs,
-               const match_locus &rhs) {
-  return std::tie(lhs.string_index, lhs.char_index) <
-         std::tie(rhs.string_index, rhs.char_index);
+/**
+ *
+ * slices exist in l
+ * @param[in]  queries           queries
+ * @param[in]  text              text
+ * @param[out] candidate_matches matches_found in the context of the degenerate
+ * letter and not N
+ */
+void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
+                      std::pair<match_st::STvertex, std::string> *text,
+                      std::vector<std::string> const &queries,
+                      std::vector<EDSMatch>* candidate_matches) {
+
+  std::vector<match_st::STQueryResult> match_positions;
+
+  for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
+    std::string qry_str = queries[qry_str_idx];
+
+    match_positions = match_st::FindEndIndexes(qry_str.c_str(),
+                                               &text->first,
+                                               text->second.c_str());
+
+    for (auto match_pos : match_positions) {
+
+      eds::slice_eds local_txt_slice =
+        txt_eds.get_str_slice_local(txt_letter_idx, match_pos.get_txt_str_idx());
+
+      // subtruct number of dollar signs which correspond to str idx
+      // subtruct local slice start position
+      match_pos.get_txt_char_idx_mut() -=
+        (match_pos.get_txt_str_idx() + local_txt_slice.start);
+
+      candidate_matches->push_back(
+        EDSMatch(qry_str_idx,
+                 qry_str.substr(0, match_pos.get_match_length()),
+                 match_pos));
+    }
+  }
 }
-
-bool operator==(const match_locus &lhs,
-                const match_locus &rhs) {
-  return std::tie(lhs.string_index, lhs.char_index) ==
-         std::tie(rhs.string_index, rhs.char_index);
-}
-// TODO remove
-// Extended match
-// ----------
-
-bool operator==(const extended_match &lhs,
-                const extended_match &rhs) {
-  return std::tie(lhs.beyond_text, lhs.match_length, lhs.str_idx,
-                  lhs.chr_idx) ==
-         std::tie(lhs.beyond_text, lhs.match_length, lhs.str_idx, lhs.chr_idx);
-}
-
-std::ostream &operator<<(std::ostream &os, const extended_match &r) {
-  os << "beyond text: " << r.beyond_text << " match length: " << r.match_length
-     << " str idx: " << r.str_idx << " char idx: " << r.chr_idx;
-  return os;
-}
-
-} // namespace core
-
-namespace n_junctions {
-
 /**
  * concatenate a vector of strings with a given characters interspersing them
  *
@@ -80,7 +108,7 @@ void join(const std::vector<std::string> &v, char c, std::string &s) {
   }
 }
 
-std::string indent(int level) {
+  std::string indent(int level) {
   std::string repeat;
   for (int i = 0; i < level; i++) {
     repeat += "\t";
@@ -88,58 +116,6 @@ std::string indent(int level) {
   return repeat;
 }
 
-// match
-// -----
-std::ostream &operator<<(std::ostream &os, const match &m) {
-  os << "qry str idx: " << m.query_str_index
-     << " txt str idx: " << m.text_str_index
-     << " txt char idx: " << m.text_char_index
-     << " match length: " << m.match_length << " beyond txt: " << m.beyond_txt
-     << " str: " << m.str;
-  return os;
-}
 
-// graph slice
-// ------
+} // namespace core
 
-std::ostream &operator<<(std::ostream &os, const graph_slice &s) {
-  os << "Graph slice {"
-     << "\ntxt start: " << s.txt_start << "\nqry start: " << s.qry_start
-     << "\nlen: " << s.len << "\nstr: " << s.str << "\n}" << std::endl;
-  return os;
-}
-
-
-/**
- *
- * slices exist in l
- * @param[in]  queries           queries
- * @param[in]  text              text
- * @param[out] candidate_matches matches_found in the context of the degenerate
- * letter and not N
- */
-void perform_matching(std::vector<std::string> const &queries,
-                      std::pair<match_st::STvertex, std::string> *text,
-                      std::vector<match> *candidate_matches,
-                      n_core::Parameters const &parameters) {
-
-  std::vector<n_core::extended_match> match_positions;
-
-  for (int qry_str_idx = 0; qry_str_idx < queries.size(); qry_str_idx++) {
-    std::string qry_str = queries[qry_str_idx];
-    match_positions = match_st::FindEndIndexes(qry_str.c_str(), &text->first, text->second.c_str());
-    
-    for (auto match_pos : match_positions) {
-
-      candidate_matches->push_back(
-        n_junctions::match{.query_str_index = (int)qry_str_idx,
-                         .text_str_index = match_pos.str_idx,
-                         .text_char_index = match_pos.chr_idx ,
-                         .match_length = match_pos.match_length,
-                         .beyond_txt = match_pos.beyond_text,
-                         .str = qry_str.substr(0, match_pos.match_length)});
-    }
-  }
-}
-
-} // namespace junctions

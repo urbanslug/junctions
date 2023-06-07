@@ -9,13 +9,8 @@
 #include <utility>
 #include <vector>
 
-
-
-// TODO: remove
 #include "./core.hpp"
 #include "../eds/eds.hpp"
-
-using namespace std;
 
 namespace match_st {
 
@@ -79,7 +74,7 @@ void Update(STedge &kraw,int n) {
 }
 
 /**
- * x should have a '$' at the end
+ * x should have a core::terminar_char at the end
  *
  */
 STvertex* Create_suffix_tree(const char* x, int n) {
@@ -109,8 +104,9 @@ void STDelete(STvertex *w) {
 }
 
 /**
+ * Query a string (not GST)
  * Does a match exist
- *
+ * reuturns a bool
  */
 bool Find(const char *query, STvertex *r, const char *x) {
   // from the start to end of the query
@@ -141,14 +137,6 @@ bool is_leaf (STvertex const *v) {
   return v->numer >= 0;
 };
 
-/**
- *
- *
- */
-// TODO: remove
-void print_vec(std::vector<int> &leaves) {
-  for (auto l : leaves) { printf("%d ", l); }
-}
 
 /**
  *
@@ -204,13 +192,12 @@ std::vector<int> DFS(STvertex const *current_vertex) {
  *
  *
  */
-std::vector<n_core::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
+std::vector<match_st::LeafData> Get_Leaf_Data(STvertex const *current_vertex) {
 
   std::set<STvertex const *> explored;
   std::stack<STvertex const *> visited;
 
-  // std::vector<std::pair<int, int>> leaves;
-  std::vector<n_core::match_locus> leaves;
+  std::vector<match_st::LeafData> leaves;
 
   visited.push(current_vertex);
 
@@ -232,10 +219,12 @@ std::vector<n_core::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
       explored.insert(current_vertex);
       visited.pop();
 
+      // returns a string id and the position in the concatenated string
+      // string separator included
       if (is_leaf(current_vertex)) {
-        leaves.push_back(n_core::match_locus{
-            .string_index = current_vertex->string_id,
-            .char_index = current_vertex->numer - current_vertex->string_id});
+        leaves.push_back(
+           match_st::LeafData(current_vertex->string_id,
+                              current_vertex->numer));
       }
     } else {
       for (auto a : temp_store) { visited.push(a); }
@@ -251,8 +240,10 @@ std::vector<n_core::match_locus> Get_Leaf_Data(STvertex const *current_vertex) {
  * @param[in]
  * @param[in]
  */
-void update_leaves(STvertex *current_vertex, std::vector<eds::slice_eds>const& text_offsets) {
-
+// Can we avoid passing the eds and letter idx?
+void update_leaves(STvertex *current_vertex,
+                   std::vector<eds::slice_eds> const &text_offsets,
+                   eds::EDS& eds, std::size_t letter_idx) {
   std::set<STvertex*> explored;
   std::stack<STvertex*> visited;
 
@@ -281,7 +272,7 @@ void update_leaves(STvertex *current_vertex, std::vector<eds::slice_eds>const& t
 
         for (size_t i = 0; i < text_offsets.size(); i++) {
 
-          string_start = text_offsets.at(i).start;
+          string_start = eds.to_local_idx(letter_idx, text_offsets.at(i).start);
 
           string_start += i; // account for $ separators
 
@@ -312,8 +303,66 @@ void update_leaves(STvertex *current_vertex, std::vector<eds::slice_eds>const& t
   // return leaves;
 }
 
+void update_leaves(STvertex *current_vertex,
+                   std::vector<eds::slice_eds> const &text_offsets_local) {
+  std::set<STvertex*> explored;
+  std::stack<STvertex*> visited;
+
+  std::vector<int> leaves;
+  int string_start;
+
+  visited.push(current_vertex);
+
+  while (!visited.empty()) {
+    current_vertex = visited.top();
+
+    if (explored.find(current_vertex) != explored.end()) { continue; }
+
+    std::vector<STvertex *> temp_store;
+
+    for (auto k = current_vertex->g.begin(); k != current_vertex->g.end(); k++) {
+      STvertex *vv = k->second.v;
+      if (explored.find(vv) == explored.end()) { temp_store.push_back(vv); }
+    }
+
+    if (temp_store.empty()) {
+      explored.insert(current_vertex);
+      visited.pop();
+
+      if (is_leaf(current_vertex)) {
+
+        for (size_t i = 0; i < text_offsets_local.size(); i++) {
+
+          string_start = text_offsets_local.at(i).start;
+
+          string_start += i; // account for $ separators
 
 
+          // in the middle
+          if (current_vertex->numer < string_start) {
+            current_vertex->string_id = i - 1;
+            break;
+          }
+
+          // suffix starts at an entire string
+          // or
+          // we are at the end of text offsets
+          if (string_start == current_vertex->numer || i == text_offsets_local.size() - 1) {
+            current_vertex->string_id = (int)i;
+            break;
+          }
+        }
+      }
+
+    } else {
+      for (auto a : temp_store) {
+        visited.push(a);
+      }
+    }
+  }
+
+  // return leaves;
+}
 
 /**
  *
@@ -322,31 +371,28 @@ void update_leaves(STvertex *current_vertex, std::vector<eds::slice_eds>const& t
  * @param[in] current_vertex  root of the suffix tree (can taeke another vertex)
  * @param[in] x the first char to the txt
  */
-// TODO: use junctions::extended_match
-vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
+std::vector<match_st::STQueryResult>
+FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
 
-  std::vector<n_core::extended_match> matches;
+  std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
 
   // TODO : rename i to q_idx or q_pos
-  int i = 0; // the query position of the match
+  int i{}; // the query position of the match
   int query_len = strlen(query);
-  int match_length = 0;
-  int d = -1;
+  int match_length{};
+  int d{-1};
 
-  std::vector<n_core::match_locus> l_data;
-  STvertex *last_with_underscore = NULL;
+  std::vector<match_st::LeafData> l_data;
+  STvertex *last_with_underscore{nullptr};
   STedge current_edge;
-  bool has_dollar = false, has_underscore = false,
-    has_qry_char = false, matched_a_char = false;
+  bool has_dollar{false}, has_underscore{false},
+    has_qry_char{false}, matched_a_char{false};
 
-  auto looper = [&](std::vector<n_core::match_locus>& l_data, bool b = false, bool a = false) {
+  // TODO: read the value of l_data from scope
+  auto looper = [&](std::vector<match_st::LeafData> l_data, bool b = false, bool a = false) {
     for (auto l : l_data) {
-      matches.push_back(
-          n_core::extended_match{.beyond_text = b,
-                                    .match_length = (a ? d : match_length),
-                                    .str_idx = l.string_index,
-                                    .chr_idx = l.char_index});
+      matches.push_back(match_st::STQueryResult(b, (a ? d : match_length), l));
     }
   };
 
@@ -356,16 +402,16 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
   };
 
   auto append_underscore_matches = [&]() {
-    if (last_with_underscore == NULL) { return; }
-    l_data = Get_Leaf_Data(last_with_underscore->g['_'].v);
+    if (last_with_underscore == nullptr) { return; }
+    l_data = Get_Leaf_Data(last_with_underscore->g[core::terminator_char].v);
     looper(l_data, true, true);
   };
 
 
   while (i < query_len) {
 
-    has_dollar = current_vertex->g.find('$') != current_vertex->g.end();
-    has_underscore = current_vertex->g.find('_') != current_vertex->g.end();
+    has_dollar = current_vertex->g.find(core::string_separator) != current_vertex->g.end();
+    has_underscore = current_vertex->g.find(core::terminator_char) != current_vertex->g.end();
     has_qry_char = current_vertex->g.find(query[i]) != current_vertex->g.end();
 
     // TODO: make these if statements not be order dependent?
@@ -373,7 +419,7 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
     // We matched at least one query to the end a text string
     // because we saw a $ sign and i > 0
     if (has_dollar && matched_a_char) {
-      current_edge = current_vertex->g['$'];
+      current_edge = current_vertex->g[core::string_separator];
       append_underscore_matches(); // TODO: remove useless
 
       append_matches(true);
@@ -382,7 +428,7 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
 
     // we can no longer match the query and we found a _
     if (!has_qry_char && has_underscore && matched_a_char) {
-      current_edge = current_vertex->g['_'];
+      current_edge = current_vertex->g[core::terminator_char];
       append_underscore_matches();
       append_matches(true);
       return matches;
@@ -423,7 +469,7 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
 
       // In the process of matching we find a $ or _
       // and we just finished processing the query as well
-      if ((x[j] == '_' || x[j] == '$') && ((i == query_len) || current_edge.l == j)) {
+      if ((x[j] == core::terminator_char || x[j] == core::string_separator) && ((i == query_len) || current_edge.l == j)) {
         // std::cerr << "case 0\n";
         append_matches();
         append_underscore_matches();
@@ -432,7 +478,7 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
 
       // In the process of matching we find a _
       // and have not finished processing the query
-      if (x[j] == '_') {
+      if (x[j] == core::terminator_char) {
         // std::cerr << "case 1\n" ;
         append_matches(true);
         append_underscore_matches();
@@ -441,7 +487,7 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
 
       // In the process of matching we find a $
       // and have not finished processing the query
-      if (x[j] == '$') {
+      if (x[j] == core::string_separator) {
         // std::cerr << "case 3\n";
         append_matches(true);
         append_underscore_matches();
@@ -476,14 +522,10 @@ vector<n_core::extended_match> FindEndIndexes(const char *query, STvertex *curre
  *
  *
  */
-void gen_suffix_tree_new(
+void gen_suffix_tree(
     eds::EDS& eds,
     std::vector<std::pair<STvertex, std::string>> *suffix_trees) {
 
-  // std::vector<std::string>& i_letter;
-  // const std::vector<std::string>& i_letter{};
-
-  // std::vector<slicex> const *str_slices;
   std::string text;
   STvertex *root;
 
@@ -491,16 +533,17 @@ void gen_suffix_tree_new(
     text.clear();
 
     std::vector<std::string>& i_letter = eds.get_d_letter(i).get_strs();
-    std::vector<eds::slice_eds>& str_slices = eds.get_slice(i); //&eds.str_slices[i];
+    std::vector<eds::slice_eds>& str_slices = eds.get_slice(i);
 
-    n_junctions::join(i_letter, '$', text); // concat the strings with dollar sign
-    text += '_';                          // add a terminator char
+    // concat the strings with seperator & add add a terminator char
+    core::join(i_letter, core::string_separator, text);
+    text += core::terminator_char;
 
     // Create the suffix tree
     root = Create_suffix_tree(text.c_str(), text.length());
 
     // add string ids
-    update_leaves(root, str_slices);
+    update_leaves(root, str_slices, eds, i);
 
     suffix_trees->push_back(std::make_pair(*root, text));
   }
