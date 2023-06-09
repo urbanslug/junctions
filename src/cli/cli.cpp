@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <ostream>
@@ -188,6 +189,36 @@ void handle_graph(core::Parameters const &params) {
       std::cerr << "INFO computing the size of the multiset\n";
       }
     std::cout << "Size of the mutlitset: " << graph::multiset(g) << "\n";
+  }
+
+  // TODO replace with method call
+  if (params.compute_match_stats) {
+    std::size_t res{std::numeric_limits<std::size_t>::max()};
+    switch (params.match_stats_str) {
+    case 1:
+      res = graph::match_stats(g,
+                               w.get_letter_boundaries(params.match_stats_letter_idx).first,
+                               q.get_size() + q.get_eps_count(),
+                               core::ed_string::w);
+      break;
+    case 2:
+      
+      res = graph::match_stats(g,
+                               q.get_letter_boundaries(params.match_stats_letter_idx).first,
+                               w.get_size() + w.get_eps_count(),
+                               core::ed_string::q);
+      break;
+    default:
+      // TODO: throw arg error
+      exit(1);
+      ;
+    }
+
+    if (params.verbosity() > 0) {
+      std::cerr << "INFO computing matching statistics\n";
+      }
+    std::cout << "MS[" << params.match_stats_letter_idx << "]: " << res << "\n";
+
   }
 
   if (params.compute_witness()) {

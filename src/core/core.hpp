@@ -214,8 +214,8 @@ struct Parameters {
   witness witness_choice;
   // matching stats
   bool compute_match_stats;
-  int match_stats_str;
-  int match_stats_letter_idx;
+  int match_stats_str; // TODO: use enum
+  int match_stats_letter_idx; // TODO: use size_t
 
   Parameters();
   // task

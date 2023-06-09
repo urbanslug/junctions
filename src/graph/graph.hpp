@@ -23,6 +23,8 @@
 namespace graph {
 /**
  * @brief Is a match explicit or implicit
+ * explicit: a match start (or ends) from the start (or end) of a string
+ * implicit: a match starts (or ends) within a string
  */
 enum match_type { exp, imp };
 
@@ -34,26 +36,14 @@ public:
   match_type left() const {return this->l;}
   match_type right() const {return this->r;}
 
-  bool is_imp_imp() const {
-    return l == match_type::imp && r == match_type::imp;
-  }
-
-  bool is_imp_exp() const {
-    return l == match_type::imp && r == match_type::exp;
-  }
-
-  bool is_exp_imp() const {
-    return l == match_type::exp && r == match_type::imp;
-  }
-
-  bool is_exp_ext() const {
-    return l == match_type::exp && r == match_type::exp;
-  }
-
   std::string to_string() const {
     return std::string(l == match_type::exp ? "exp" : "imp") + "-" + std::string(r == match_type::exp ? "exp" : "imp");
   }
 };
+
+// TODO use something to hold both horizontal and vertical match type
+
+
 
 class GraphSlice {
   std::size_t txt_start; // text start in N
@@ -123,8 +113,8 @@ struct compare_by_weight {
   bool operator()(const graph::Edge &l, const graph::Edge &r);
 };
 
-  // TODO: use unordered set
-  struct Vertex {
+// TODO: use unordered set
+struct Vertex {
   std::set<Edge> incoming;
   std::set<Edge> outgoing;
   /*
@@ -155,6 +145,7 @@ class Graph {
   std::vector<Edge> q_a; // accept node
   std::vector<Vertex> adj; // adjacency list to store edges
 
+  std::vector<std::size_t> match_stats; // match stats
 
   bool is_exp_exp(int idx);
 
@@ -164,11 +155,19 @@ class Graph {
 
   bool is_imp_imp(int idx);
 
+  Vertex const& get_node(std::size_t node_idx);
+
 public:
 
   std::size_t get_size();
 
+  std::size_t last_node() const;
+
   std::size_t compute_index(std::size_t x, std::size_t y);
+
+  void compute_match_stats();
+
+  std::size_t get_match_stats(std::size_t node_idx);
 
   // compute the size of the multiset
   std::size_t multiset_size();
@@ -242,16 +241,10 @@ Graph compute_intersection_graph(eds::EDS &eds_w,
                                  eds::EDS &eds_q,
                                  core::Parameters const &parameters);
 
-/**
- *
- *
- *
- *
- */
-int match_stats(Graph &g,
-                eds::EDS &eds_w,
-                eds::EDS &eds_q,
-                core::Parameters const &parameters);
+std::size_t match_stats(Graph &g,
+                        std::size_t letter_start,
+                        std::size_t last,
+                        core::ed_string match_stats_str);
 
 std::size_t multiset(graph::Graph &g);
 

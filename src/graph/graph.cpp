@@ -58,6 +58,7 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
   this->N_2 = N_2;
   this->V = (N_1 + 1) * (N_2 + 1);
 
+
   try {
     adj.resize(V);
   } catch (const std::bad_alloc &) {
@@ -92,8 +93,23 @@ bool graph::Graph::is_imp_imp(int idx) {
   return this->adj[idx].vertex_type == 3;
 }
 
+graph::Vertex const& graph::Graph::get_node(std::size_t node_idx) {
+  return this->adj[node_idx];
+}
+
+std::size_t graph::Graph::get_match_stats(std::size_t node_idx) {
+  return this->match_stats[node_idx];
+}
+
+
+
+
 std::size_t graph::Graph::get_size() { return this->V; }
 
+std::size_t graph::Graph::last_node() const { return this->V-1; }
+
+
+// TODO: replace i & j boundary with a struct
 /**
  * function to add an edge to the graph
  */
@@ -198,6 +214,31 @@ std::size_t graph::Graph::multiset_size() {
   }
 
   return dp_table[stop_node];
+}
+
+
+void graph::Graph::compute_match_stats() {
+  //std::size_t last_node = this->last_node();
+
+  std::vector<size_t> dp_tbl(this->get_size(), 0);
+  std::size_t max_k = 0;
+
+  // Note that this expects that idx will overflow when we attempt to go below
+  // zero therefore assumes the last node is not max size_t value
+  for (std::size_t idx{this->last_node()}; idx <= this->last_node(); idx--) {
+    Vertex const& v = this->get_node(idx);
+
+    for (auto e: v.outgoing) {
+      if (max_k < (e.weight + dp_tbl[e.dest]) ) {
+        max_k = e.weight + dp_tbl[e.dest];
+      }
+    }
+
+    dp_tbl[idx] += max_k;
+    max_k = 0;
+  }
+
+  this->match_stats = dp_tbl;
 }
 
 /**
@@ -396,12 +437,8 @@ void graph::Graph::dbg_print(int indent_level = 0) {
 
 void graph::Graph::print_dot() {
   auto print_idx = [&](std::size_t idx) -> std::string {
-    if (idx == 0) {
-      return core::q_0;
-    }
-    if (idx == this->V - 1) {
-      return core::q_a;
-    }
+    if (idx == 0) { return core::q_0; }
+    if (idx == this->V - 1) { return core::q_a; }
     return std::to_string(idx);
   };
 
@@ -885,17 +922,24 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
   return g;
 }
 
+std::size_t graph::match_stats(graph::Graph &g,
+                        std::size_t letter_start,
+                        std::size_t last,
+                        core::ed_string match_stats_str) {
+  g.compute_match_stats();
 
-/**
- *
- *
- *
- *
- */
-int match_stats(graph::Graph &g, eds::EDS &eds_w, eds::EDS &eds_q,
-                core::Parameters const &parameters) {
-  int max = INT_MIN;
-  int letter = parameters.match_stats_letter_idx;
+  std::size_t max = 0;
+  std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
+
+  for (std::size_t i{}; i<last; i++) {
+    node_idx = match_stats_str == core::ed_string::w
+             ? g.compute_index(letter_start, i)
+             : g.compute_index(i, letter_start);
+
+    if (max < g.get_match_stats(node_idx)) {
+      max = g.get_match_stats(node_idx);
+    }
+  }
 
   return max;
 }
