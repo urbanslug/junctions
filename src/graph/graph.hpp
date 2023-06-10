@@ -25,32 +25,76 @@ namespace graph {
  * @brief Is a match explicit or implicit
  * explicit: a match start (or ends) from the start (or end) of a string
  * implicit: a match starts (or ends) within a string
+ * n: a match starts (or ends) within a string
  */
-enum match_type { exp, imp };
+enum match_type { exp, imp, n };
 
-class MatchTypePair{
-  match_type l;
-  match_type r;
-public:
-  MatchTypePair(match_type l, match_type r) : l(l), r(r) {}
-  match_type left() const {return this->l;}
-  match_type right() const {return this->r;}
-
-  std::string to_string() const {
-    return std::string(l == match_type::exp ? "exp" : "imp") + "-" + std::string(r == match_type::exp ? "exp" : "imp");
-  }
+/**
+ * 0 exp exp
+ * 1 exp imp
+ * 2 imp exp
+ * 3 imp imp
+ */
+enum match_type_pair {
+  exp_exp,
+  exp_imp,
+  imp_exp,
+  imp_imp,
+  inv // invalid
 };
 
-// TODO use something to hold both horizontal and vertical match type
+class MatchTypePairUnion {
+  match_type l1;
+  match_type r1;
 
+  match_type l2;
+  match_type r2;
 
+  /*
+    maps a match type pair to an int between 0 and 3
+
+    0 exp exp
+    1 exp imp
+    2 imp exp
+    3 imp imp
+  */
+  constexpr static int to_integral(match_type lhs, match_type rhs) {
+    return int(lhs) * int(match_type::n) + int(rhs);
+  }
+
+  match_type_pair get_val(match_type v1, match_type v2) {
+    switch (to_integral(v1, v2)) {
+    case (to_integral(exp, exp)):
+      return exp_exp;
+      break;
+    case (to_integral(imp, exp)):
+      return exp_imp;
+      break;
+    case (to_integral(exp, imp)):
+      return imp_exp;
+      break;
+    default:
+      return imp_imp;
+    }
+  }
+
+public:
+  MatchTypePairUnion(match_type l1, match_type r1, match_type l2, match_type r2)
+      : l1(l1), r1(r1), l2(l2), r2(r2) {}
+
+  match_type_pair get_val_left() { return get_val(this->l1, this->l2); }
+  match_type_pair get_val_right() { return get_val(this->r1, this->r2); }
+  match_type left1() const {return this->l1;}
+  match_type right1() const {return this->r1;}
+  match_type left2() const {return this->l2;}
+  match_type right2() const {return this->r2;}
+};
 
 class GraphSlice {
   std::size_t txt_start; // text start in N
   std::size_t qry_start; // query start in N
 
-  MatchTypePair qry_match_typ; // match type of the qry
-  MatchTypePair txt_match_typ; // match type of the txt
+  MatchTypePairUnion m_typ;
 
   std::size_t match_length;
   std::string str;
@@ -59,32 +103,27 @@ public:
   // TODO: Constructor with initialization list
   GraphSlice(std::size_t txt_start,
              std::size_t qry_start,
-             MatchTypePair qry_match_typ,
-             MatchTypePair txt_match_typ,
+             MatchTypePairUnion m_typ,
              std::size_t match_length,
              std::string str)
     : txt_start(txt_start),
       qry_start(qry_start),
-      qry_match_typ(qry_match_typ),
-      txt_match_typ(txt_match_typ),
+      m_typ(m_typ),
       match_length(match_length),
       str(str) {}
 
     GraphSlice(std::size_t txt_start,
-             std::size_t qry_start,
-             MatchTypePair qry_match_typ,
-             MatchTypePair txt_match_typ)
+               std::size_t qry_start,
+               MatchTypePairUnion m_typ)
     : txt_start(txt_start),
       qry_start(qry_start),
-      qry_match_typ(qry_match_typ),
-      txt_match_typ(txt_match_typ),
+      m_typ(m_typ),
       match_length(0),
       str(std::string{}) {}
 
     std::size_t get_txt_start() const { return this->txt_start; }
     std::size_t get_qry_start() const { return this->qry_start; }
-    MatchTypePair get_qry_match_typ() const { return this->qry_match_typ; }
-    MatchTypePair get_txt_match_typ() const { return this->txt_match_typ; }
+    MatchTypePairUnion get_match_typ() const { return this->m_typ; }
     std::size_t get_match_length() const { return this->match_length; }
     std::string const& get_str() { return this->str; }
 };
@@ -125,7 +164,7 @@ struct Vertex {
    * imp imp 3
    */
   // use an enum?
-  int vertex_type;
+  match_type_pair vertex_type;
 
   // initialize a struct with default value
   Vertex();
@@ -147,13 +186,6 @@ class Graph {
 
   std::vector<std::size_t> match_stats; // match stats
 
-  bool is_exp_exp(int idx);
-
-  bool is_exp_imp(int idx);
-
-  bool is_imp_exp(int idx);
-
-  bool is_imp_imp(int idx);
 
   Vertex const& get_node(std::size_t node_idx);
 
@@ -216,8 +248,7 @@ public:
       void add_edge(std::size_t N_1, std::size_t N_2,
                    std::pair<std::size_t, std::size_t> i_boundary,
                    std::pair<std::size_t, std::size_t> j_boundary,
-                   graph::MatchTypePair w_m,
-                   graph::MatchTypePair q_m,
+                   graph::MatchTypePairUnion m_typ,
                    std::size_t weight, std::string str,
                    int eps_side);
 
