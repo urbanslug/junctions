@@ -200,65 +200,6 @@ void graph::Graph::compute_match_stats() {
   this->match_stats = dp_tbl;
 }
 
-/**
- * what is the furthest path from this given start node
- *
- *
- * @param[in] start_node_idx
- * @return
- */
-// TODO: replace with witness but set stop node
-std::size_t graph::Graph::longest_frm_start(std::size_t start_node_idx) {
-  // TODO: remove
-  // std::size_t stop_node = this->adj.size();
-
-  auto compute_table_idx =
-      [&start_node_idx](std::size_t gr_idx) -> std::size_t {
-    return gr_idx - start_node_idx;
-  };
-  // TODO: remove
-  // auto compute_graph_idx = [&start_node_idx](std::size_t tbl_idx) ->
-  // std::size_t { return tbl_idx + start_node_idx + 1; };
-  std::vector<std::size_t> dists(this->V, INT_MIN);
-
-  int max = 0;
-
-  std::stack<int> to_visit;
-  std::set<int> visited;
-  std::set<Edge> out;
-  int current_dist;
-
-  int current_node = start_node_idx;
-  dists[current_node] = 0;
-  to_visit.push(current_node);
-
-  while (!to_visit.empty()) {
-    current_node = to_visit.top();
-    to_visit.pop();
-    out = this->adj[current_node].outgoing;
-
-    if (visited.count(current_node) > 0) {
-      continue;
-    }
-
-    current_dist = dists[current_node];
-
-    for (auto e : out) {
-      if (dists[compute_table_idx(e.dest)] < current_dist + static_cast<int>(e.weight)) {
-        dists[compute_table_idx(e.dest)] = current_dist + static_cast<int>(e.weight);
-        if (max < current_dist + static_cast<int>(e.weight)) {
-          max = current_dist + static_cast<int>(e.weight);
-        }
-      }
-
-      to_visit.push(e.dest);
-    }
-
-    visited.insert(current_node);
-  }
-
-  return max;
-}
 
 /**
  * longest path from start_node_idx to stop_node_idx

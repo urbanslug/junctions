@@ -204,14 +204,6 @@ public:
   // compute the size of the multiset
   std::size_t multiset_size();
 
-  /**
-   * what is the furthest path from this given start node
-   *
-   *
-   * @param[in] start_node_idx
-   * @return
-   */
-  std::size_t longest_frm_start(std::size_t start_node_idx);
 
   /**
    * longest path from start_node_idx to stop_node_idx
@@ -242,15 +234,15 @@ public:
                    std::pair<std::size_t, std::size_t> txt_boundary,
                    bool eps_edge);
 
-      // function to add an edge to the graph
-      // src is T_1
-      // src is T_2
-      void add_edge(std::size_t N_1, std::size_t N_2,
-                   std::pair<std::size_t, std::size_t> i_boundary,
-                   std::pair<std::size_t, std::size_t> j_boundary,
-                   graph::MatchTypePairUnion m_typ,
-                   std::size_t weight, std::string str,
-                   int eps_side);
+  // function to add an edge to the graph
+  // src is T_1
+  // src is T_2
+  void add_edge(std::size_t N_1, std::size_t N_2,
+                std::pair<std::size_t, std::size_t> i_boundary,
+                std::pair<std::size_t, std::size_t> j_boundary,
+                graph::MatchTypePairUnion m_typ,
+                std::size_t weight, std::string str,
+                int eps_side);
 
   // constructor to initialize the graph
   Graph(std::size_t N_1, std::size_t N_2);
