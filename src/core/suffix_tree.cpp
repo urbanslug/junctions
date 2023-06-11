@@ -182,7 +182,6 @@ std::vector<int> DFS(STvertex const *current_vertex) {
     }
   }
 
-
   return leaves;
 }
 
@@ -396,6 +395,7 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
     }
   };
 
+  // make sure this call is made after initializing the value of current edge
   auto append_matches = [&](bool b = false, bool a = false) {
     l_data = Get_Leaf_Data(current_edge.v);
     looper(l_data, b, a);
