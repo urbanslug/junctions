@@ -258,8 +258,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 
         if (i > 0) {
           // copy down
-          std::pair<std::size_t, std::size_t> b = eds_q.get_letter_boundaries(j);
-          for (std::size_t col = b.first; col <= b.second; col++) {
+          eds::LetterBoundary b = eds_q.get_letter_boundaries(j);
+          for (std::size_t col = b.left(); col <= b.right(); col++) {
             if (q_matrix[i - 1][col]) { q_matrix[i][col] = true; }
           }
         }
@@ -278,8 +278,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 
         if (j > 0) {
           // copy down
-          std::pair<std::size_t, std::size_t> b = eds_w.get_letter_boundaries(i); // dry with other copy down
-          for (std::size_t col = b.first; col <= b.second; col++) {
+          eds::LetterBoundary b = eds_w.get_letter_boundaries(i); // dry with other copy down
+          for (std::size_t col = b.left(); col <= b.right(); col++) {
             if (w_matrix[j - 1][col]) { w_matrix[j][col] = true; }
           }
         }

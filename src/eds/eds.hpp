@@ -31,6 +31,23 @@ struct slice_eds {
   friend bool operator==(const slice_eds &lhs, const slice_eds &rhs);
 };
 
+/**
+ * A boundary is the index within N in which a degenerate letter is within.
+ * a left boundary is the index of the first character of the first string in N
+ * the right boundary is the index of the last char of the last string in N
+ */
+struct LetterBoundary {
+  std::size_t l; // left
+  std::size_t r; // right
+
+  LetterBoundary() : l(0), r(0) {}
+
+  LetterBoundary(std::size_t l, std::size_t r) : l(l), r(r) {}
+
+  std::size_t left() const { return this->l; }
+  std::size_t right() const { return this->r; }
+};
+
 class DegenerateLetter {
   std::vector<std::string> data;
   bool has_epsilon;
@@ -99,8 +116,7 @@ public:
   bool is_letter_eps(std::size_t letter_idx) const;
 
   // the global start and end of the degenerate letter
-  std::pair<std::size_t, std::size_t>
-  get_letter_boundaries(std::size_t letter_idx);
+  LetterBoundary get_letter_boundaries(std::size_t letter_idx);
 
   std::vector<std::size_t>& get_prev_char_idx(std::size_t char_idx);
   char get_char_at(std::size_t char_idx);
