@@ -113,14 +113,19 @@ public:
 };
 
 
-class STQueryResult : public LeafData {
+class STQueryResult : private LeafData {
   bool beyond_text; // there was a match but the query was longer than the text
   std::size_t match_length; // the length of the match
 
 public:
   // constructor(s)
-  STQueryResult(bool beyond_text, std::size_t match_length, LeafData &l_data)
-    : LeafData(l_data.get_txt_str_idx(), l_data.get_char_idx()),
+  STQueryResult(bool beyond_text, std::size_t match_length, LeafData&& l_data)
+    : LeafData(std::move(l_data)),
+      beyond_text(beyond_text),
+      match_length(match_length) {}
+
+ STQueryResult(bool beyond_text, std::size_t match_length, LeafData& l_data)
+    : LeafData(std::move(l_data)),
       beyond_text(beyond_text),
       match_length(match_length) {}
 
@@ -136,6 +141,11 @@ public:
 
   // modifiers
   std::size_t& get_match_length_mut() { return this->match_length; }
+
+  //
+  using LeafData::get_char_idx;
+  using LeafData::get_txt_char_idx_mut;
+  using LeafData::get_txt_str_idx;
 };
 
 std::vector<match_st::STQueryResult>
@@ -160,13 +170,11 @@ bool_matrix gen_matrix(size_t rows, size_t cols);
 // C++ timer
 typedef std::chrono::high_resolution_clock Time;
 
-
 enum file_format {
   msa, // msa in PIR format
   eds, // eds file
   unknown
 };
-
 
 enum ed_string { w, q };
 
@@ -214,8 +222,8 @@ struct Parameters {
   witness witness_choice;
   // matching stats
   bool compute_match_stats;
-  int match_stats_str;
-  int match_stats_letter_idx;
+  int match_stats_str; // TODO: use enum
+  int match_stats_letter_idx; // TODO: use size_t
 
   Parameters();
   // task
@@ -247,24 +255,29 @@ struct Parameters {
 
 
 // TODO call this an eds match and move to core?
-struct EDSMatch : public match_st::STQueryResult{
+struct EDSMatch {
   std::size_t query_str_index;
   std::string str;
   // in this case we modify the char idx in q_res.l_data.char_idx
   // to be actual position in the text string
   //match_st::STQueryResult &q_res;
 
+  match_st::STQueryResult q_res;
+
 public:
   // constructor(s)
+  EDSMatch(std::size_t query_str_index, std::string str,
+           match_st::STQueryResult &&q_res)
+      : query_str_index(query_str_index),
+        str(str),
+        q_res(std::move(q_res)) {}
+
   EDSMatch(std::size_t query_str_index,
            std::string str,
            match_st::STQueryResult& q_res)
-      : match_st::STQueryResult(q_res.is_beyond_txt(),
-                                q_res.get_match_length(),
-                                q_res.get_txt_str_idx(),
-                                q_res.get_char_idx()),
-        query_str_index(query_str_index),
-        str(str) {}
+    : query_str_index(query_str_index),
+      str(str),
+      q_res(std::move(q_res)) {}
 
   EDSMatch(std::size_t qry_str_index,
            std::size_t txt_str_idx,
@@ -273,19 +286,44 @@ public:
            bool beyond_txt,
            std::size_t m_len
            )
-      : match_st::STQueryResult(beyond_txt,
-                                m_len,
-                                txt_str_idx,
-                                txt_char_idx),
-        query_str_index(qry_str_index),
-        str(str) {}
+    : query_str_index(qry_str_index),
+      str(str),
+      q_res(std::move(match_st::STQueryResult(beyond_txt,
+                                    m_len,
+                                    txt_str_idx,
+                                    txt_char_idx))) {}
 
   //
   std::size_t get_qry_str_idx() const { return this->query_str_index; }
   std::string const& get_str() const { return this->str; }
 
+
+
   // modifiers
   std::string& get_str_mut() { return this->str; }
+
+  /*
+   * from LeafData
+   */
+
+  // getters
+  std::size_t get_char_idx() const { return this->q_res.get_char_idx(); }
+  std::size_t get_txt_str_idx() const { return this->q_res.get_txt_str_idx(); }
+
+  // modifiers
+  std::size_t& get_txt_char_idx_mut() { return this->q_res.get_txt_char_idx_mut(); }
+
+  // setters
+  //void set_char_idx(std::size_t i) { this->char_idx = i; }
+
+  /*
+   * from STQueryResult
+   */
+  bool is_beyond_txt() const { return this->q_res.is_beyond_txt(); }
+  std::size_t get_match_length() const { return this->q_res.get_match_length(); }
+
+  // modifiers
+  std::size_t& get_match_length_mut() { return this->q_res.get_match_length_mut(); }
 };
 
 void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
@@ -295,7 +333,6 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
 
 void join(const std::vector<std::string> &v, char c, std::string &s);
 std::string indent(int level);
-
 
 const std::string unicode_eps = "\u03B5";
 const std::string unicode_sub_1 = "\u2081";

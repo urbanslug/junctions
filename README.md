@@ -134,7 +134,7 @@ Available options
     amount of debug information [default : 0]
 ```
 
-## Running Tests and Debugging
+## Running tests and Debugging
 Assuming a user is in the `junctions/` dir create a debug build
 ```sh
 cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build

@@ -284,6 +284,7 @@ longest = short/longest/1",
       }
     } else
       parameters.match_stats_str = 0;
+    str.str("");
     str.clear();
 
     if (cmd.foundOption("match-stats-idx")) {
@@ -293,6 +294,7 @@ longest = short/longest/1",
       parameters.match_stats_letter_idx =  stoi(str.str());
 
     }
+    str.str("");
     str.clear();
 
     // Witness

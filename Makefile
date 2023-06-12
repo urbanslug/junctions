@@ -1,4 +1,5 @@
 BUILD_DIR=bin
+CMAKE_BUILD_DIR=build
 
 
 all:
@@ -44,4 +45,4 @@ test:
 
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) ${CMAKE_BUILD_DIR}

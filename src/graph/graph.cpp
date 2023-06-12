@@ -46,7 +46,9 @@ bool graph::compare_by_weight::operator()(const graph::Edge &l,
 
 // initialize a struct with default values
 graph::Vertex::Vertex()
-  : incoming(std::set<Edge>{}), outgoing(std::set<Edge>{}), vertex_type(-1) {}
+  : incoming(std::set<Edge>{}),
+    outgoing(std::set<Edge>{}),
+    vertex_type(graph::match_type_pair::inv) {}
 
 // -------
 // classes
@@ -57,6 +59,7 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
   this->N_1 = N_1;
   this->N_2 = N_2;
   this->V = (N_1 + 1) * (N_2 + 1);
+
 
   try {
     adj.resize(V);
@@ -76,48 +79,46 @@ std::size_t graph::Graph::compute_index(std::size_t x, std::size_t y) {
   // return ((y+j)*N_1) + x+i;
   return (x * (this->N_2 + 1)) + y;
 }
-bool graph::Graph::is_exp_exp(int idx) {
-  return this->adj[idx].vertex_type == 0;
+
+graph::Vertex const& graph::Graph::get_node(std::size_t node_idx) {
+  return this->adj[node_idx];
 }
 
-bool graph::Graph::is_exp_imp(int idx) {
-  return this->adj[idx].vertex_type == 1;
+std::size_t graph::Graph::get_match_stats(std::size_t node_idx) {
+  return this->match_stats[node_idx];
 }
 
-bool graph::Graph::is_imp_exp(int idx) {
-  return this->adj[idx].vertex_type == 2;
-}
 
-bool graph::Graph::is_imp_imp(int idx) {
-  return this->adj[idx].vertex_type == 3;
-}
+
 
 std::size_t graph::Graph::get_size() { return this->V; }
 
+std::size_t graph::Graph::last_node() const { return this->V-1; }
+
+
+// TODO: replace i & j boundary with a struct
 /**
  * function to add an edge to the graph
  */
 void graph::Graph::add_edge(std::size_t N_1,
-                           std::size_t N_2,
-                           std::pair<std::size_t, std::size_t> i_boundary,
-                           std::pair<std::size_t, std::size_t> j_boundary,
-                           graph::MatchTypePair w_m,
-                           graph::MatchTypePair q_m,
-                           std::size_t weight,
-                           std::string str,
-                           int eps_side = 0
-                           ) {
+                            std::size_t N_2,
+                            std::pair<std::size_t, std::size_t> i_boundary,
+                            std::pair<std::size_t, std::size_t> j_boundary,
+                            MatchTypePairUnion m_typ,
+                            std::size_t weight,
+                            std::string str,
+                            int eps_side = 0) {
   int stop, start;
   int l, k, l_prime, k_prime;
 
 
-  l = w_m.left() == graph::match_type::exp ? i_boundary.first : N_1;
-  k = q_m.left() == graph::match_type::exp ? j_boundary.first : N_2;
+  l = m_typ.left1() == graph::match_type::exp ? i_boundary.first : N_1;
+  k = m_typ.left2() == graph::match_type::exp ? j_boundary.first : N_2;
 
   start = compute_index(l, k);
 
-  l_prime = w_m.right() == graph::match_type::exp ? i_boundary.second + 1 : N_1 + weight;
-  k_prime = q_m.right() == graph::match_type::exp ? j_boundary.second + 1 : N_2 + weight;
+  l_prime = m_typ.right1() == graph::match_type::exp ? i_boundary.second + 1 : N_1 + weight;
+  k_prime = m_typ.right2() == graph::match_type::exp ? j_boundary.second + 1 : N_2 + weight;
 
   if (eps_side == 1) { k_prime = k; }
 
@@ -136,34 +137,8 @@ void graph::Graph::add_edge(std::size_t N_1,
   adj[stop].incoming.insert(e_rev);
 
   // start type, end type
-  int s_typ, e_typ;
-
-  if (w_m.left() == graph::match_type::exp && q_m.left() == graph::match_type::exp) {
-    s_typ = 0;
-  } else if (w_m.left() == graph::match_type::exp && q_m.left() == graph::match_type::imp) {
-    s_typ = 1;
-  } else if (w_m.left() == graph::match_type::imp && q_m.left() == graph::match_type::exp) {
-    s_typ = 2;
-  } else if (w_m.left() == graph::match_type::imp && q_m.left() == graph::match_type::imp) {
-    s_typ = 3;
-  } else {
-    s_typ = -1;
-  }
-
-  if (w_m.right() == graph::match_type::exp && q_m.right() == graph::match_type::exp) {
-    e_typ = 0;
-  } else if (w_m.right() == graph::match_type::exp && q_m.right() == graph::match_type::imp) {
-    e_typ = 1;
-  } else if (w_m.right() == graph::match_type::imp && q_m.right() == graph::match_type::exp) {
-    e_typ = 2;
-  } else if (w_m.right() == graph::match_type::imp && q_m.right() == graph::match_type::imp) {
-    e_typ = 3;
-  } else {
-    e_typ = -1;
-  }
-
-  adj[start].vertex_type = s_typ;
-  adj[stop].vertex_type = e_typ;
+  adj[start].vertex_type = m_typ.get_val_left();
+  adj[stop].vertex_type = m_typ.get_val_right();
 }
 
 std::size_t graph::Graph::multiset_size() {
@@ -200,65 +175,31 @@ std::size_t graph::Graph::multiset_size() {
   return dp_table[stop_node];
 }
 
-/**
- * what is the furthest path from this given start node
- *
- *
- * @param[in] start_node_idx
- * @return
- */
-// TODO: replace with witness but set stop node
-std::size_t graph::Graph::longest_frm_start(std::size_t start_node_idx) {
-  // TODO: remove
-  // std::size_t stop_node = this->adj.size();
 
-  auto compute_table_idx =
-      [&start_node_idx](std::size_t gr_idx) -> std::size_t {
-    return gr_idx - start_node_idx;
-  };
-  // TODO: remove
-  // auto compute_graph_idx = [&start_node_idx](std::size_t tbl_idx) ->
-  // std::size_t { return tbl_idx + start_node_idx + 1; };
-  std::vector<std::size_t> dists(this->V, INT_MIN);
+void graph::Graph::compute_match_stats() {
+  //std::size_t last_node = this->last_node();
 
-  int max = 0;
+  std::vector<size_t> dp_tbl(this->get_size(), 0);
+  std::size_t max_k = 0;
 
-  std::stack<int> to_visit;
-  std::set<int> visited;
-  std::set<Edge> out;
-  int current_dist;
+  // Note that this expects that idx will overflow when we attempt to go below
+  // zero therefore assumes the last node is not max size_t value
+  for (std::size_t idx{this->last_node()}; idx <= this->last_node(); idx--) {
+    Vertex const& v = this->get_node(idx);
 
-  int current_node = start_node_idx;
-  dists[current_node] = 0;
-  to_visit.push(current_node);
-
-  while (!to_visit.empty()) {
-    current_node = to_visit.top();
-    to_visit.pop();
-    out = this->adj[current_node].outgoing;
-
-    if (visited.count(current_node) > 0) {
-      continue;
-    }
-
-    current_dist = dists[current_node];
-
-    for (auto e : out) {
-      if (dists[compute_table_idx(e.dest)] < current_dist + static_cast<int>(e.weight)) {
-        dists[compute_table_idx(e.dest)] = current_dist + static_cast<int>(e.weight);
-        if (max < current_dist + static_cast<int>(e.weight)) {
-          max = current_dist + static_cast<int>(e.weight);
-        }
+    for (auto e: v.outgoing) {
+      if (max_k < (e.weight + dp_tbl[e.dest]) ) {
+        max_k = e.weight + dp_tbl[e.dest];
       }
-
-      to_visit.push(e.dest);
     }
 
-    visited.insert(current_node);
+    dp_tbl[idx] += max_k;
+    max_k = 0;
   }
 
-  return max;
+  this->match_stats = dp_tbl;
 }
+
 
 /**
  * longest path from start_node_idx to stop_node_idx
@@ -396,12 +337,8 @@ void graph::Graph::dbg_print(int indent_level = 0) {
 
 void graph::Graph::print_dot() {
   auto print_idx = [&](std::size_t idx) -> std::string {
-    if (idx == 0) {
-      return core::q_0;
-    }
-    if (idx == this->V - 1) {
-      return core::q_a;
-    }
+    if (idx == 0) { return core::q_0; }
+    if (idx == this->V - 1) { return core::q_a; }
     return std::to_string(idx);
   };
 
@@ -481,6 +418,7 @@ void graph::Graph::print_dot() {
 */
 void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
                     eds::EDS &txt_eds,
+                    core::ed_string txt,
                     std::vector<eds::slice_eds> const &qry_offsets,
                     core::bool_matrix *txt_active_suffixes,
                     core::bool_matrix *qry_active_suffixes,
@@ -613,13 +551,17 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
       (*qry_active_suffixes)[txt_letter_idx][q_start_in_N + candiate_match.get_match_length()] = 1;
     }
 
-    valid_matches->push_back(graph::GraphSlice(
-                  t_start_in_N,
-                  q_start_in_N,
-                  graph::MatchTypePair(g_q_m_start, g_q_m_stop),
-                  graph::MatchTypePair(g_t_m_start, g_t_m_stop),
-                  candiate_match.get_match_length(),
-                  candiate_match.str));
+
+    graph::MatchTypePairUnion u = txt == core::ed_string::w
+      ? graph::MatchTypePairUnion(g_t_m_start, g_t_m_stop, g_q_m_start, g_q_m_stop)
+      : graph::MatchTypePairUnion( g_q_m_start, g_q_m_stop, g_t_m_start, g_t_m_stop);
+
+    valid_matches->push_back(
+      graph::GraphSlice(t_start_in_N,
+                        q_start_in_N,
+                        u,
+                        candiate_match.get_match_length(),
+                        candiate_match.str));
 
   }
 }
@@ -649,8 +591,7 @@ void graph::Graph::create_edge(
                      x.get_txt_start(),
                      qry_boundary,
                      txt_boundary,
-                     x.get_qry_match_typ(),
-                     x.get_txt_match_typ(),
+                     x.get_match_typ(),
                      x.get_match_length(),
                      x.get_str(),
                      eps_side);
@@ -660,13 +601,11 @@ void graph::Graph::create_edge(
     // T_2 is the qry
     if (eps_edge) { eps_side = 1; }
     for (auto x : valid_matches) {
-      this->add_edge(
-                     x.get_txt_start(),
+      this->add_edge(x.get_txt_start(),
                      x.get_qry_start(),
                      txt_boundary,
                      qry_boundary,
-                     x.get_txt_match_typ(),
-                     x.get_qry_match_typ(),
+                     x.get_match_typ(),
                      x.get_match_length(),
                      x.get_str(),
                      eps_side);
@@ -676,8 +615,6 @@ void graph::Graph::create_edge(
     break;
   };
 }
-
-
 
 /**
 *
@@ -744,22 +681,20 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
       j_boundary = eds_q.get_letter_boundaries(j);
       i_boundary = eds_w.get_letter_boundaries(i);
 
-
       // T_2[j] has epsilon
       // T_1[i] is the query
       if (eds_q.is_letter_eps(j)) {
-
-
-
         // TODO: make size_t
         std::size_t eps_idx = eds_q.get_global_eps_idx(j);
 
-        valid_matches.push_back(graph::GraphSlice(
-            eps_idx,
-            i_boundary.first,
-            graph::MatchTypePair(graph::match_type::exp, graph::match_type::exp),
-            graph::MatchTypePair(graph::match_type::exp, graph::match_type::exp)));
+        graph::MatchTypePairUnion u =
+            graph::MatchTypePairUnion(graph::match_type::exp,
+                                      graph::match_type::exp,
+                                      graph::match_type::exp,
+                                      graph::match_type::exp);
 
+
+        valid_matches.push_back(graph::GraphSlice(eps_idx, i_boundary.first, u));
 
         // the last letter in T_1
         if (i == len_w - 1) {
@@ -774,13 +709,14 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
               // update active suffixes
               i_active_suffixes[j][col] = 1;
 
+              graph::MatchTypePairUnion u =
+                graph::MatchTypePairUnion(graph::match_type::imp,
+                                          graph::match_type::imp,
+                                          graph::match_type::exp,
+                                          graph::match_type::exp);
+
               // update active suffixes
-              valid_matches.push_back(graph::GraphSlice(
-                  eps_idx,
-                  col,
-                  graph::MatchTypePair(graph::match_type::imp, graph::match_type::imp),
-                  graph::MatchTypePair(graph::match_type::exp, graph::match_type::exp))
-              );
+              valid_matches.push_back(graph::GraphSlice(eps_idx, col, u));
             }
           }
         }
@@ -796,11 +732,14 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
         int eps_idx = eds_w.get_global_eps_idx(i);
 
-        valid_matches.push_back(graph::GraphSlice(
-            eps_idx,
-            j_boundary.first,
-            graph::MatchTypePair(graph::match_type::exp, graph::match_type::exp),
-            graph::MatchTypePair(graph::match_type::exp, graph::match_type::exp)));
+        graph::MatchTypePairUnion u =
+            graph::MatchTypePairUnion(graph::match_type::exp,
+                                      graph::match_type::exp,
+                                      graph::match_type::exp,
+                                      graph::match_type::exp);
+
+
+        valid_matches.push_back(graph::GraphSlice(eps_idx, j_boundary.first, u));
 
         // the last letter in T_2
         if (j == len_q - 1) {
@@ -816,12 +755,14 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
               // update active suffixes
               j_active_suffixes[i][col] = 1;
 
+              graph::MatchTypePairUnion u =
+                graph::MatchTypePairUnion(graph::match_type::exp,
+                                          graph::match_type::exp,
+                                          graph::match_type::imp,
+                                          graph::match_type::imp);
+
               // update active suffixes
-              valid_matches.push_back(graph::GraphSlice(
-                  eps_idx,
-                  col,
-                  graph::MatchTypePair(graph::match_type::imp, graph::match_type::imp),
-                  graph::MatchTypePair(graph::match_type::exp, graph::match_type::exp)));
+              valid_matches.push_back(graph::GraphSlice(eps_idx, col, u));
             }
           }
         }
@@ -845,6 +786,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
       filter_matches(candidate_matches,
                      eds_w,
+                     core::ed_string::w,
                      eds_q.get_slice(j),
                      &i_active_suffixes,
                      &j_active_suffixes,
@@ -869,6 +811,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
        filter_matches(candidate_matches,
                       eds_q,
+                      core::ed_string::q,
                       eds_w.get_slice(i),
                       &j_active_suffixes,
                       &i_active_suffixes,
@@ -885,17 +828,24 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
   return g;
 }
 
+std::size_t graph::match_stats(graph::Graph &g,
+                        std::size_t letter_start,
+                        std::size_t last,
+                        core::ed_string match_stats_str) {
+  g.compute_match_stats();
 
-/**
- *
- *
- *
- *
- */
-int match_stats(graph::Graph &g, eds::EDS &eds_w, eds::EDS &eds_q,
-                core::Parameters const &parameters) {
-  int max = INT_MIN;
-  int letter = parameters.match_stats_letter_idx;
+  std::size_t max = 0;
+  std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
+
+  for (std::size_t i{}; i<last; i++) {
+    node_idx = match_stats_str == core::ed_string::w
+             ? g.compute_index(letter_start, i)
+             : g.compute_index(i, letter_start);
+
+    if (max < g.get_match_stats(node_idx)) {
+      max = g.get_match_stats(node_idx);
+    }
+  }
 
   return max;
 }
