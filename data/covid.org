@@ -1,0 +1,23 @@
+Built a MSA that we expected to share a sequence ~OQ080093.1~
+
+Dataset 1
+#+BEGIN_SRC
+>OQ080093.1
+>OQ080095.1
+>OQ080102.1
+>OQ080103.1
+#+END_SRC
+
+Dataset 2
+#+BEGIN_SRC
+>OQ080089.1
+>OQ080091.1
+>OQ080093.1
+>OQ080095.1
+#+END_SRC
+
+As expected there was an intersection between the two sequences
+
+| ID | Dataset |   N_1 | m_1 |   N_2 | m_2 |   Naive |  Improved |
+|----+---------+-------+-----+-------+-----+---------+-----------|
+|  0 |         | 37631 | 131 | 44381 |  94 | 12.8395 | 0.0871455 |
