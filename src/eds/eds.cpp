@@ -18,7 +18,7 @@ namespace eds {
 const std::streamsize CHUNK_SIZE = 4096;
 
 inline bool isDNA(char ch) {
-  return (ch == 'A' || ch == 'T' || ch == 'C' || ch == 'G');
+  return (ch == 'A' || ch == 'T' || ch == 'C' || ch == 'G' || ch == 'N');
 }
 
 inline bool is_open_bracket(char ch) { return ch == '{'; }
