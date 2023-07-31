@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -197,14 +196,13 @@ void handle_graph(core::Parameters const &params) {
     switch (params.match_stats_str) {
     case 1:
       res = graph::match_stats(g,
-                               w.get_letter_boundaries(params.match_stats_letter_idx).first,
+                               w.get_letter_boundaries(params.match_stats_letter_idx).left(),
                                q.get_size() + q.get_eps_count(),
                                core::ed_string::w);
       break;
     case 2:
-      
       res = graph::match_stats(g,
-                               q.get_letter_boundaries(params.match_stats_letter_idx).first,
+                               q.get_letter_boundaries(params.match_stats_letter_idx).left(),
                                w.get_size() + w.get_eps_count(),
                                core::ed_string::q);
       break;

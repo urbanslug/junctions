@@ -1,7 +1,6 @@
 #ifndef CORE_HPP
 #define CORE_HPP
 
-#include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
 #include <iostream>

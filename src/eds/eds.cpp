@@ -18,7 +18,7 @@ namespace eds {
 const std::streamsize CHUNK_SIZE = 4096;
 
 inline bool isDNA(char ch) {
-  return (ch == 'A' || ch == 'T' || ch == 'C' || ch == 'G');
+  return (ch == 'A' || ch == 'T' || ch == 'C' || ch == 'G' || ch == 'N');
 }
 
 inline bool is_open_bracket(char ch) { return ch == '{'; }
@@ -353,11 +353,11 @@ void EDS::linearize() {
     if (this->is_letter_eps(i)) { this->str += '*'; }
 
     // populate previous char indexes
-    std::pair<std::size_t, std::size_t> bounds = this->get_letter_boundaries(i);
+    eds::LetterBoundary bounds = this->get_letter_boundaries(i);
     c_sl = this->get_slice(i);
 
-    std::size_t k = bounds.first;
-    for (; k <= bounds.second; k++) {
+    std::size_t k = bounds.left();
+    for (; k <= bounds.right(); k++) {
       this->prev_chars.push_back(std::vector<std::size_t>{});
       std::vector<slice_eds>::iterator it;
       it = std::find_if(c_sl.begin(), c_sl.end(),
@@ -485,9 +485,7 @@ std::vector<std::string>& EDS::get_strs(std::size_t letter_idx) {
   ;
 }
 
-
-std::pair<std::size_t, std::size_t>
-EDS::get_letter_boundaries(std::size_t letter_idx){
+eds::LetterBoundary EDS::get_letter_boundaries(std::size_t letter_idx){
 
   std::vector<eds::slice_eds> s = this->get_slice(letter_idx);
   std::size_t left, right;
@@ -495,10 +493,10 @@ EDS::get_letter_boundaries(std::size_t letter_idx){
   right = s.back().start + s.back().length;
 
   if (this->is_letter_eps(letter_idx)) {
-    return std::make_pair(left, right);
+    return eds::LetterBoundary(left, right);
   } else {
     // TODO: right should never be zero if so throw an exception
-    return std::make_pair(left, right-1);
+    return eds::LetterBoundary(left, right-1);
   }
 };
 

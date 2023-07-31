@@ -13,7 +13,7 @@ all:
 	g++ -O3 -c src/cli/cli.cpp -o bin/cli.o
 	g++ -O3 -c src/cli/argvparser.cpp -o bin/argvparser.o
 	g++ -O3 -c src/cli/parseCmdArgs.cpp -o bin/parseCmdArgs.o
-	g++ -Wall -pipe -O3 -std=c++11 bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
+	g++ -Wall -pipe -O3 -std=c++14 bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
 
 # compile with debugging info
 debug:
@@ -27,7 +27,7 @@ debug:
 	g++ -g -c src/cli/cli.cpp -o bin/cli.o
 	g++ -g -c src/cli/argvparser.cpp -o bin/argvparser.o
 	g++ -g -c src/cli/parseCmdArgs.cpp -o bin/parseCmdArgs.o
-	g++ -g -Wall -Wextra -DDEBUG -pipe -std=c++11 bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
+	g++ -g -Wall -Wextra -DDEBUG -pipe -std=c++14 bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
 
 # run tests
 test:
@@ -41,7 +41,7 @@ test:
 	g++ -g -c src/cli/cli.cpp -o bin/cli.o
 	g++ -g -c src/cli/argvparser.cpp -o bin/argvparser.o
 	g++ -g -c src/cli/parseCmdArgs.cpp -o bin/parseCmdArgs.o
-	g++ -g -Wall -Wextra -DDEBUG -pipe -std=c++11 bin/*.o tests/tests.cpp -lm -o $(BUILD_DIR)/junctions
+	g++ -g -Wall -Wextra -DDEBUG -pipe -std=c++14 bin/*.o tests/tests.cpp -lm -o $(BUILD_DIR)/junctions
 
 
 clean:

@@ -21,6 +21,34 @@
 
 
 namespace graph {
+
+/**
+ * A boundary is the index within N in which a degenerate letter is within.
+ * a left boundary is the index of the first character of the first string in N
+ * the right boundary is the index of the last char of the last string in N
+ */
+struct BoundaryUnion {
+  std::size_t l1; // left T1
+  std::size_t r1; // right T1
+
+  std::size_t l2; // left T2
+  std::size_t r2; // right T2
+
+
+  BoundaryUnion(eds::LetterBoundary b1, eds::LetterBoundary b2)
+    : l1(b1.left()), r1(b1.right()), l2(b2.left()), r2(b2.right()) {}
+
+
+  BoundaryUnion(std::size_t l1, std::size_t r1,
+                std::size_t l2, std::size_t r2)
+      : l1(l1), r1(r1), l2(l2), r2(r2) {}
+
+  std::size_t left1() const {return this->l1;}
+  std::size_t right1() const {return this->r1;}
+  std::size_t left2() const {return this->l2;}
+  std::size_t right2() const {return this->r2;}
+};
+
 /**
  * @brief Is a match explicit or implicit
  * explicit: a match start (or ends) from the start (or end) of a string
@@ -100,24 +128,24 @@ class GraphSlice {
   std::string str;
 
 public:
-  // TODO: Constructor with initialization list
+  // TODO: take &&?
   GraphSlice(std::size_t txt_start,
              std::size_t qry_start,
-             MatchTypePairUnion m_typ,
+             MatchTypePairUnion& m_typ,
              std::size_t match_length,
              std::string str)
     : txt_start(txt_start),
       qry_start(qry_start),
-      m_typ(m_typ),
+      m_typ(std::move(m_typ)),
       match_length(match_length),
       str(str) {}
 
     GraphSlice(std::size_t txt_start,
                std::size_t qry_start,
-               MatchTypePairUnion m_typ)
+               MatchTypePairUnion& m_typ)
     : txt_start(txt_start),
       qry_start(qry_start),
-      m_typ(m_typ),
+      m_typ(std::move(m_typ)),
       match_length(0),
       str(std::string{}) {}
 
@@ -139,8 +167,9 @@ struct Edge {
 
   Edge(std::size_t d, std::size_t w, std::string s, bool b);
 };
+
 bool operator==(const Edge &lhs, const Edge &rhs);
-  //bool operator<(const Edge &lhs, const Edge &rhs);
+//bool operator<(const Edge &lhs, const Edge &rhs);
 bool operator<(Edge const &lhs, Edge const &rhs);
 std::ostream &operator<<(std::ostream &os, const Edge &e);
 
@@ -156,14 +185,6 @@ struct compare_by_weight {
 struct Vertex {
   std::set<Edge> incoming;
   std::set<Edge> outgoing;
-  /*
-   * invalid -1
-   * exp exp 0
-   * exp imp 1
-   * imp exp 2
-   * imp imp 3
-   */
-  // use an enum?
   match_type_pair vertex_type;
 
   // initialize a struct with default value
@@ -181,11 +202,10 @@ class Graph {
   std::size_t N_1;                  // yyy
   std::size_t N_2;                  // xxx
   // std::set<int> q_0; // start node // TODO: remove
-  std::vector<Edge> q_a; // accept node
+  std::vector<Edge> q_a; // accept node // TODO: remove
   std::vector<Vertex> adj; // adjacency list to store edges
 
   std::vector<std::size_t> match_stats; // match stats
-
 
   Vertex const& get_node(std::size_t node_idx);
 
@@ -201,7 +221,9 @@ public:
 
   std::size_t get_match_stats(std::size_t node_idx);
 
-  // compute the size of the multiset
+  /**
+   *  compute the size of the multiset, i.e the number of unique paths to q_a
+   */
   std::size_t multiset_size();
 
 
@@ -230,21 +252,19 @@ public:
 
   void create_edge(std::vector<GraphSlice> const &valid_matches,
                    int qry,
-                   std::pair<std::size_t, std::size_t> qry_boundary,
-                   std::pair<std::size_t, std::size_t> txt_boundary,
+                   BoundaryUnion letter_bounds,
                    bool eps_edge);
 
-  // function to add an edge to the graph
-  // src is T_1
-  // src is T_2
-  void add_edge(std::size_t N_1, std::size_t N_2,
-                std::pair<std::size_t, std::size_t> i_boundary,
-                std::pair<std::size_t, std::size_t> j_boundary,
+  void add_edge(std::size_t N_1,
+                std::size_t N_2,
+                BoundaryUnion letter_bounds,
                 graph::MatchTypePairUnion m_typ,
                 std::size_t weight, std::string str,
                 int eps_side);
 
-  // constructor to initialize the graph
+  /**
+   * constructor
+   */
   Graph(std::size_t N_1, std::size_t N_2);
 
   void dbg_print(int indent_level);

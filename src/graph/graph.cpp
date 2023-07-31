@@ -102,8 +102,7 @@ std::size_t graph::Graph::last_node() const { return this->V-1; }
  */
 void graph::Graph::add_edge(std::size_t N_1,
                             std::size_t N_2,
-                            std::pair<std::size_t, std::size_t> i_boundary,
-                            std::pair<std::size_t, std::size_t> j_boundary,
+                            graph::BoundaryUnion bounds,
                             MatchTypePairUnion m_typ,
                             std::size_t weight,
                             std::string str,
@@ -112,13 +111,13 @@ void graph::Graph::add_edge(std::size_t N_1,
   int l, k, l_prime, k_prime;
 
 
-  l = m_typ.left1() == graph::match_type::exp ? i_boundary.first : N_1;
-  k = m_typ.left2() == graph::match_type::exp ? j_boundary.first : N_2;
+  l = m_typ.left1() == graph::match_type::exp ? bounds.left1() : N_1;
+  k = m_typ.left2() == graph::match_type::exp ? bounds.left2() : N_2;
 
   start = compute_index(l, k);
 
-  l_prime = m_typ.right1() == graph::match_type::exp ? i_boundary.second + 1 : N_1 + weight;
-  k_prime = m_typ.right2() == graph::match_type::exp ? j_boundary.second + 1 : N_2 + weight;
+  l_prime = m_typ.right1() == graph::match_type::exp ? bounds.right1() + 1 : N_1 + weight;
+  k_prime = m_typ.right2() == graph::match_type::exp ? bounds.right2() + 1 : N_2 + weight;
 
   if (eps_side == 1) { k_prime = k; }
 
@@ -575,8 +574,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
 void graph::Graph::create_edge(
   std::vector<graph::GraphSlice> const &valid_matches,
   int qry,
-  std::pair<std::size_t, std::size_t> qry_boundary,
-  std::pair<std::size_t, std::size_t> txt_boundary,
+  graph::BoundaryUnion bounds,
   bool eps_edge = false) {
 
   int eps_side = 0;
@@ -589,8 +587,7 @@ void graph::Graph::create_edge(
     for (auto x : valid_matches) {
       this->add_edge(x.get_qry_start(),
                      x.get_txt_start(),
-                     qry_boundary,
-                     txt_boundary,
+                     bounds,
                      x.get_match_typ(),
                      x.get_match_length(),
                      x.get_str(),
@@ -603,8 +600,7 @@ void graph::Graph::create_edge(
     for (auto x : valid_matches) {
       this->add_edge(x.get_txt_start(),
                      x.get_qry_start(),
-                     txt_boundary,
-                     qry_boundary,
+                     bounds,
                      x.get_match_typ(),
                      x.get_match_length(),
                      x.get_str(),
@@ -672,14 +668,17 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
 
   if (parameters.verbosity() > 0) { g.dbg_print(); }
 
-  std::pair<std::size_t, std::size_t> j_boundary;
-  std::pair<std::size_t, std::size_t> i_boundary;
+  eds::LetterBoundary j_boundary;
+  eds::LetterBoundary i_boundary;
 
   for (std::size_t i = 0; i < len_w; i++) {
     for (std::size_t j = 0; j < len_q; j++) {
 
       j_boundary = eds_q.get_letter_boundaries(j);
       i_boundary = eds_w.get_letter_boundaries(i);
+
+      graph::BoundaryUnion bounds =
+        graph::BoundaryUnion(i_boundary, j_boundary);
 
       // T_2[j] has epsilon
       // T_1[i] is the query
@@ -694,17 +693,22 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                                       graph::match_type::exp);
 
 
-        valid_matches.push_back(graph::GraphSlice(eps_idx, i_boundary.first, u));
+        valid_matches.push_back(graph::GraphSlice(eps_idx, i_boundary.left(), u));
 
         // the last letter in T_1
         if (i == len_w - 1) {
-          std::pair<int, int>  accept_qry_boundary = std::make_pair(i_boundary.second + 1, i_boundary.second + 1);
-          g.create_edge(valid_matches, 1, accept_qry_boundary, j_boundary, true);
+          std::pair<int, int> last_i_boundary = std::make_pair(i_boundary.right() + 1, i_boundary.right() + 1);
+
+          g.create_edge(valid_matches,
+                        1,
+                        graph::BoundaryUnion(last_i_boundary.first, last_i_boundary.second,
+                                             j_boundary.left(), j_boundary.right()),
+                        true);
         }
 
         // handle active suffixes
         if (j > 0) {
-          for (std::size_t col=0; col <= i_boundary.second; col++) {
+          for (std::size_t col=0; col <= i_boundary.right(); col++) {
             if (i_active_suffixes[j-1][col]) {
               // update active suffixes
               i_active_suffixes[j][col] = 1;
@@ -721,7 +725,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
           }
         }
 
-        g.create_edge(valid_matches, 1, i_boundary, j_boundary, true);
+        g.create_edge(valid_matches, 1, bounds, true);
       }
 
       clean_up();
@@ -739,18 +743,25 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                                       graph::match_type::exp);
 
 
-        valid_matches.push_back(graph::GraphSlice(eps_idx, j_boundary.first, u));
+        valid_matches.push_back(graph::GraphSlice(eps_idx, j_boundary.left(), u));
 
         // the last letter in T_2
         if (j == len_q - 1) {
-          std::pair<int, int> accept_qry_boundary =
-              std::make_pair(j_boundary.second + 1, j_boundary.second + 1);
-          g.create_edge(valid_matches, 2, accept_qry_boundary, i_boundary, true);
+          std::pair<int, int> last_j_boundary =
+            std::make_pair(j_boundary.right() + 1, j_boundary.right() + 1);
+
+          g.create_edge(valid_matches,
+                        2,
+                        graph::BoundaryUnion(i_boundary.left(),
+                                             i_boundary.right(),
+                                             last_j_boundary.first,
+                                             last_j_boundary.second),
+                        true);
         }
 
         // update active suffixes
         if (i > 0) {
-          for (std::size_t col = 0; col <= j_boundary.second; col++) {
+          for (std::size_t col = 0; col <= j_boundary.right(); col++) {
             if (j_active_suffixes[i - 1][col]) {
               // update active suffixes
               j_active_suffixes[i][col] = 1;
@@ -767,7 +778,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
           }
         }
 
-        g.create_edge(valid_matches, 2, j_boundary, i_boundary, true);
+        g.create_edge(valid_matches, 2, bounds, true);
       }
 
       clean_up();
@@ -795,7 +806,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                      &valid_matches);
 
 
-      g.create_edge(valid_matches, 2, j_boundary, i_boundary);
+      g.create_edge(valid_matches, 2, bounds);
 
        clean_up();
 
@@ -819,7 +830,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                       j,
                       &valid_matches);
 
-       g.create_edge(valid_matches, 1, i_boundary, j_boundary);
+       g.create_edge(valid_matches, 1, bounds);
 
        clean_up();
     }
@@ -828,6 +839,16 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
   return g;
 }
 
+/**
+ * Compute MS[i] where i is the longest suffix starting at {i ∈ [0,n-1]} in
+ * either T_1 or T_2 and is a substring of the other (T_2 or T_1)
+ *
+ * @param[in] g the graph
+ * @param[in] letter_start the start of i in N
+ * @param[in] last the last positon in the other ed string
+ * @param[in] match_stats_str the string in which i lies (either T_1 or T_2)
+
+ */
 std::size_t graph::match_stats(graph::Graph &g,
                         std::size_t letter_start,
                         std::size_t last,

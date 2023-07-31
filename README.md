@@ -137,7 +137,7 @@ Available options
 ## Running tests and Debugging
 Assuming a user is in the `junctions/` dir create a debug build
 ```sh
-cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build -- -j 3
 cd build
 ```

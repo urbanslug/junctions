@@ -1,5 +1,3 @@
-
-#include <bits/stdc++.h>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -63,8 +61,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
     if (prev_w.empty() || prev_q.empty()) {
       // in the same letter
 
-      if (eds_q.get_letter_boundaries(0).second >= (size_t)col &&
-          eds_w.get_letter_boundaries(0).second >= (size_t)row) {
+      if (eds_q.get_letter_boundaries(0).right() >= (size_t)col &&
+          eds_w.get_letter_boundaries(0).right() >= (size_t)row) {
         if (prev_q.empty() && prev_w.empty()) {
           // std::cout << "j" << std::endl;
           return true;
