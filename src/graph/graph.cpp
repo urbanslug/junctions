@@ -10,6 +10,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <queue>   
+
 
 #include "./graph.hpp"
 
@@ -150,24 +152,23 @@ std::size_t graph::Graph::multiset_size() {
   std::set<Edge> out;
 
   std::size_t current_node = start_node;
-
-  std::stack<std::size_t> to_visit;
-  std::set<std::size_t> visited;
+  std::queue<std::size_t> to_visit;
+  std::set<std::size_t> queued; 
 
   to_visit.push(current_node);
 
   while (!to_visit.empty()) {
-    current_node = to_visit.top();
+    current_node = to_visit.front();
     to_visit.pop();
 
-    if (visited.count(current_node) > 0) {
-      continue;
-    }
 
     out = this->adj[current_node].outgoing;
-    for (auto e : out) {
+    for (auto e : out) {	  
       dp_table[e.dest] += dp_table[current_node];
-      to_visit.push(e.dest);
+	  if (!queued.count(e.dest)) {
+		to_visit.push(e.dest);
+		queued.insert(e.dest);
+	  }
     }
   }
 
