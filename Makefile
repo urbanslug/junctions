@@ -1,19 +1,20 @@
 BUILD_DIR=bin
 CMAKE_BUILD_DIR=build
-
+CPP_STANDARD=c++14
+COMPILER_FLAGS=-Wall -Wextra -Wpedantic -pipe -O3 -std=${CPP_STANDARD}
 
 all:
 	@mkdir -p $(BUILD_DIR)
-	g++ -O3 -c src/core/core.cpp -o bin/core.o
-	g++ -O3 -c src/core/suffix_tree.cpp -o bin/suffix_tree.o
-	g++ -O3 -c src/eds/eds.cpp -o bin/eds.o
-	g++ -O3 -c src/graph/graph.cpp -o bin/graph.o
-	g++ -O3 -c src/intersect/improved.cpp -o bin/improved.o
-	g++ -O3 -c src/intersect/naive.cpp -o bin/naive.o
-	g++ -O3 -c src/cli/cli.cpp -o bin/cli.o
-	g++ -O3 -c src/cli/argvparser.cpp -o bin/argvparser.o
-	g++ -O3 -c src/cli/parseCmdArgs.cpp -o bin/parseCmdArgs.o
-	g++ -Wall -pipe -O3 -std=c++14 bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
+	g++ ${COMPILER_FLAGS} -c src/core/core.cpp -o bin/core.o
+	g++ ${COMPILER_FLAGS} -c src/core/suffix_tree.cpp -o bin/suffix_tree.o
+	g++ ${COMPILER_FLAGS} -c src/eds/eds.cpp -o bin/eds.o
+	g++ ${COMPILER_FLAGS} -c src/graph/graph.cpp -o bin/graph.o
+	g++ ${COMPILER_FLAGS} -c src/intersect/improved.cpp -o bin/improved.o
+	g++ ${COMPILER_FLAGS} -c src/intersect/naive.cpp -o bin/naive.o
+	g++ ${COMPILER_FLAGS} -c src/cli/cli.cpp -o bin/cli.o
+	g++ ${COMPILER_FLAGS} -c src/cli/argvparser.cpp -o bin/argvparser.o
+	g++ ${COMPILER_FLAGS}   -c src/cli/parseCmdArgs.cpp -o bin/parseCmdArgs.o
+	g++ ${COMPILER_FLAGS} bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
 
 # compile with debugging info
 debug:
