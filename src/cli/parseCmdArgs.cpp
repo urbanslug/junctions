@@ -13,19 +13,24 @@
 
 #include "./cli.hpp"
 #include "../core/core.hpp"
+#include "../core/utils.hpp"
 
 
 namespace cli {
-  // TODO: move this to eds
-core::file_format extract_extension(std::string file_path) {
-  auto const pos = file_path.find_last_of('.');
-  core::file_format f;
 
-  if (file_path.substr(pos + 1) == "eds") {
+/*
+// TODO: move this to utils
+core::file_format extract_extension(std::string const& file_path) {
+  std::string extension = file_path.substr(file_path.find_last_of(".") + 1);
+  core::file_format f;
+  
+  if (extension == "eds") {
     f = core::eds;
-  } else if (file_path.substr(pos + 1) == "msa") {
+  }
+  else if (extension == "msa") {
     f = core::msa;
-  } else {
+  }
+  else {
     f = core::unknown;
   }
 
@@ -39,13 +44,14 @@ core::file_format extract_extension(std::string file_path) {
 
   return f;
 }
-
+*/
+  
   /**
    * @brief           Initialize the command line argument parser
    * @param[out] cmd  command line parser object
    */
-  void initCmdParser(CommandLineProcessing::ArgvParser &cmd)
-  {
+void initCmdParser(CommandLineProcessing::ArgvParser &cmd)
+{
   cmd.setIntroductoryDescription("-----------------\n\
 Compute the intersection of Elastic Degenerate Strings\n\
 \
@@ -88,7 +94,7 @@ shortest = short/shortest/0\n\
 longest = short/longest/1",
                    CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("witness", "w");
-
+  
   cmd.defineOption("match-stats-str",
                    "matching stats ed string\n" + core::T_1 + " = 1\n" +
                        core::T_2 + " = 2\n" + "[default: 1]",
@@ -98,6 +104,10 @@ longest = short/longest/1",
   cmd.defineOption("match-stats-idx", "matching stats letter index",
                    CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("match-stats-idx", "n");
+
+  cmd.defineOption("match-stats-avg",
+				   "matching stats average");
+  cmd.defineOptionAlternative("match-stats-avg", "s");
 
   cmd.defineOption("verbosity", "amount of debug information [default : 0]",
                    CommandLineProcessing::ArgvParser::OptionRequiresValue);
@@ -119,7 +129,7 @@ longest = short/longest/1",
       case core::algorithm::both:
         return "both";
       }
-      return "uknown";
+      return "unknown";
     };
 
     // core params
@@ -131,34 +141,33 @@ longest = short/longest/1",
         std::cerr << f.second << " (format: " << (f.first == 0 ? "msa" : "eds")
                   << ")" << std::endl;
       }
-    
-    } else {
+    }
+	else {
+	  std::cerr << "w = " << parameters.w_file_path
+				<< " (format: "
+				<< (parameters.w_format == 0 ? "msa" : "eds")
+				<< ")" << std::endl;
 
-    std::cerr << "w = " << parameters.w_file_path
-              << " (format: "
-              << (parameters.w_format == 0 ? "msa" : "eds")
-              << ")" << std::endl;
-
-    std::cerr << "q = " << parameters.q_file_path
-              << " (format: "
-              << (parameters.q_format == 0 ? "msa" : "eds")
-              << ")" << std::endl;
+	  std::cerr << "q = " << parameters.q_file_path
+				<< " (format: "
+				<< (parameters.q_format == 0 ? "msa" : "eds")
+				<< ")" << std::endl;
     }
 
     std::cerr << "Task(s):\n";
     switch (parameters.get_task()) {
     case core::task::compute_graph:
-    std::cerr << core::indent(1) << "compute intersection graph\n";
-    break;
+	  std::cerr << core::indent(1) << "compute intersection graph\n";
+	  break;
     case core::task::check_intersection:
-    std::cerr << core::indent(1) << "check intersection\n";
-    std::cerr << core::indent(1) << "algorithm = " << algo_string(parameters.algo) << "\n";
-    break;
+	  std::cerr << core::indent(1) << "check intersection\n";
+	  std::cerr << core::indent(1) << "algorithm = " << algo_string(parameters.algo) << "\n";
+	  break;
     case core::task::info:
-    std::cerr << core::indent(1) << "print info\n";
-    break;
+	  std::cerr << core::indent(1) << "print info\n";
+	  break;
     default:
-    std::cerr << "unhandled task: report a bug\n";
+	  std::cerr << "unhandled task: report a bug\n";
     }
 
     if (parameters.output_dot) {
@@ -297,6 +306,11 @@ longest = short/longest/1",
     str.str("");
     str.clear();
 
+	if (cmd.foundOption("match-stats-avg")) {
+	  parameters.compute_match_stats = true;
+	  parameters.compute_match_stats_avg = true;
+	}
+
     // Witness
     if (cmd.foundOption("witness")) {
       str << cmd.optionValue("witness");
@@ -361,15 +375,15 @@ longest = short/longest/1",
     if (parameters.is_task(core::task::info)) {
 
       for (auto arg: args) {
-        parameters.input_files.push_back(std::make_pair(extract_extension(arg), arg));
+        parameters.input_files.push_back(std::make_pair(utils::extract_extension(arg), arg));
       }
 
     } else {
       // assume 2 input files
-      parameters.w_format = extract_extension(args[0]);
+      parameters.w_format = utils::extract_extension(args[0]);
       parameters.w_file_path = args[0];
 
-      parameters.q_format = extract_extension(args[1]);
+      parameters.q_format = utils::extract_extension(args[1]);
       parameters.q_file_path = args[1];
     }
 

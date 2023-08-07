@@ -1,4 +1,5 @@
 #include <climits>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <functional>
@@ -9,8 +10,10 @@
 #include <tuple>
 #include <unordered_set>
 #include <utility>
+#include <valarray>
 #include <vector>
-#include <queue>   
+#include <queue>
+#include <cmath>
 
 
 #include "./graph.hpp"
@@ -65,8 +68,14 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
 
   try {
     adj.resize(V);
-  } catch (const std::bad_alloc &) {
-    std::cerr << "not enough memory for this graph" << std::endl;
+  } catch (const std::bad_alloc & e) {
+	 std::double_t space_in_gb = static_cast<double>(this->V) / std::pow(1024.0, 3);;
+	 space_in_gb *= sizeof(Vertex);
+
+	 std::cerr << "Not enough memory. This graph needs over "
+			   << ceil(space_in_gb)
+			   << " GB of memory.\n";
+	
     exit(-1);
   } catch (const std::length_error &) {
     std::cerr << "graph would be too large" << std::endl;
@@ -90,8 +99,9 @@ std::size_t graph::Graph::get_match_stats(std::size_t node_idx) {
   return this->match_stats[node_idx];
 }
 
-
-
+std::vector<std::size_t> const& graph::Graph::get_match_stats_vec() const {
+  return this->match_stats;
+}
 
 std::size_t graph::Graph::get_size() { return this->V; }
 
@@ -196,7 +206,7 @@ void graph::Graph::compute_match_stats() {
     dp_tbl[idx] += max_k;
     max_k = 0;
   }
-
+  
   this->match_stats = dp_tbl;
 }
 
@@ -870,6 +880,59 @@ std::size_t graph::match_stats(graph::Graph &g,
   }
 
   return max;
+}
+
+std::double_t graph::match_stats_avg(
+  graph::Graph &g, eds::EDS eds_w, eds::EDS eds_q) {
+  g.compute_match_stats();
+
+  // the last letter in T_1 and T_2
+  std::size_t len_w = eds_w.get_length();
+  std::size_t len_q = eds_q.get_length();
+  
+  // the last value in internal size of T1 and T2
+  std::size_t last_w = eds_w.get_size() + eds_w.get_eps_count();
+  std::size_t last_q = eds_q.get_size() + eds_q.get_eps_count();
+
+  // MS_T1 and MS_T2
+  std::valarray<std::size_t> ms_w(len_w), ms_q(len_q);
+  
+  std::size_t max{}, i_start{}, j_start{};
+
+  std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
+	
+  for (std::size_t i{}; i < len_w; i++) {
+	i_start = eds_w.get_letter_boundaries(i).left();
+	for (std::size_t l{}; l < last_q; l++) {
+	  node_idx = g.compute_index(i_start, l);
+	 
+	  if (max < g.get_match_stats(node_idx)) {
+		max = g.get_match_stats(node_idx);
+	  }
+	}
+
+	ms_w[i] = max;
+	max = 0;
+  }
+
+  for (std::size_t j{}; j < len_q; j++) {
+	j_start = eds_q.get_letter_boundaries(j).left();
+	for (std::size_t k{}; k < last_w; k++) {
+	  node_idx = g.compute_index(k, j_start);
+	 
+	  if (max < g.get_match_stats(node_idx)) {
+		max = g.get_match_stats(node_idx);
+	  }
+	}
+
+	ms_q[j] = max;
+	max = 0;
+  }
+  
+  std::size_t sum_vals = ms_q.sum() + ms_w.sum();
+  std::size_t sum_size = len_w + len_q;
+
+  return static_cast<std::double_t>(sum_vals) / static_cast<std::double_t>(sum_size);
 }
 
 int graph::longest_witness(graph::Graph &g) {
