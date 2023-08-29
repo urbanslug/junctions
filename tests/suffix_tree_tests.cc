@@ -51,5 +51,27 @@ TEST(SuffixTreeTest, Matching) {
   setup();
   qry = "GAACA";
   match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str());
+
+
+  // ----
+  txt_strs = {"G", "TG"};
+  text_slices =
+      std::vector<eds::slice_eds>{eds::slice_eds(0, 1), eds::slice_eds(1, 2)};
+  setup();
+
+  qry = "TT";
+  // qry = "A";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str());
+
+  
+  
+  // print match positions vector
+  std::cout << "Match positions: ";
+  for (auto &m : match_positions) {
+		std::cout << m.get_txt_str_idx() << " ";
+  }
+
+  EXPECT_EQ(1, 0);
+  //EXPECT_EQ(match_positions, exp);  
 }
 

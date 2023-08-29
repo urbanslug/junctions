@@ -65,7 +65,6 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
   this->N_2 = N_2;
   this->V = (N_1 + 1) * (N_2 + 1);
 
-
   try {
     adj.resize(V);
   } catch (const std::bad_alloc & e) {
@@ -184,7 +183,6 @@ std::size_t graph::Graph::multiset_size() {
 
   return dp_table[stop_node];
 }
-
 
 void graph::Graph::compute_match_stats() {
   //std::size_t last_node = this->last_node();
@@ -626,13 +624,15 @@ void graph::Graph::create_edge(
 /**
 *
 *
-* @param[in] eds_w
-* @param[in] eds_q
+* @param[in] eds_w T1
+* @param[in] eds_q T2
 * @param[in] parameters
-* return
+* return an intersection graph
 */
-graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
-                                 core::Parameters const &parameters) {
+graph::Graph graph::compute_intersection_graph(
+  eds::EDS &eds_w,
+  eds::EDS &eds_q,
+  core::Parameters const &parameters) {
 
   size_t size_w = eds_w.get_size();
   size_t size_q = eds_q.get_size();
@@ -753,7 +753,6 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                                       graph::match_type::exp,
                                       graph::match_type::exp);
 
-
         valid_matches.push_back(graph::GraphSlice(eps_idx, j_boundary.left(), u));
 
         // the last letter in T_2
@@ -795,10 +794,9 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
       clean_up();
 
       // Search for j_strs in T_1[i]
-      // ---------------------------
-
       // Query => T_2[j]
       // Text => T_1[i]
+	  // ---------------------------
 
       core::perform_matching(eds_w,
                                i,
@@ -816,7 +814,6 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
                      i,
                      &valid_matches);
 
-
       g.create_edge(valid_matches, 2, bounds);
 
        clean_up();
@@ -825,6 +822,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_w, eds::EDS &eds_q,
        // Query => T_1[i]
        // Text => T_2[j]
        // ---------------------------
+	   
        core::perform_matching(eds_q,
                                 j,
                                 &q_suffix_trees[j],
