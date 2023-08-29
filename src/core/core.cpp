@@ -1,6 +1,7 @@
-#include "./core.hpp"
 #include <utility>
 #include <vector>
+
+#include "./core.hpp"
 
 namespace core {
 Parameters::Parameters() {}

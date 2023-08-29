@@ -69,15 +69,21 @@ public:
 };
 
 class EDS {
-  std::vector<DegenerateLetter> data; // rename to d_letters
-  // std::vector<std::vector<span>> str_offsets;
+  // rename to d_letters
+  std::vector<DegenerateLetter> data;
+
+
+  // slices run from 0 to size - 1 (or N)
+  // the epsilon takes a slice of size 0 but increases the offset
+  // of the next slice by 1
   std::vector<std::vector<slice_eds>> slices;
-  // std::unordered_set<size_t> stops;
-  // std::unordered_set<size_t> starts;
+
+  // number of chars in the EDS
+  // an epsilon doesn't add to N
   size_t size;
   size_t epsilons; // number of epsilons
-  size_t str_count;        // number of strings
-  size_t length; // TODO: remove. is never set
+  size_t str_count; // number of strings
+  //size_t length; // TODO: remove. is never set
 
   // TODO: is there a better way to do this?
   // maybe a different object &inheritance?
@@ -125,12 +131,15 @@ public:
   void append_d_letter(DegenerateLetter d);
   void append_slice(std::vector<slice_eds> s);
   void inc_size();
+  void inc_size_by(std::size_t n);
   void inc_str_count();
   void inc_epsilons();
 
   // IO
   void print_properties();
+  void print_eds();
   friend std::ostream& operator<<(std::ostream &os, EDS& e);
+  
 
   // populates str and prev_chars
   void linearize();
@@ -144,6 +153,8 @@ public:
   static EDS from_eds(const std::string& fp);
 
   static EDS from_string(const std::string &raw_ed_string);
+
+  static EDS from_msa(const std::string &fp);
 };
 } // namespace eds
 #endif

@@ -221,6 +221,7 @@ struct Parameters {
   bool compute_match_stats;
   int match_stats_str; // TODO: use enum
   int match_stats_letter_idx; // TODO: use size_t
+  bool compute_match_stats_avg;
 
   Parameters();
   // task

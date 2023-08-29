@@ -64,6 +64,19 @@ cd junctions
 ```
 
 ### Compile
+
+#### Using make
+```
+make
+```
+
+in case of need of statically linked binary
+```
+make static
+```
+
+#### Using cmake
+
 ```
 cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build -- -j 3 

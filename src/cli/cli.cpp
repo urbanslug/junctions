@@ -1,7 +1,9 @@
+#include <cmath>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <ostream>
 #include <stdlib.h>
@@ -10,6 +12,7 @@
 #include <vector>
 
 #include "../core/core.hpp"
+#include "../core/utils.hpp"
 #include "../graph/graph.hpp"
 #include "../intersect/intersect.hpp"
 #include "../eds/eds.hpp"
@@ -23,17 +26,17 @@ void handle_info(core::Parameters const &params);
 void dispatch(core::Parameters const& params) {
   switch (params.get_task()) {
   case core::task::compute_graph:
-    handle_graph(params);
-    break;
+	handle_graph(params);
+	break;
   case core::task::check_intersection:
-    handle_intersection(params);
-    break;
+	handle_intersection(params);
+	break;
   case core::task::info:
-    handle_info(params);
-    break;
+	handle_info(params);
+	break;
   default:
-    std::string e = "Unhandled task: report a bug\n";
-    throw std::invalid_argument(e);
+	std::string e = "Unhandled task: report a bug\n";
+	throw std::invalid_argument(e);
   }
 }
 
@@ -52,20 +55,25 @@ void handle_info(core::Parameters const &params) {
   std::size_t w{20}; // width
   std::size_t tw{20}; // title width
 
-  std::cout << std::left << std::setw(tw)  << "size(N)"
-            << std::left << std::setw(tw) << "length(n)"
-            << std::left << std::setw(tw) << "str count(m)"
-            << std::left << std::setw(tw) << "number of epsilons"
-            << std::left << std::setw(tw)  << "file"
-            << "\n";
+  std::cout << std::left << std::setw(tw)  << "Size (N)"
+			<< std::left << std::setw(tw) << "Length (n)"
+			<< std::left << std::setw(tw) << "String Count (m)"
+			<< std::left << std::setw(tw) << "Epsilon Count"
+			<< std::left << std::setw(tw)  << "File"
+			<< "\n";
   for (auto fp: params.input_files) {
-    e = eds::Parser::from_eds(fp.second);
-    std::cout << std::left << std::setw(w) << e.get_size()
-              << std::left << std::setw(w) << e.get_length()
-              << std::left << std::setw(w) << e.get_str_count()
-              << std::left << std::setw(w) << e.get_eps_count()
-              << std::left << std::setw(w) << fp.second
-              << "\n";
+	core::file_format format = utils::extract_extension(fp.second);
+	e = format == core::file_format::msa ?
+	  eds::Parser::from_msa(fp.second):
+	  eds::Parser::from_eds(fp.second);
+
+	//e = eds::Parser::from_eds(fp.second);
+	std::cout << std::left << std::setw(w) << e.get_size()
+			  << std::left << std::setw(w) << e.get_length()
+			  << std::left << std::setw(w) << e.get_str_count()
+			  << std::left << std::setw(w) << e.get_eps_count()
+			  << std::left << std::setw(w) << fp.second
+			  << "\n";
   }
 }
 
@@ -78,188 +86,240 @@ void handle_info(core::Parameters const &params) {
  */
 void handle_intersection(core::Parameters const &params) {
   eds::EDS w, q;
-  w = eds::Parser::from_eds(params.get_w_fp().second);
-  q = eds::Parser::from_eds(params.get_q_fp().second);
+
+  w = params.w_format == core::file_format::msa ?
+	eds::Parser::from_msa(params.get_w_fp().second) :
+	eds::Parser::from_eds(params.get_w_fp().second);
+
+  q = params.q_format == core::file_format::msa ?
+	eds::Parser::from_msa(params.get_q_fp().second) :
+	eds::Parser::from_eds(params.get_q_fp().second);
+
+  // w = eds::Parser::from_eds(params.get_w_fp().second);
+  // q = eds::Parser::from_eds(params.get_q_fp().second);
 
   bool res_i{false}, res_n{false};
   std::chrono::duration<double> timeRefRead;
 
   auto report_res = [](bool res) {
-    std::cout << "INFO "
-              << (res ? "intersection exists" : "no intersection")
-              << "\n";
+	std::cout << "INFO "
+			  << (res ? "intersection exists" : "no intersection")
+			  << "\n";
   };
 
   auto err = [&]() {
-    std::cerr << "INFO incompatible results "
-              << "(naive " << res_n << " improved " << res_i
-              << "). Please report as a bug.\n";
-    exit(1);
+	std::cerr << "INFO incompatible results "
+			  << "(naive " << res_n << " improved " << res_i
+			  << "). Please report as a bug.\n";
+	exit(1);
   };
 
   auto report_time = [&](std::string const& n) {
-    if (params.verbosity() > 0) {
-      std::cerr << "INFO Time spent by " + n + " algorithm: "
-                << timeRefRead.count() << " sec\n";
-    }
+	if (params.verbosity() > 0) {
+	  std::cerr << "INFO Time spent by " + n + " algorithm: "
+				<< timeRefRead.count() << " sec\n";
+	}
   };
 
   auto t0 = core::Time::now();
 
   switch (params.get_algo()) {
   case core::algorithm::improved: {
-    res_i = intersect::improved::has_intersection(w, q);
-    timeRefRead = core::Time::now() - t0;
-    report_res(res_i);
-    report_time("improved");
+	res_i = intersect::improved::has_intersection(w, q);
+	timeRefRead = core::Time::now() - t0;
+	report_res(res_i);
+	report_time("improved");
   }
-    break;
+	break;
   case core::algorithm::naive: {
-    res_n = intersect::naive::has_intersection(w, q);
-    timeRefRead = core::Time::now() - t0;
-    report_res(res_n);
-    report_time("naive");
+	res_n = intersect::naive::has_intersection(w, q);
+	timeRefRead = core::Time::now() - t0;
+	report_res(res_n);
+	report_time("naive");
   }
-    break;
+	break;
   case core::algorithm::both: {
-    // Both (for tests & benchmarks)
-    // -----------------------------
-    res_i = intersect::improved::has_intersection(w, q);
-    timeRefRead = core::Time::now() - t0;
-    report_res(res_i);
-    report_time("improved");
+	// Both (for tests & benchmarks)
+	// -----------------------------
+	res_i = intersect::improved::has_intersection(w, q);
+	timeRefRead = core::Time::now() - t0;
+	report_res(res_i);
+	report_time("improved");
 
-    t0 = core::Time::now();
-    res_n = intersect::naive::has_intersection(w, q);
-    timeRefRead = core::Time::now() - t0;
+	t0 = core::Time::now();
+	res_n = intersect::naive::has_intersection(w, q);
+	timeRefRead = core::Time::now() - t0;
 
-    if (res_i != res_n) { err(); }
+	if (res_i != res_n) { err(); }
 
-    report_time("naive");
+	report_time("naive");
   }
-    break;
+	break;
   default:
-    std::string e =
-      "could not determine algorithm to use: " +
-      std::string(__FILE__) + ":" + std::to_string(__LINE__) +
-      " report a bug\n";
-    throw std::invalid_argument(e);
-    ;
+	std::string e =
+	  "could not determine algorithm to use: " +
+	  std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+	  " report a bug\n";
+	throw std::invalid_argument(e);
+	;
   }
 }
 
 // -----
 // graph
 // -----
+
+// TODO: move to parser.hpp
+/*
+  core::file_format get_file_format(std::string const& filepath) {
+  std::string extension = filepath.substr(filepath.find_last_of(".") + 1);
+
+  std::cerr << "extension: " << extension << "\n";
+
+  if (extension == "eds") {
+	return core::file_format::eds;
+  }
+  else if (extension == "msa") {
+	return core::file_format::msa;
+  }
+  else {
+	return core::file_format::unknown;
+  }
+}
+*/
+  
 /**
  * Compute Intersection Graph and...
  *
  */
 void handle_graph(core::Parameters const &params) {
   eds::EDS w, q;
-  w = eds::Parser::from_eds(params.get_w_fp().second);
-  q = eds::Parser::from_eds(params.get_q_fp().second);
+  // w = eds::Parser::from_eds(params.get_w_fp().second);
+  // q = eds::Parser::from_eds(params.get_q_fp().second);
+
+  w = params.w_format == core::file_format::msa ?
+	eds::Parser::from_msa(params.get_w_fp().second) :
+	eds::Parser::from_eds(params.get_w_fp().second);
+
+  q = params.q_format == core::file_format::msa ?
+	eds::Parser::from_msa(params.get_q_fp().second) :
+	eds::Parser::from_eds(params.get_q_fp().second);
 
   std::chrono::duration<double> timeRefRead;
   auto t0 = core::Time::now();
 
   if (params.verbosity() > 0) {
-    std::cerr << "INFO computing intersection graph\n";
+	std::cerr << "INFO computing intersection graph\n";
   }
 
   graph::Graph g = graph::compute_intersection_graph(w, q, params);
   timeRefRead = core::Time::now() - t0;
 
   if (params.verbosity() > 0) {
-    std::cerr << "INFO Time spent computing intersection graph: "
-              << timeRefRead.count() << " sec\n";
+	std::cerr << "INFO Time spent computing intersection graph: "
+			  << timeRefRead.count() << " sec\n";
   }
 
-  // dot
+  // generate the graph in dot format
   if (params.gen_dot()) {
-    if (params.verbosity() > 0) {
-      std::cerr << "INFO generating graph in dot format\n";
-    }
-      g.print_dot();
+	if (params.verbosity() > 0) {
+	  std::cerr << "INFO generating graph in dot format\n";
+	}
+	  g.print_dot();
   }
 
+  // compute the size of the multiset
   if (params.multiset()) {
-    if (params.verbosity() > 0) {
-      std::cerr << "INFO computing the size of the multiset\n";
-      }
-    std::cout << "Size of the mutlitset: " << graph::multiset(g) << "\n";
+	if (params.verbosity() > 0) {
+	  std::cerr << "INFO computing the size of the multiset\n";
+	  }
+	std::cout << "Size of the mutlitset: " << graph::multiset(g) << "\n";
   }
 
   // TODO replace with method call
   if (params.compute_match_stats) {
-    std::size_t res{std::numeric_limits<std::size_t>::max()};
-    switch (params.match_stats_str) {
-    case 1:
-      res = graph::match_stats(g,
-                               w.get_letter_boundaries(params.match_stats_letter_idx).left(),
-                               q.get_size() + q.get_eps_count(),
-                               core::ed_string::w);
-      break;
-    case 2:
-      res = graph::match_stats(g,
-                               q.get_letter_boundaries(params.match_stats_letter_idx).left(),
-                               w.get_size() + w.get_eps_count(),
-                               core::ed_string::q);
-      break;
-    default:
-      // TODO: throw arg error
-      exit(1);
-      ;
-    }
 
-    if (params.verbosity() > 0) {
-      std::cerr << "INFO computing matching statistics\n";
-      }
-    std::cout << "MS[" << params.match_stats_letter_idx << "]: " << res << "\n";
+	std::size_t res{std::numeric_limits<std::size_t>::max()};
+	std::double_t avg{};
 
+	if (params.verbosity() > 0) {
+	  std::cerr << "INFO computing matching statistics\n";
+	}
+
+
+	if (params.compute_match_stats_avg) {
+	  avg = graph::match_stats_avg(g, w, q);
+	}
+	else {
+	switch (params.match_stats_str) {
+	case 1:
+	  res = graph::match_stats(g,
+							   w.get_letter_boundaries(params.match_stats_letter_idx).left(),
+							   q.get_size() + q.get_eps_count(),
+							   core::ed_string::w);
+	  break;
+	case 2:
+	  res = graph::match_stats(g,
+							   q.get_letter_boundaries(params.match_stats_letter_idx).left(),
+							   w.get_size() + w.get_eps_count(),
+							   core::ed_string::q);
+	  break;
+	default:
+	  throw std::invalid_argument("invalid match stats string");
+	}
+	}
+
+	if (params.compute_match_stats_avg) {
+	  std::cout << "MS average is: " << std::fixed << std::setprecision(2) << avg << "\n";
+	  // std::cout << "MS average is: " << avg << "\n"; TODO: remove ? 
+	}
+	else {
+	  std::cout << "MS[" << params.match_stats_letter_idx << "]: " << res << "\n";
+	}
   }
 
+  // compute the length of the longest witness
   if (params.compute_witness()) {
-    int witness_len;
-    switch (params.get_witness_choice()) {
-    case core::witness::longest:
-      if (params.verbosity() > 0) {
-        std::cerr << "INFO computing the longest witness\n";
-      }
+	int witness_len;
+	switch (params.get_witness_choice()) {
+	case core::witness::longest:
+	  if (params.verbosity() > 0) {
+		std::cerr << "INFO computing the longest witness\n";
+	  }
 
-      t0 = core::Time::now();
-      witness_len = graph::longest_witness(g);
-      timeRefRead = core::Time::now() - t0;
+	  t0 = core::Time::now();
+	  witness_len = graph::longest_witness(g);
+	  timeRefRead = core::Time::now() - t0;
 
-      std::cout << "longest witness is: " << witness_len << " chars long.\n";
+	  std::cout << "longest witness is: " << witness_len << " chars long.\n";
 
-      if (params.verbosity() > 0) {
-        std::cerr << "INFO Time spent computing the longest witness: "
-                  << timeRefRead.count() << " sec\n";
-      }
+	  if (params.verbosity() > 0) {
+		std::cerr << "INFO Time spent computing the longest witness: "
+				  << timeRefRead.count() << " sec\n";
+	  }
 
-      break;
+	  break;
 
-    case core::witness::shortest:
-      if (params.verbosity() > 0) {
-        std::cerr << "INFO computing the shortest witness\n";
-      }
+	case core::witness::shortest:
+	  if (params.verbosity() > 0) {
+		std::cerr << "INFO computing the shortest witness\n";
+	  }
 
-      t0 = core::Time::now();
-      witness_len =  graph::shortest_witness(g);
-      timeRefRead = core::Time::now() - t0;
+	  t0 = core::Time::now();
+	  witness_len =  graph::shortest_witness(g);
+	  timeRefRead = core::Time::now() - t0;
 
-      std::cout << "shortests witness is: " << witness_len << " chars long.\n";
+	  std::cout << "shortests witness is: " << witness_len << " chars long.\n";
 
-      if (params.verbosity() > 0) {
-        std::cerr << "INFO Time spent computing the shortest witness: "
-                  << timeRefRead.count() << " sec\n";
-      }
-      break;
+	  if (params.verbosity() > 0) {
+		std::cerr << "INFO Time spent computing the shortest witness: "
+				  << timeRefRead.count() << " sec\n";
+	  }
+	  break;
 
-    default:
-      break;
-    }
+	default:
+	  break;
+	}
   }
 }
 
