@@ -7,6 +7,9 @@ RELEASE_COMPILER_FLAGS=${COMMON_COMPILER_FLAGS} -O3 -std=${CPP_STANDARD}
 DEBUG_COMPILER_FLAGS=-g ${COMMON_COMPILER_FLAGS} -DDEBUG -std=${CPP_STANDARD}
 STATIC_BUILD_FLAGS=-static -static-libgcc -static-libstdc++
 
+# plain `make` without a target runs the first target it encounters in the makefile, which in this case is `all`
+all: dynamic
+
 build: 
 	@mkdir -p $(BUILD_DIR) ${CMAKE_BUILD_DIR}
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/core/core.cpp -o bin/core.o
@@ -20,12 +23,11 @@ build:
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/cli/argvparser.cpp -o bin/argvparser.o
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/cli/parseCmdArgs.cpp -o bin/parseCmdArgs.o
 
-
+# with dynamic linking
 dynamic: build
 	g++ ${RELEASE_COMPILER_FLAGS} bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
 
-all: dynamic
-
+# with static linking
 static: build
 	g++ ${RELEASE_COMPILER_FLAGS} ${STATIC_BUILD_FLAGS} bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
 
