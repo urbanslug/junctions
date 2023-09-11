@@ -231,7 +231,6 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   for (int i = 0; i < len_w; i++) {
     for (int j = 0; j < len_q; j++) {
 
-
       // Handle ε
       if (i == 0 && j == 0 && eds_w.is_letter_eps(i) && eds_q.is_letter_eps(j)) {
         w_matrix[0][eds_w.get_global_eps_idx(i)] = true;

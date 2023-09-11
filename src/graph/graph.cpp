@@ -15,7 +15,6 @@
 #include <queue>
 #include <cmath>
 
-
 #include "./graph.hpp"
 
 // initialize a struct with default values
@@ -47,6 +46,16 @@ bool graph::compare_by_weight::operator()(const std::pair<std::size_t, std::size
 bool graph::compare_by_weight::operator()(const graph::Edge &l,
                                           const graph::Edge &r) {
   return l.weight > r.weight;
+}
+
+// impl == for MatchTypePairUnion
+bool graph::operator==(const graph::MatchTypePairUnion &lhs,
+					   const graph::MatchTypePairUnion &rhs) {
+  return
+	lhs.left1() == rhs.left1() &&
+	lhs.left2() == rhs.left2() &&
+	lhs.right1() == rhs.right1() &&
+	lhs.right2() == rhs.right2();
 }
 
 // initialize a struct with default values
@@ -143,6 +152,9 @@ void graph::Graph::add_edge(std::size_t N_1,
   graph::Edge e_rev = graph::Edge(start, weight, str, is_eps);
   graph::Edge e = graph::Edge(stop, weight, str, is_eps);
 
+  adj[start].meta = std::to_string(l) + "," + std::to_string(k);
+  adj[stop].meta = std::to_string(l_prime) + "," + std::to_string(k_prime);
+  
   adj[start].outgoing.insert(e);
   adj[stop].incoming.insert(e_rev);
 
@@ -350,11 +362,19 @@ void graph::Graph::print_dot() {
     return std::to_string(idx);
   };
 
+
+  auto print_node_label = [&](std::size_t idx) -> std::string {
+    if (idx == 0) { return core::q_0; }
+    if (idx == this->V - 1) { return core::q_a; }
+    return std::to_string(idx) + "\\n" + "(" + this->adj[idx].meta + ")";
+  };
+
   auto print_node = [&](std::size_t idx, std::string color) {
     if (idx == 0 || idx == this->V - 1) {
       color = "green";
     }
-    std::cout << "\t" << print_idx(idx) << " [color=\"" << color << "\"];"
+    std::cout << "\t" << print_idx(idx)
+			  << " [color=\"" << color << "\" label=\"" << print_node_label(idx) << "\"];"
               << std::endl;
   };
 
@@ -419,6 +439,11 @@ void graph::Graph::print_dot() {
  *
  * active suffixes exist in N
  *
+ * a match is valid if:
+ *   - 
+ *   - 
+ *
+ *
  * txt_slices exist in l start and length
  * txt_offsets exist in N start and stop indexes of a str in N
  * qry_offsets exist in N start and stop indexes of a str in N
@@ -447,13 +472,15 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
     // explicit or implicit match
     graph::match_type g_t_m_start, g_t_m_stop, g_q_m_start, g_q_m_stop;
 
-    // is the active suffix valid?
-    bool valid_as{false};
 
     // TODO: rename t_start in N to something like match_start_in_N
     int t_start_in_N =
         txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) +
         local_txt_slice.start;
+
+	/*
+    // is the active suffix valid?
+    bool valid_as{false};
 
     // the match starts within a string in the text
     // second condition because actv suff can only be extended ...
@@ -483,7 +510,8 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
     // or valid active suffix
     // txt start is not valid so skip
     if (candiate_match.get_char_idx() > 0 && !valid_as) { continue; }
-
+    */
+	
     if (candiate_match.get_char_idx() == 0) {
       //t_m_start = n_junctions::match_type::exp;
       g_t_m_start = graph::match_type::exp;
@@ -523,7 +551,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
       g_t_m_stop = graph::match_type::exp;
     } else {
       // within the text
-      match_end = candidate_match_end; // actual idx is -1
+      match_end = local_txt_slice.start + candidate_match_end; // actual idx is -1
       //m_len = candiate_match.match_length;
 
       //t_m_stop = n_junctions::match_type::imp;
@@ -548,11 +576,14 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
 
     // determine match start and ends in N in the query EDS
     int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
+	std::size_t qlen = qry_offsets[candiate_match.query_str_index].length;
 
 
     g_q_m_start = graph::match_type::exp;
-    g_q_m_stop = candiate_match.is_beyond_txt() ? graph::match_type::imp
-                                                : graph::match_type::exp;
+    g_q_m_stop = candiate_match.is_beyond_txt() || (candiate_match.get_match_length() < qlen)
+	  ? graph::match_type::imp : graph::match_type::exp;
+
+
 
     // create an active suffix in the query
     if (candiate_match.is_beyond_txt()) {
@@ -564,6 +595,12 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
       ? graph::MatchTypePairUnion(g_t_m_start, g_t_m_stop, g_q_m_start, g_q_m_stop)
       : graph::MatchTypePairUnion( g_q_m_start, g_q_m_stop, g_t_m_start, g_t_m_stop);
 
+	if (u ==
+		graph::MatchTypePairUnion(graph::match_type::imp, graph::match_type::imp,
+								  graph::match_type::imp, graph::match_type::imp)) {
+	  continue;
+		}
+	
     valid_matches->push_back(
       graph::GraphSlice(t_start_in_N,
                         q_start_in_N,
@@ -799,10 +836,11 @@ graph::Graph graph::compute_intersection_graph(
 	  // ---------------------------
 
       core::perform_matching(eds_w,
-                               i,
-                               &w_suffix_trees[i],
-                               eds_q.get_strs(j),
-                               &candidate_matches);
+							 i,
+							 &w_suffix_trees[i],
+							 eds_q.get_strs(j),
+							 &candidate_matches,
+							 true);
 
       filter_matches(candidate_matches,
                      eds_w,
@@ -824,10 +862,11 @@ graph::Graph graph::compute_intersection_graph(
        // ---------------------------
 	   
        core::perform_matching(eds_q,
-                                j,
-                                &q_suffix_trees[j],
-                                eds_w.get_strs(i),
-                                &candidate_matches);
+							  j,
+							  &q_suffix_trees[j],
+							  eds_w.get_strs(i),
+							  &candidate_matches,
+							  true);
 
        filter_matches(candidate_matches,
                       eds_q,

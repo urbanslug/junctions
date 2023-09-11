@@ -119,6 +119,9 @@ public:
   match_type right2() const {return this->r2;}
 };
 
+// impl == for MatchTypePairUnion
+bool operator==(const MatchTypePairUnion &lhs, const MatchTypePairUnion &rhs);
+  
 class GraphSlice {
   std::size_t txt_start; // text start in N
   std::size_t qry_start; // query start in N
@@ -187,6 +190,7 @@ struct Vertex {
   std::set<Edge> incoming;
   std::set<Edge> outgoing;
   match_type_pair vertex_type;
+  std::string meta; // vertex metadata
 
   // initialize a struct with default value
   Vertex();

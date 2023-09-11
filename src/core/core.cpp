@@ -3,6 +3,24 @@
 
 #include "./core.hpp"
 
+namespace match_st {
+  bool operator==(const STQueryResult& lhs, const STQueryResult& rhs) {
+
+	std::size_t w = lhs.is_beyond_txt();
+	std::size_t x = lhs.get_match_length();
+	std::size_t y = lhs.get_char_idx();
+	std::size_t z = lhs.get_txt_str_idx();
+
+
+	std::size_t a = rhs.is_beyond_txt();
+	std::size_t b = rhs.get_match_length();
+	std::size_t c = rhs.get_char_idx();
+	std::size_t d = rhs.get_txt_str_idx();
+	
+	return std::tie(w, x, y, z) == std::tie(a, b, c, d);
+  }
+}
+
 namespace core {
 Parameters::Parameters() {}
 
@@ -62,7 +80,8 @@ std::ostream &operator<<(std::ostream &os, const ed_string &value) {
 void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
                       std::pair<match_st::STvertex, std::string> *text,
                       std::vector<std::string> const &queries,
-                      std::vector<EDSMatch>* candidate_matches) {
+                      std::vector<EDSMatch>* candidate_matches,
+					  bool end_in_imp_imp) {
 
   std::vector<match_st::STQueryResult> match_positions;
 
@@ -71,7 +90,8 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
 
     match_positions = match_st::FindEndIndexes(qry_str.c_str(),
                                                &text->first,
-                                               text->second.c_str());
+                                               text->second.c_str(),
+											   end_in_imp_imp);
 
     for (auto match_pos : match_positions) {
 

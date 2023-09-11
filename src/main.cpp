@@ -1,5 +1,8 @@
 #include "./cli/cli.hpp"
 
+/**
+ * junctions entrypoint
+ */
 int main(int argc, char **argv) {
 
   // CLI

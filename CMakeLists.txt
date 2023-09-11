@@ -55,7 +55,9 @@ file(MAKE_DIRECTORY ${BINARY_DIR}/)
 add_custom_command(TARGET junctions
                    POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:junctions> ../${BINARY_DIR}/)
-
+# ------
+# Tests
+# ------
 add_executable( junctions_test
   tests/main_tests.cc
 )
