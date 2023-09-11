@@ -8,7 +8,7 @@ DEBUG_COMPILER_FLAGS=-g ${COMMON_COMPILER_FLAGS} -DDEBUG -std=${CPP_STANDARD}
 STATIC_BUILD_FLAGS=-static -static-libgcc -static-libstdc++
 
 build: 
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR) ${CMAKE_BUILD_DIR}
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/core/core.cpp -o bin/core.o
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/core/utils.cpp -o bin/utils.o
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/core/suffix_tree.cpp -o bin/suffix_tree.o
@@ -20,14 +20,17 @@ build:
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/cli/argvparser.cpp -o bin/argvparser.o
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/cli/parseCmdArgs.cpp -o bin/parseCmdArgs.o
 
-all: build
+
+dynamic: build
 	g++ ${RELEASE_COMPILER_FLAGS} bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
+
+all: dynamic
 
 static: build
 	g++ ${RELEASE_COMPILER_FLAGS} ${STATIC_BUILD_FLAGS} bin/*.o src/main.cpp -lm -o $(BUILD_DIR)/junctions
 
 debug_build:
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR) ${CMAKE_BUILD_DIR}
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/core/core.cpp -o bin/core.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/core/suffix_tree.cpp -o bin/suffix_tree.o
 	g++ ${DEBUG_COMPILER_FLAGS} ${AVX_COMPILER_FLAGS} -c src/eds/eds.cpp -o bin/eds.o
