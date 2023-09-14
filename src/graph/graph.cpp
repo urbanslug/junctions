@@ -965,11 +965,14 @@ std::double_t graph::match_stats_avg(
 	ms_q[j] = max;
 	max = 0;
   }
-  
-  std::size_t sum_vals = ms_q.sum() + ms_w.sum();
-  std::size_t sum_size = len_w + len_q;
 
-  return static_cast<std::double_t>(sum_vals) / static_cast<std::double_t>(sum_size);
+  
+  std::double_t ms_1 =
+	static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_q);
+  std::double_t ms_2 =
+	static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_w);
+
+  return (ms_1 + ms_2);
 }
 
 int graph::longest_witness(graph::Graph &g) {
