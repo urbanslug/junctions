@@ -270,8 +270,8 @@ void handle_graph(core::Parameters const &params) {
 	}
 
 	if (params.compute_match_stats_avg) {
-	  std::cout << "MS average is: " << std::fixed << std::setprecision(2) << avg << "\n";
-	  // std::cout << "MS average is: " << avg << "\n"; TODO: remove ? 
+	  //std::cout << "MS average is: " << std::fixed << std::setprecision(2) << avg << "\n";
+	  std::cout << "MS average is: " << avg << "\n";
 	}
 	else {
 	  std::cout << "MS[" << params.match_stats_letter_idx << "]: " << res << "\n";

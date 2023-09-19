@@ -297,8 +297,8 @@ std::size_t match_stats(Graph &g,
 						core::ed_string match_stats_str);
 
 std::double_t match_stats_avg(Graph &g,
-							  eds::EDS eds_w,
-							  eds::EDS eds_q);
+							  eds::EDS& eds_w,
+							  eds::EDS& eds_q);
 
 std::size_t multiset(graph::Graph &g);
 

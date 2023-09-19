@@ -14,8 +14,12 @@
 #include <vector>
 #include <queue>
 #include <cmath>
+#include <numeric>
+
+
 
 #include "./graph.hpp"
+
 
 // initialize a struct with default values
 graph::Edge::Edge(std::size_t d, std::size_t w, std::string s, bool b)
@@ -919,8 +923,47 @@ std::size_t graph::match_stats(graph::Graph &g,
   return max;
 }
 
-std::double_t graph::match_stats_avg(
-  graph::Graph &g, eds::EDS eds_w, eds::EDS eds_q) {
+/**
+ * Matching statistics from self to self
+ *
+ */
+std::double_t match_stats_self(eds::EDS& e) {
+  std::size_t n = e.get_length();
+
+  // a vector of the longest string in the set starting at i-th letter
+  std::vector<std::size_t> t1_letter_maxes;
+  t1_letter_maxes.reserve(n);
+
+  std::size_t longest_str_len{}; // the length of longest string in the set
+  for (std::size_t i{}; i < n; i++) {
+	longest_str_len = 0;
+	// loop through all slices in the i-th letter
+	for (eds::slice_eds sl : e.get_slice(i)) {
+	  if (sl.length > longest_str_len) { longest_str_len = sl.length; }
+	}
+
+	t1_letter_maxes.push_back(longest_str_len);
+  }
+
+  // sum up the elements of the vector from the back such that in the end
+  // the element at i is set to the sum of the elements at  i and at i+1
+  for (std::size_t i{n-2}; i < n-1 ; i--) {
+	t1_letter_maxes[i] += t1_letter_maxes[i+1];  
+  }
+  
+  std::size_t self_prefix_sum =
+	accumulate(t1_letter_maxes.begin(), t1_letter_maxes.end(), 0);
+
+  //std::cout << "self prefix sum = " << self_prefix_sum << "\n";
+  
+  std::double_t ms_t1_t1 =
+	static_cast<std::double_t>(self_prefix_sum) / static_cast<std::double_t>(n);
+
+  return ms_t1_t1;
+}
+
+std::double_t
+graph::match_stats_avg(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
   g.compute_match_stats();
 
   // the last letter in T_1 and T_2
@@ -966,13 +1009,33 @@ std::double_t graph::match_stats_avg(
 	max = 0;
   }
 
-  
-  std::double_t ms_1 =
-	static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_q);
-  std::double_t ms_2 =
-	static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_w);
+  std::double_t N_1 = static_cast<std::double_t>(eds_w.get_size());
+  std::double_t N_2 = static_cast<std::double_t>(eds_q.get_size());
 
-  return (ms_1 + ms_2);
+  std::double_t log_N_1 = std::log2(N_1);
+  std::double_t log_N_2 = std::log2(N_2);
+
+  std::double_t ms_t1_t1 = match_stats_self(eds_w);
+  std::double_t ms_t2_t2 = match_stats_self(eds_q);
+  
+  // MS_T1_T2
+  std::double_t ms_t1_t2 =
+	static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_w);
+  std::double_t ms_t2_t1 =
+	static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_q);
+
+  /*
+  std::cout << "ms_t1_sum " << ms_w.sum() << " ms_t2_sum " << ms_q.sum()
+			<< " ms_t1_t2 " << ms_t1_t2 << " ms_t2_t1 " << ms_t2_t1
+			<< " ms_t1_t1 " << ms_t1_t1 << " ms_t2_t2 " << ms_t2_t2
+ 			<< " log_N_1 " << log_N_1 << " log_N_2: " << log_N_2
+			<< "\n";
+*/
+
+  std::double_t  d_t1_t2 = log_N_2 / ms_t1_t2 - log_N_1/ ms_t1_t1;
+  std::double_t  d_t2_t1 = log_N_1 / ms_t2_t1 - log_N_2/ ms_t2_t2;
+
+  return (d_t1_t2 + d_t2_t1) / 2.0;
 }
 
 int graph::longest_witness(graph::Graph &g) {
