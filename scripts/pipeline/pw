@@ -66,7 +66,7 @@ function run_junctions {
         return
     fi
 
-    echo "$base_1 - $base_2"
+    echo "Started job: $base_1 - $base_2"
     
     echo "Running junctions for $base_1 and $base_2" >> "$local_outfile"
 
@@ -80,7 +80,7 @@ function run_junctions {
         processed_pairs+=("$base_1-$base_2")
     fi
 
-    echo "Junctions computed for $base_1 and $base_2"
+    echo "Finished job: $base_1 - $base_2"
 }
 
 function handle_concurrency {
