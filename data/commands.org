@@ -66,17 +66,17 @@ gatk CountVariants \
 get all types of variants from a given DB
 
 #+BEGIN_SRC bash
-CHR=6; REF=Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa; REGION="6:31300000-31400000"; OUT=100k.1000G.vcf;\
+CHR=6; REF=Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa; REGION="6:31353875-31367067"; OUT=hla-b.topmed.vcf;\
 gatk SelectVariants \
   -R $REF \
   -V homo_sapiens-chr$CHR.vcf \
-  -select "E_1000G" \
+  -select "E_TOPMed" \
   -L $REGION \
   -O x && \
 gatk SelectVariants \
   -R $REF \
   -V x \
-  -invert-select -select "E_TOPMed" -select "E_gnomAD" \
+  -invert-select -select "E_1000G" -select "E_gnomAD" \
   -L $REGION \
   -O $OUT && \
 gatk CountVariants \
@@ -86,7 +86,7 @@ gatk CountVariants \
 #+END_SRC
 
 #+BEGIN_SRC bash
-CHR=6; REF=Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa; REGION="6:31300000-31400000"; VARIANT=SNP; OUT=100k.gnomad.$VARIANT.vcf;\
+CHR=6; REF=Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa; REGION="6:31353875-31367067"; VARIANT=SNP; OUT=hla-b.gnomad.$VARIANT.vcf;\
 gatk SelectVariants \
   -R $REF \
   -V homo_sapiens-chr$CHR.vcf \
@@ -107,6 +107,8 @@ gatk CountVariants \
   -L $REGION
 #+END_SRC
 
+31353875 31367067
+
 Making the eds file using aedso from a VCF file and a reference
 #+BEGIN_SRC bash
 # SNPs only
@@ -117,9 +119,15 @@ aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.$TYPE.vcf > $GENE.$SOURCE.$TYPE.e
 CHR=6; GENE=100k; REF=chr$CHR.$GENE.fa; SOURCE=gnomad; TYPE=indels; START=31300001; STOP=31400000; \
 aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.vcf > $GENE.$SOURCE.$TYPE.eds
 
-  
+CHR=6; GENE=hla-b; REF=chr$CHR.$GENE.fa; SOURCE=gnomad; TYPE=SNP; START=31353875; STOP=31367067; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.$TYPE.vcf > $GENE.$SOURCE.$TYPE.eds
+
+CHR=6; GENE=hla-b; REF=chr$CHR.$GENE.fa; SOURCE=topmed; TYPE=indels; START=31353875; STOP=31367067; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.vcf > $GENE.$SOURCE.$TYPE.eds
+
 CHR=6; GENE=100k; REF=chr$CHR.$GENE.fa; SOURCE=1000G; TYPE=indels; START=31300000; STOP=31400000; \
 aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.vcf > $GENE.$SOURCE.$TYPE.eds
+
 
 #+END_SRC
 
