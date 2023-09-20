@@ -13,6 +13,10 @@ OUT_FILE=""
 OUT_DIR=""
 REDUNDANT=false # run both ways
 TIME=false
+JOBS=5 # number of parallel jobs
+
+# Initialize an array to store processed pairs
+processed_pairs=()
 
 function handle_dirs {
 
@@ -21,26 +25,65 @@ function handle_dirs {
         echo "Input directory $IN_DIR does not exist."
         exit 1
     fi
-    
+
+    # get the outfilename
     # extract output dir from the string $OUT_FILE
     # if the string contains a / then we need to extract the part after the last /
     # otherwise we just use the string as is
-    if [[ $OUT_FILE == */* ]]; then
+    #if [[ $OUT_FILE == */* ]]; then
         # extract the part after the last /
-        OUT_DIR=${OUT_FILE##*/}
-    else
-        OUT_DIR=$OUT_FILE
-    fi
+    #    OUT_DIR=${OUT_FILE##*/}
+    #else
+    #    OUT_DIR=$OUT_FILE
+    #fi
 
+    # extract output dir from the string $OUT_FILE
+    # if the string contains a / then we need to extract the part before the last /
+    # otherwise we just use the string as is
+    if [[ $OUT_FILE == */* ]]; then
+        # extract the part before the last /
+        OUT_DIR=${OUT_FILE%/*}
+    else
+        OUT_DIR="."
+    fi
+    
+    
     # Create a directory to store junction results
     mkdir -p $OUT_DIR
 
 }
 
-function run_junctions {
 
-    # Initialize an array to keep track of processed pairs
-    processed_pairs=()
+function run_junctions {
+    msa_1=$1
+    msa_2=$2
+    base_1=$(basename "$msa_1" .msa)
+    base_2=$(basename "$msa_2" .msa)    
+    local_outfile="$OUT_DIR/$base_1-$base_2.out"
+    
+    # Check if redundant is false and if the pair has been processed
+    if [ "$REDUNDANT" = false ] && [[ "${processed_pairs[@]}" =~ "$base_2-$base_1" ]]; then
+        return
+    fi
+
+    echo "$base_1 - $base_2"
+    
+    echo "Running junctions for $base_1 and $base_2" >> "$local_outfile"
+
+    if [ "$TIME" = true ]; then
+        (/usr/bin/time -f"%S\t%M" junctions -g -s "$msa_1" "$msa_2" 2>&1) >> "$local_outfile"
+    else
+        junctions -g -s "$msa_1" "$msa_2" >> "$local_outfile"
+    fi
+
+    if [ "$REDUNDANT" = false ]; then
+        processed_pairs+=("$base_1-$base_2")
+    fi
+
+    echo "Junctions computed for $base_1 and $base_2"
+}
+
+function handle_concurrency {
 
     # create the output directory if it doesn't exist
     handle_dirs
@@ -48,49 +91,32 @@ function run_junctions {
     # Clear the result file before starting
     > "$OUT_FILE"
 
+    # remove trailing backslash from IN_DIR if there is one
+    IN_DIR=${IN_DIR%/}
+
     # Iterate through MSA files
     for msa_1 in "$IN_DIR"/*.msa; do
         for msa_2 in "$IN_DIR"/*.msa; do
             if [ "$msa_1" != "$msa_2" ]; then
-                # Get the base filenames
-                base_1=$(basename "$msa_1" .msa)
-                base_2=$(basename "$msa_2" .msa)
+                # Check the number of background jobs
+                while [ $(jobs | wc -l) -ge $JOBS ]; do
+                    sleep 1  # Wait until a slot is available
+                done
 
-                # check if redundant is true and if the pair has been processed
-                if [ "$REDUNDANT" = false ] && [[ "${processed_pairs[@]}" =~ "$base_2-$base_1" ]]; then
-                    continue
-                fi
-
-                # Check if the reverse pair has been processed
-                #if ! [[ "${processed_pairs[@]}" =~ "$base_2-$base_1" ]]; then
-
-                # Run junctions command with time and redirect output to the result file
-                echo "Running junctions for $base_1 and $base_2" >> $OUT_FILE
-
-                # if time is true then we will run the command with time
-                # otherwise we will run it without time
-                if [ "$TIME" = true ]; then
-                    (/usr/bin/time -f"%S\t%M" junctions -g -s "$msa_1" "$msa_2" 2>&1) >> $OUT_FILE
-                else
-                    junctions -g -s "$msa_1" "$msa_2" >> $OUT_FILE
-                fi
-                
-                #(/usr/bin/time -f"%S\t%M" junctions -g -s "$msa_1" "$msa_2" 2>&1) >> $OUT_FILE
-
-                # if we don't require redundancy then
-                # add the pair to the processed_pairs array
-                if [ "$REDUNDANT" = false ]; then
-                    processed_pairs+=("$base_1-$base_2")
-                fi
-
-                echo "Junctions computed for $base_1 and $base_2"
-                #fi
+                # Run junctions in the background
+                run_junctions "$msa_1" "$msa_2" &
             fi
         done
     done
 
+    # Wait for all background jobs to finish
+    wait
+
+    cat "$OUT_DIR"/*.out > "$OUT_FILE"
+
     echo "All junctions computed."
 }
+
 
 # Define the cli function
 cli() {
@@ -101,6 +127,7 @@ cli() {
     echo "Options:"
     echo "  -i, --in_dir      Input directory"
     echo "  -o, --out_file    Output file"
+    echo "  -j, --jobs        Number of concurrent jobs to run [default: 5]"
     echo "  -r, --redundant   Use redundant flag (optional)"
     echo "  -t, --time        use the /usr/bin/time utility to check time and space usage (optional)"
     echo "  -h, --help        Display this help message"
@@ -110,7 +137,7 @@ cli() {
   }
 
   # Parse command-line options using getopt
-  TEMP=$(getopt -o i:o:rth --long in_dir:,out_file:,redundant,time,help -- "$@")
+  TEMP=$(getopt -o i:o:j:rth --long in_dir:,out_file:,jobs:,redundant,time,help -- "$@")
 
   # Check for getopt errors
   if [ $? -ne 0 ]; then
@@ -127,6 +154,10 @@ cli() {
         ;;
       -o | --out_file)
         OUT_FILE="$2"
+        shift 2
+        ;;
+      -j | --jobs)
+        JOBS="$2"
         shift 2
         ;;
       -r | --redundant)
@@ -162,11 +193,12 @@ cli() {
   # -e flag allows interpretation of backslash escapes
   echo -e "  Input Directory: $IN_DIR"
   echo -e "  Output File: $OUT_FILE"
+  echo -e "  Jobs: $JOBS"
   echo -e "  Redundant Flag: $REDUNDANT"
   echo -e "  Time Flag: $TIME"
 
   # call the run_junctions function
-  run_junctions
+  handle_concurrency
 }
 
 # Call the cli function with command-line arguments
