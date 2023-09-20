@@ -1,3 +1,7 @@
-As input we use the file nextstrain_ncov_open_global_all-time_metadata.tsv to get a list of sars cov 2 sample metadata.
-We filter out the lines that don't have a genbank accession number and end up with output_data.tsv
-we also have at most 10 of each sample in output_data.tsv
+As input we use the file `metadata/nextstrain_ncov_open_global_all-time_metadata.tsv` 
+as out start.
+
+We filter out the lines that do not have a genbank accession numbers
+and also randomly select at most 10 rows from each NextStrain strain to end up 
+with `metadata/output_data.tsv`
+
