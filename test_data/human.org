@@ -1,0 +1,108 @@
+* Overview
+
+We built ED strings for human genome data from the [[https://ftp.ensembl.org/pub/release-108/fasta/homo_sapiens/dna/][GRCh38.p13 dataset]],
+specifically from [[https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000234745;r=6:31353872-31367067;transcript=ENST00000696560.1][HLA-B]] and
+[[https://genome-euro.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr6%3A32578775%2D32589848&hgsid=301270471_2se3lLE7vUgP2ahunbf1sFOFeLWE][HLA-DRB1]] genes in chromosome 6 as
+well as the 7 ACTB gene in chromosome 7, using human genomic sequence data in fasta format and [[https://ftp.ensembl.org/pub/release-108/variation/vcf/homo_sapiens/][variation data]] in Variant Call Format (VCF).
+We did this by updating regions containing variation as denoted in the VCF into sets containing
+what is originally in the reference and what is in the VCF therefore creating an ED-string.
+
+More precisely, the vcf file that we used contained variation data from three databases namely:
+1000G, TOPmed, and gnomAD.
+We then generated subset vcf files for each database and again a smaller subset of this containing only from each database SNPs.
+Therefore creating datasets in which we have SNPs as well as larger insertion and deletions from the same region
+and then generated ED-strings for each of these.
+
+Examples of the commands used are in [[./commands.org#human-data-commands][commands.org]]
+
+* Dataset Description
+
+#+CAPTION[Data Overview]: The datasets used for human data built from a VCF+linear reference
+#+LABEL: tbl:degenerate-letter-index
+|------------+-----+----------+---------+------------------------------+---------------+---------------+--------+--------+-------|
+| Dataset Id | Chr | Gene     | Length  | Region                       | Variants Type | Variant Count | source |      N |     m |
+|------------+-----+----------+---------+------------------------------+---------------+---------------+--------+--------+-------|
+|            |   6 | HLA-B    | 13,193  | chr6:31,353,875 - 31,367,067 | all           |          4483 | all    |        |       |
+|          0 |     |          |         |                              |               |            74 | 1000G  |  13332 |   224 |
+|          1 |     |          |         |                              |               |          1188 | TOPMed |  15090 |  3453 |
+|          2 |     |          |         |                              |               |           663 | gnomAD |  14436 |  2044 |
+|            |     |          |         |                              | SNP           |          3752 | all    |        |       |
+|          3 |     |          |         |                              |               |            53 | 1000G  |  13247 |   161 |
+|          4 |     |          |         |                              |               |          1075 | TOPMed |  14355 |  3170 |
+|          5 |     |          |         |                              |               |           567 | gnomAD |  13941 |  1785 |
+|------------+-----+----------+---------+------------------------------+---------------+---------------+--------+--------+-------|
+|            |     | HLA-DRB1 | 11,074  | chr6:32,578,775 - 32,589,848 | all           |         6,477 | all    |        |       |
+|          6 |     |          |         |                              |               |            99 | 1000G  | 11,278 |   307 |
+|          7 |     |          |         |                              |               |         2,196 | TOPMed | 15,470 | 6,358 |
+|          8 |     |          |         |                              |               |           368 | gnomAD | 12,004 | 1,091 |
+|            |     |          |         |                              | SNP           |          4979 | all    |        |       |
+|          9 |     |          |         |                              |               |            70 | 1000G  |  11151 |   214 |
+|         10 |     |          |         |                              |               |         1,939 | TOPMed | 13,451 | 5,749 |
+|         11 |     |          |         |                              |               |           285 | gnomAD | 11,425 |   870 |
+|            |     |          |         |                              |               |               |        |        |       |
+|------------+-----+----------+---------+------------------------------+---------------+---------------+--------+--------+-------|
+|            |   7 | ACTB     | 36,751  | chr7:5,527,152 - 5,563,902   | all           |         12683 | all    |        |       |
+|         12 |     |          |         |                              |               |           212 | 1000G  |  37019 |   644 |
+|         13 |     |          |         |                              |               |          5275 | TOPMed |  46944 | 15413 |
+|         14 |     |          |         |                              |               |          1210 | gnomAD |  39006 |  3621 |
+|            |     |          |         |                              | SNP           |         11399 | all    |        |       |
+|         15 |     |          |         |                              |               |           208 | 1000G  |  36967 |   630 |
+|         16 |     |          |         |                              |               |          4960 | TOPMed |  41947 | 13891 |
+|         17 |     |          |         |                              |               |          1044 | gnomAD |  37876 |  3146 |
+|------------+-----+----------+---------+------------------------------+---------------+---------------+--------+--------+-------|
+|            |   6 |          | 100,000 | chr6:31,300,000 - 31,400,000 | all           |         25748 | all    |        |       |
+|         18 |     |          |         |                              |               |           456 | 1000G  | 100951 |  1375 |
+|         19 |     |          |         |                              |               |          8525 | TOPMed | 121089 | 29061 |
+|         20 |     |          |         |                              |               |          2436 | gnomAD | 104945 |  7297 |
+|            |     |          |         |                              | SNP           |               | all    |        |       |
+|         21 |     |          |         |                              |               |           359 | 1000G  | 100368 |  1082 |
+|         22 |     |          |         |                              |               |          7645 | TOPMed | 111744 | 26323 |
+|         23 |     |          |         |                              |               |          2007 | gnomAD | 102236 |  6097 |
+|            |     |          |         |                              |               |               |        |        |       |
+#+CAPTION[Data Overview]: The datasets used for human data built from a VCF+linear reference
+
+
+* Results
+
+In the table provided, each row represents the execution time of an EDSI
+(intersection) query on a specific pair of ED strings from our dataset.
+The time measurement is in seconds, with the dataset ID indicated in parentheses,
+referring to the corresponding [[tbl:degenerate-letter-index][dataset description table above]].
+
+
+
+| ID | Dataset 1     | Dataset 2    | N_1 | m_1 | N_2 | m_2 |   Naive |  Improved | Gene     |
+|----+---------------+--------------+-----+-----+-----+-----+---------+-----------+----------|
+|  0 | 1000G all (0) | SNP (3)      |     |     |     |     | 1.26589 | 0.0388119 | HLA-B    |
+|  1 | 1000G (6)     | TOPMed (7)   |     |     |     |     | 1.43796 |  0.270942 | HLA-DRB1 |
+|  2 | gNomad (8)    | TOPMed  (10) |     |     |     |     |    1.04 |      0.10 | HLA-DRB1 |
+|  3 | 1000G (12)    | gNomad (17)  |     |     |     |     | 11.3456 |  0.314023 | ACTB     |
+|  4 | 1000G (18)    | 1000G (21)   |     |     |     |     |   71.53 |      0.28 |          |
+|  5 | TOPMed (19)   | TOPMed (22)  |     |     |     |     |   97.20 |     41.67 |          |
+|  6 | gNomad (20)   | gNomad (23)  |     |     |     |     |   75.75 |      2.93 |          |
+|  7 | TOPMed (1)    | gNomad (5)   |     |     |     |     |    1.62 |      0.75 | HLA-B    |
+|  8 | 1000G (12)    | 1000G (15)   |     |     |     |     |   10.13 |      0.11 | ACTB     |
+|  9 | topmed (13)   | topmed (16)  |     |     |     |     |   16.38 |     15.05 | ACTB     |
+
+* Data download
+
+** http links
+ - chromosome 6
+   * fasta https://ftp.ensembl.org/pub/release-109/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz
+   * vcf https://ftp.ensembl.org/pub/release-109/variation/vcf/homo_sapiens/homo_sapiens-chr6.vcf.gz
+ - chromosome 7
+   * fasta https://ftp.ensembl.org/pub/release-109/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.7.fa.gz
+   * vcf https://ftp.ensembl.org/pub/release-109/variation/vcf/homo_sapiens/homo_sapiens-chr7.vcf.gz
+
+
+** ftp links
+ - chromosome 6
+   * fasta ftp://ftp.ensembl.org/pub/release-109/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz
+   * vcf ftp://ftp.ensembl.org/pub/release-109/variation/vcf/homo_sapiens/homo_sapiens-chr6.vcf.gz
+ - chromosome 7
+   * fasta ftp://ftp.ensembl.org/pub/release-109/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.7.fa.gz
+   * vcf ftp://ftp.ensembl.org/pub/release-109/variation/vcf/homo_sapiens/homo_sapiens-chr7.vcf.gz
+
+You can download the files by saving these links in a file and using a download utility tool such as [[https://aria2.github.io/][aria2]] 
+For example ~aria2c --continue -i download-links.txt~
+ 
