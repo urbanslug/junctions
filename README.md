@@ -44,7 +44,7 @@ For larger graphs you may want to visualize them in
 [bandage](https://github.com/rrwick/Bandage/)
 
 ```
-cat x.dot | python scripts/dot2gfa.py > x.gfa
+cat x.dot | ./scripts/dot2gfa > x.gfa
 ```
 
 ## Compile and Run

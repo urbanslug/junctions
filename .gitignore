@@ -2,6 +2,9 @@
 *.gfa
 *.png
 *.svg
+*.tsv
+*.txt
+
 out
 data/ignore/
 tmp/
