@@ -2,12 +2,12 @@
 *.gfa
 *.png
 *.svg
-*.tsv
 *.txt
 x*
 out
 data/ignore/
 tmp/
+scratch/
 Testing/
 bin/
 build/
