@@ -1,3 +1,13 @@
+use `seq_dl` to download the necessary data from a file such as `output_data.tsv`
+
+`./seq_dl output.tsv all_sequences.fasta`
+
+use do_msa to generate multiple sequence alignments 
+
+`do_msa` takes an optional output dir
+`./do_msa output_data.tsv all_sequences.fasta <output_dir>`
+
+
 # Pipeline Scripts
 
 Run a series of pairwise matching statistics average with:

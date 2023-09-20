@@ -72,7 +72,6 @@ function run_junctions {
                 if [ "$TIME" = true ]; then
                     (/usr/bin/time -f"%S\t%M" junctions -g -s "$msa_1" "$msa_2" 2>&1) >> $OUT_FILE
                 else
-                    echo "Running junctions for $base_1 and $base_2" >> $OUT_FILE
                     junctions -g -s "$msa_1" "$msa_2" >> $OUT_FILE
                 fi
                 
