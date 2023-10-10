@@ -445,10 +445,26 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		  }
 		}
 
+		if (j==0 && i > 0) {
+		  // copy down
+		  // --------
+
+		  std::size_t col = eds_q.get_letter_boundaries(j).left();
+
+		  // in case of active suffix
+		  std::size_t col_end = eds_q.get_letter_boundaries(j).right();
+
+		  for (; col <= col_end; col++) {
+			//continue;
+			if (q_matrix[i - 1][col]) { q_matrix[i][col] = true; }
+		  }
+		}
+
 		if (j > 0 && i> 0) {
 		  // copy down
 		  // --------
 
+		  // TODO: combine with previous by starting with j or j-1 only when possible
 		  std::size_t col = eds_q.get_letter_boundaries(j-1).left();
 
 		  // in case of active suffix
@@ -474,6 +490,21 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		  }
 		}
 
+
+		if (i == 0 && j > 0) {
+		  // copy down
+		  // --------
+
+		  std::size_t col = eds_w.get_letter_boundaries(i).left();
+
+		  // in case of active suffix
+		  std::size_t col_end = eds_w.get_letter_boundaries(i).right();
+
+		  for (; col <= col_end; col++) {
+			if (w_matrix[j - 1][col]) { w_matrix[j][col] = true; }
+		  }
+		}
+		
 		if (i > 0 && j > 0) {
 		  // copy down
 		  // --------
@@ -499,15 +530,15 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	  bool imp_exp_val = imp_exp(i, j, eds_w, eds_q, w_matrix, q_matrix);
 	  bool exp_imp_val = exp_imp(i, j, eds_w, eds_q, w_matrix, q_matrix);
 
-	  /*
-		print i j values and their exp_exp_val values, etc.
+	  /*	 */
+	  //print i j values and their exp_exp_val values, etc.
 		std::cout << "i: " << i << " j: " << j
 				  << " exp_exp_val: " << exp_exp_val
 				  << " imp_exp_val: " << imp_exp_val
 				  << " exp_imp_val: " << exp_imp_val
 				  << " res: " << (exp_exp_val || imp_exp_val || exp_imp_val)
 				  << std::endl;
-	 */
+
 
 	  // at least one of these must be true
 	  if (!(exp_exp_val || imp_exp_val || exp_imp_val) ) { continue; }
@@ -532,11 +563,11 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	  // -------------------------------------------------
 
 	  core::perform_matching(
-		  eds_w,
-		  i,
-		  &w_suffix_trees[i],
-		  eds_q.get_strs(j),
-		  &candidate_matches);
+		eds_w,
+		i,
+		&w_suffix_trees[i],
+		eds_q.get_strs(j),
+		&candidate_matches);
 
 	  update_matrices(candidate_matches,
 					  eds_w,
@@ -552,11 +583,11 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	  // -----------------------------------------------
 
 	  core::perform_matching(
-		  eds_q,
-		  j,
-		  &q_suffix_trees[j],
-		  eds_w.get_strs(i),
-		  &candidate_matches);
+		eds_q,
+		j,
+		&q_suffix_trees[j],
+		eds_w.get_strs(i),
+		&candidate_matches);
 
 
 	  update_matrices(candidate_matches,
@@ -583,7 +614,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	if (w_matrix[len_q - 1][col]) { accept_w = true; break; }
   }
 
-  /*
+  /**/
+	  
   // print the w_matrix
   for (int n = 0; n < len_q; n++) {
 	for (int j = 0; j < (size_w + eds_w.get_eps_count()); j++) {
@@ -600,11 +632,10 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	}
 	std::cout << std::endl;
   }
-  */
+
 
   return accept_q && accept_w;
 }
-
 
 }
 }
