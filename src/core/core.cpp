@@ -1,3 +1,4 @@
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -88,13 +89,26 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
   for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
     std::string qry_str = queries[qry_str_idx];
 
-    match_positions = match_st::FindEndIndexes(qry_str.c_str(),
-                                               &text->first,
-                                               text->second.c_str(),
-											   end_in_imp_imp);
+	//std::cout << "qry: " << qry_str << " txt: " << text->second << std::endl;
+	
+    match_positions =
+	  match_st::FindEndIndexes(qry_str.c_str(),
+							   &text->first,
+							   text->second.c_str(),
+							   end_in_imp_imp);
 
-    for (auto match_pos : match_positions) {
 
+	
+	
+    for (match_st::STQueryResult match_pos : match_positions) {
+
+	  /*
+	  std::cout << "char idx: " << match_pos.get_char_idx()
+				<< " txt idx: " << match_pos.get_txt_str_idx() 
+				<< " match len: " << match_pos.get_match_length()
+				<< std::endl;
+	  */
+	  
       eds::slice_eds local_txt_slice =
         txt_eds.get_str_slice_local(txt_letter_idx, match_pos.get_txt_str_idx());
 
@@ -103,6 +117,8 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
       match_pos.get_txt_char_idx_mut() -=
         (match_pos.get_txt_str_idx() + local_txt_slice.start);
 
+
+	  
       candidate_matches->push_back(
         EDSMatch(qry_str_idx,
                  qry_str.substr(0, match_pos.get_match_length()),

@@ -47,7 +47,7 @@ debug_build:
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/core/core.cpp -o bin/core.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/core/utils.cpp -o bin/utils.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/core/suffix_tree.cpp -o bin/suffix_tree.o
-	g++ ${DEBUG_COMPILER_FLAGS} ${AVX_COMPILER_FLAGS} -c src/eds/eds.cpp -o bin/eds.o
+	g++ ${DEBUG_COMPILER_FLAGS} -c src/eds/eds.cpp -o bin/eds.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/eds/common.cpp -o bin/common.o
 ifeq ($(WITH_MSA),true)
 		g++ ${RELEASE_COMPILER_FLAGS} ${AVX_COMPILER_FLAGS} -c src/eds/msa.cpp -o bin/msa.o

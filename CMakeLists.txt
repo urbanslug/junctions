@@ -25,6 +25,7 @@ endif()
 
 ADD_LIBRARY(LibsModule
   src/eds/eds.cpp
+  src/eds/common.cpp
   src/core/core.cpp
   src/core/utils.cpp
   src/graph/graph.cpp

@@ -51,6 +51,24 @@ TEST(SuffixTreeTest, Matching) {
   setup();
   qry = "GAACA";
   match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str());
+
+  txt_strs = {"AAGT","CT"};
+  text_slices =
+	std::vector<eds::slice_eds>{eds::slice_eds(0, 4), eds::slice_eds(4, 2)};
+  setup();
+  qry = "TG";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str());
+
+  // print each match_pos in match positions vector
+  std::cout << "Match positions.......: \n";
+  for (auto &m : match_positions) {
+
+	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
+		//std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
+
+  }
+
+  EXPECT_EQ(0,1);
 }
 
 TEST(SuffixTreeTest, CommonPrefix) {
@@ -99,7 +117,7 @@ TEST(SuffixTreeTest, CommonPrefix) {
 
   std::cout << "Match positions: \n";
   for (auto &m : match_positions) {
-	std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
+	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
   }
   std::cout << "\n\n";
 

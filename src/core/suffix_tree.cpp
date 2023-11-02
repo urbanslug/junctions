@@ -365,9 +365,8 @@ void update_leaves(STvertex *current_vertex,
 
 
 std::vector<match_st::STQueryResult>
-FindEndIndexes(
-  const char *query, STvertex *current_vertex,
-  const char *x, bool end_in_imp_imp) {
+FindEndIndexes(const char *query, STvertex *current_vertex, const char *x,
+			   bool end_in_imp_imp) {
 
   std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
@@ -413,6 +412,29 @@ FindEndIndexes(
 
     // TODO: make these if statements not be order dependent?
 
+	// both has a $ and _ going out of it
+	if (has_underscore && has_dollar && matched_a_char) {
+
+	  //std::cout << "both\n";
+
+	  current_edge = current_vertex->g[core::string_separator];
+      append_underscore_matches(); // TODO: remove useless
+
+      append_matches(true);
+
+
+
+	  d = match_length;
+      last_with_underscore = current_vertex;
+
+	  current_edge = current_vertex->g[core::terminator_char];
+      append_underscore_matches();
+      //append_matches(true);
+	  
+      if (!has_qry_char) { return matches; }
+	  
+    }
+	
     // We matched at least one query to the end a text string
     // because we saw a $ sign and i > 0
     if (has_dollar && matched_a_char) {
@@ -423,19 +445,19 @@ FindEndIndexes(
       if (!has_qry_char) { return matches; }
     }
 
+    // save the last vertex we found with an _ going out of it
+    // and is not the root
+    if (has_underscore && matched_a_char) {
+      d = match_length;
+      last_with_underscore = current_vertex;
+    }
+	
     // we can no longer match the query and we found a _
     if (!has_qry_char && has_underscore && matched_a_char) {
       current_edge = current_vertex->g[core::terminator_char];
       append_underscore_matches();
       append_matches(true);
       return matches;
-    }
-
-    // save the last vertex we found with an _ going out of it
-    // and is not the root
-    if (has_underscore && matched_a_char) {
-      d = match_length;
-      last_with_underscore = current_vertex;
     }
 
     // matching failed
