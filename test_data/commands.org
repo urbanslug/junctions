@@ -1,0 +1,238 @@
+* Commands
+** SARS-CoV-2
+
+Extract clade_membership column
+#+BEGIN_SRC bash
+cut -f 6 nextstrain_ncov_open_global_all-time_metadata.tsv > clades.txt
+#+END_SRC
+
+Get unique clades
+#+BEGIN_SRC bash
+sort clades.txt | uniq > clades.uniq.txt
+#+END_SRC
+use sample.py to create a subset TSV and then use do_msa.py to create the MSA
+
+
+Use do_jc.sh which will run pairwise MS junctions with redundancy or do_jc_2.sh
+which calls junctions withtout redundancy
+
+
+Takes a multi fa fasta file and outputs a multiple sequence alignment in
+row-column multiple sequence alignment (RC-MSA) format
+#+BEGIN_SRC
+abpoa -S -m 0 -r 1 <input>.fa > <output>.msa
+#+END_SRC
+
+** Human Data Commands
+
+*** Chr 6
+Use bedtools to subset the fasta file
+#+BEGIN_SRC bash
+CHR=6; REF="Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa"; GENE=100k; \
+bedtools getfasta -fi $REF -bed $GENE.bed -fo chr$CHR.$GENE.fa
+#+END_SRC
+
+Index the VCF
+#+BEGIN_SRC bash
+CHR=6;\
+gatk IndexFeatureFile \
+  -F homo_sapiens-chr$CHR.vcf
+#+END_SRC
+
+Count variants in a VCF file
+#+BEGIN_SRC bash
+CHR=6; REGION="6:31300000-31400000"; \
+gatk CountVariants \
+     -R Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa \
+     -V homo_sapiens-chr$CHR.vcf \
+     -L $REGION
+#+END_SRC
+
+unnecessary
+Select and count all variants
+#+BEGIN_SRC bash
+CHR=6; REF=Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa; REGION="6:31300000-31400000"; OUT=100k.vcf;\
+gatk SelectVariants \
+  -R $REF \
+  -V homo_sapiens-chr$CHR.vcf \
+  -L $REGION \
+  -O $OUT && \
+gatk CountVariants \
+  -R $REF \
+  -V $OUT \
+  -L $REGION
+#+END_SRC
+  
+get all types of variants from a given DB
+
+#+BEGIN_SRC bash
+CHR=6; REF=Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa; REGION="6:31353875-31367067"; OUT=hla-b.topmed.vcf;\
+gatk SelectVariants \
+  -R $REF \
+  -V homo_sapiens-chr$CHR.vcf \
+  -select "E_TOPMed" \
+  -L $REGION \
+  -O x && \
+gatk SelectVariants \
+  -R $REF \
+  -V x \
+  -invert-select -select "E_1000G" -select "E_gnomAD" \
+  -L $REGION \
+  -O $OUT && \
+gatk CountVariants \
+  -R $REF \
+  -V $OUT \
+  -L $REGION
+#+END_SRC
+
+#+BEGIN_SRC bash
+CHR=6; REF=Homo_sapiens.GRCh38.dna.chromosome.$CHR.fa; REGION="6:31353875-31367067"; VARIANT=SNP; OUT=hla-b.gnomad.$VARIANT.vcf;\
+gatk SelectVariants \
+  -R $REF \
+  -V homo_sapiens-chr$CHR.vcf \
+  --select-type-to-include $VARIANT \
+  -select "E_gnomAD" \
+  -L $REGION \
+  -O x && \
+gatk SelectVariants \
+  -R $REF \
+  -V x \
+  --select-type-to-include $VARIANT \
+  -invert-select -select "E_TOPMed" -select "E_1000G" \
+  -L $REGION \
+  -O $OUT && \
+gatk CountVariants \
+  -R $REF \
+  -V $OUT \
+  -L $REGION
+#+END_SRC
+
+31353875 31367067
+
+Making the eds file using aedso from a VCF file and a reference
+#+BEGIN_SRC bash
+# SNPs only
+CHR=6; GENE=100k; REF=chr$CHR.$GENE.fa; SOURCE=gnomad; TYPE=SNP; START=31300001; STOP=31400000; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.$TYPE.vcf > $GENE.$SOURCE.$TYPE.eds
+
+# InDels
+CHR=6; GENE=100k; REF=chr$CHR.$GENE.fa; SOURCE=gnomad; TYPE=indels; START=31300001; STOP=31400000; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.vcf > $GENE.$SOURCE.$TYPE.eds
+
+CHR=6; GENE=hla-b; REF=chr$CHR.$GENE.fa; SOURCE=gnomad; TYPE=SNP; START=31353875; STOP=31367067; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.$TYPE.vcf > $GENE.$SOURCE.$TYPE.eds
+
+CHR=6; GENE=hla-b; REF=chr$CHR.$GENE.fa; SOURCE=topmed; TYPE=indels; START=31353875; STOP=31367067; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.vcf > $GENE.$SOURCE.$TYPE.eds
+
+CHR=6; GENE=100k; REF=chr$CHR.$GENE.fa; SOURCE=1000G; TYPE=indels; START=31300000; STOP=31400000; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.vcf > $GENE.$SOURCE.$TYPE.eds
+
+
+#+END_SRC
+
+*** Chr 7
+
+
+**** ACTB
+
+bedfile
+#+BEGIN_SRC bash
+7	5527152	5563902
+#+END_SRC
+
+bedtools to create subset fa file
+#+BEGIN_SRC bash
+REF=Homo_sapiens.GRCh38.dna.chromosome.7.fa; GENE=actb; \
+bedtools getfasta -fi $REF -bed $GENE.bed -fo chr7.$GENE.fa
+#+END_SRC
+
+
+
+Index the VCF
+#+BEGIN_SRC bash
+gatk IndexFeatureFile \
+  -F homo_sapiens-chr7.vcf
+#+END_SRC
+
+Count variants in the given region
+#+BEGIN_SRC bash
+REGION="7:5527152-5563902"; gatk CountVariants \
+     -R Homo_sapiens.GRCh38.dna.chromosome.7.fa \
+     -V homo_sapiens-chr7.vcf \
+     -L $REGION
+#+END_SRC
+
+Select all variants
+#+BEGIN_SRC bash
+REF=Homo_sapiens.GRCh38.dna.chromosome.7.fa; REGION="7:5527152-5563902"; gatk SelectVariants \
+     -R $REF \
+     -V homo_sapiens-chr7.vcf \
+     -L $REGION \
+     -O actb.indels.vcf
+#+END_SRC
+
+#+BEGIN_SRC bash
+REF=Homo_sapiens.GRCh38.dna.chromosome.7.fa; REGION="7:5527152-5563902";  VARIANT=SNP; OUT=actb.snp.vcf; gatk SelectVariants \
+  -R $REF \
+  -V homo_sapiens-chr7.vcf \
+  --select-type-to-include $VARIANT \
+  -L $REGION \
+  -O $OUT && \
+gatk CountVariants \
+  -R $REF \
+  -V $OUT \
+  -L $REGION
+#+END_SRC
+
+from DB
+no variant
+#+BEGIN_SRC bash
+REF=Homo_sapiens.GRCh38.dna.chromosome.7.fa; REGION="7:5527152-5563902"; OUT="actb.topmed.indels.vcf"; \
+gatk SelectVariants \
+  -R $REF \
+  -V homo_sapiens-chr7.vcf \
+  -select "E_TOPMed" \
+  -L $REGION \
+  -O x && \
+gatk SelectVariants \
+  -R $REF \
+  -V x \
+  -invert-select -select "E_gnomAD" -select "E_1000G" \
+  -L $REGION \
+  -O $OUT && \
+gatk CountVariants \
+  -R $REF \
+  -V $OUT \
+  -L $REGION
+#+END_SRC
+
+with variant
+#+BEGIN_SRC bash
+REF=Homo_sapiens.GRCh38.dna.chromosome.7.fa; REGION="7:5527152-5563902"; VARIANT=SNP; OUT="actb.1000G.$VARIANT.vcf"; \
+gatk SelectVariants \
+  -R $REF \
+  -V homo_sapiens-chr7.vcf \
+  --select-type-to-include $VARIANT \
+  -select "E_1000G" \
+  -L $REGION \
+  -O x && \
+gatk SelectVariants \
+  -R $REF \
+  -V x \
+  --select-type-to-include $VARIANT \
+  -invert-select -select "E_gnomAD" -select "E_TOPMed" \
+  -L $REGION \
+  -O $OUT && \
+gatk CountVariants \
+  -R $REF \
+  -V $OUT \
+  -L $REGION
+#+END_SRC
+
+Gen ~.eds~ with aedso
+#+BEGIN_SRC
+REF=chr7.$GENE.fa; GENE=actb; SOURCE=1000G; TYPE=indels; START=5527152; STOP=5563902; \
+aedso -v -s $START -e $STOP $REF $GENE.$SOURCE.$TYPE.vcf > $GENE.$SOURCE.$TYPE.eds
+#+END_SRC
+

@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+
+# call junctions matching statistics
+# when redundant is set to true then we will run the pairwise comparison
+# in both ways by calling junctions twice for x y and y x
+
+# creates an $OUTPUT_DIR if it doesn't exist
+# truncates the $OUT_FILE if it exists
+
+# Default values
+IN_DIR=""
+OUT_FILE=""
+OUT_DIR=""
+REDUNDANT=false # run both ways
+TIME=false
+JOBS=5 # number of parallel jobs
+
+# Initialize an array to store processed pairs
+processed_pairs=()
+
+function handle_dirs {
+
+    # check that $IN_DIR exists else exit with error
+    if [ ! -d "$IN_DIR" ]; then
+        echo "Input directory $IN_DIR does not exist."
+        exit 1
+    fi
+
+    # get the outfilename
+    # extract output dir from the string $OUT_FILE
+    # if the string contains a / then we need to extract the part after the last /
+    # otherwise we just use the string as is
+    #if [[ $OUT_FILE == */* ]]; then
+        # extract the part after the last /
+    #    OUT_DIR=${OUT_FILE##*/}
+    #else
+    #    OUT_DIR=$OUT_FILE
+    #fi
+
+    # extract output dir from the string $OUT_FILE
+    # if the string contains a / then we need to extract the part before the last /
+    # otherwise we just use the string as is
+    if [[ $OUT_FILE == */* ]]; then
+        # extract the part before the last /
+        OUT_DIR=${OUT_FILE%/*}
+    else
+        OUT_DIR="."
+    fi
+    
+    
+    # Create a directory to store junction results
+    mkdir -p $OUT_DIR
+
+}
+
+
+function run_junctions {
+    msa_1=$1
+    msa_2=$2
+    base_1=$(basename "$msa_1" .msa)
+    base_2=$(basename "$msa_2" .msa)    
+    local_outfile="$OUT_DIR/$base_1-$base_2.out"
+    
+    # Check if redundant is false and if the pair has been processed
+    if [ "$REDUNDANT" = false ] && [[ "${processed_pairs[@]}" =~ "$base_2-$base_1" ]]; then
+        return
+    fi
+
+    echo "Started job: $base_1 - $base_2"
+    
+    echo "Running junctions for $base_1 and $base_2" >> "$local_outfile"
+
+    if [ "$TIME" = true ]; then
+        (/usr/bin/time -f"%S\t%M" junctions -g -s "$msa_1" "$msa_2" 2>&1) >> "$local_outfile"
+    else
+        junctions -g -s "$msa_1" "$msa_2" >> "$local_outfile"
+    fi
+
+    if [ "$REDUNDANT" = false ]; then
+        processed_pairs+=("$base_1-$base_2")
+    fi
+
+    echo "Finished job: $base_1 - $base_2"
+}
+
+function handle_concurrency {
+
+    # create the output directory if it doesn't exist
+    handle_dirs
+
+    # Clear the result file before starting
+    > "$OUT_FILE"
+
+    # remove trailing backslash from IN_DIR if there is one
+    IN_DIR=${IN_DIR%/}
+
+    # Iterate through MSA files
+    for msa_1 in "$IN_DIR"/*.msa; do
+        for msa_2 in "$IN_DIR"/*.msa; do
+            if [ "$msa_1" != "$msa_2" ]; then
+                # Check the number of background jobs
+                while [ $(jobs | wc -l) -ge $JOBS ]; do
+                    sleep 1  # Wait until a slot is available
+                done
+
+                # Run junctions in the background
+                run_junctions "$msa_1" "$msa_2" &
+            fi
+        done
+    done
+
+    # Wait for all background jobs to finish
+    wait
+
+    cat "$OUT_DIR"/*.out > "$OUT_FILE"
+
+    echo "All junctions computed."
+}
+
+
+# Define the cli function
+cli() {
+
+  # Define the usage message
+  usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo "Options:"
+    echo "  -i, --in_dir      Input directory"
+    echo "  -o, --out_file    Output file"
+    echo "  -j, --jobs        Number of concurrent jobs to run [default: 5]"
+    echo "  -r, --redundant   Use redundant flag (optional)"
+    echo "  -t, --time        use the /usr/bin/time utility to check time and space usage (optional)"
+    echo "  -h, --help        Display this help message"
+    echo "Example:"
+    echo "  $0 -i input_dir -o output_file -r"
+    exit 1
+  }
+
+  # Parse command-line options using getopt
+  TEMP=$(getopt -o i:o:j:rth --long in_dir:,out_file:,jobs:,redundant,time,help -- "$@")
+
+  # Check for getopt errors
+  if [ $? -ne 0 ]; then
+    usage
+  fi
+
+  # Extract options and their arguments into variables
+  eval set -- "$TEMP"
+  while true; do
+    case "$1" in
+      -i | --in_dir)
+        IN_DIR="$2"
+        shift 2
+        ;;
+      -o | --out_file)
+        OUT_FILE="$2"
+        shift 2
+        ;;
+      -j | --jobs)
+        JOBS="$2"
+        shift 2
+        ;;
+      -r | --redundant)
+        REDUNDANT=true
+        shift
+        ;;
+      -t | --time)
+        TIME=true
+        shift
+        ;;
+      -h | --help)
+        usage
+        ;;
+      --)
+        shift
+        break
+        ;;
+      *)
+        usage
+        ;;
+    esac
+  done
+
+  # Validate required options
+  if [ -z "$IN_DIR" ] || [ -z "$OUT_FILE" ]; then
+    echo "Error: Both --in_dir and --out_file are required."
+    usage
+  fi
+
+  # Display the parsed options
+  echo "Running junctions matching statistics script."
+  echo "Parsed options:"
+  # -e flag allows interpretation of backslash escapes
+  echo -e "  Input Directory: $IN_DIR"
+  echo -e "  Output File: $OUT_FILE"
+  echo -e "  Jobs: $JOBS"
+  echo -e "  Redundant Flag: $REDUNDANT"
+  echo -e "  Time Flag: $TIME"
+
+  # call the run_junctions function
+  handle_concurrency
+}
+
+# Call the cli function with command-line arguments
+cli "$@"

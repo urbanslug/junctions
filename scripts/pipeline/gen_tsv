@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+
+"""
+
+Takes data run from a series of calls to junctions with -s
+and converts it to a TSV file for easy analysis.
+
+Run with
+python3 res_to_tsv.py <in_file> <out_file> <with_time>
+python3 res_to_tsv.py res3.txt res3.tsv t
+outputs res3.tsv
+"""
+
+import sys
+
+def res_to_tsv(in_file, out_file, with_time):
+    # Read data from res2.txt file
+  with open(in_file, 'r') as file:
+    lines = file.readlines()
+
+  # Initialize variables
+  data = []
+  current_line = 0
+
+  # Process the data and convert to TSV format
+  while current_line < len(lines):
+    substring_to_remove = "Running junctions for "
+    result_string = lines[current_line].replace(substring_to_remove, "")
+    clade_info = result_string.split(" and ")
+    clade_info = [info.strip() for info in clade_info]
+
+    ms_average_line = lines[current_line + 1]
+    if not ms_average_line.startswith("MS average"):
+      current_line += 2 if with_time else 1
+      continue
+
+    #print(ms_average_line)
+    ms_average = float(ms_average_line.split(":")[1].strip())
+
+    if with_time:
+      time_space_line = lines[current_line + 2]
+      time, space_kb = time_space_line.split("\t")
+      time = float(time.strip())
+      space_gb = round(float(space_kb) / (1024 * 1024), 2)  # Convert KB to GB and round to 2 decimal places
+
+      data.append((clade_info[0], clade_info[1], ms_average, time, space_gb))
+      current_line += 3
+    else:
+      data.append((clade_info[0], clade_info[1], ms_average))
+      current_line += 2
+
+    
+    
+  # Write TSV data to a new file
+  if with_time:
+    #out_file = out_file.replace(".tsv", "_time_space.tsv")
+    with open(out_file, 'w') as output_file:
+      output_file.write("Clade 1\tClade 2\tMS Avg\tTime (s)\tSpace (GB)\n")
+      for entry in data:
+        output_file.write(f"{entry[0]}\t{entry[1]}\t{entry[2]}\t{entry[3]}\t{entry[4]}\n")
+  else:
+    #out_file = out_file.replace(".tsv", "_ms.tsv")
+    with open(out_file, 'w') as output_file:
+      output_file.write("Clade 1\tClade 2\tMS Avg\n")
+      for entry in data:
+        output_file.write(f"{entry[0]}\t{entry[1]}\t{entry[2]}\n")
+
+  print("Conversion complete. TSV data written to: " + out_file)
+
+
+
+def main():
+    #len(sys.argv) >= 4
+    in_file = sys.argv[1]
+    out_file = sys.argv[2]
+
+    if len(sys.argv) >= 4:
+      with_time = True
+      out_file = out_file.replace(".tsv", "_time_space.tsv")
+    else:
+      with_time = False
+      out_file = out_file.replace(".tsv", "_ms.tsv")
+
+  
+    # print parsed args
+    print("Converting matching statistics script to TSV file.")
+    print("Parsed options:")
+    print("  Input file: " + in_file)
+    print("  Output file: " + out_file)
+    print("  With time: " + str(with_time))
+
+    res_to_tsv(in_file, out_file, with_time)
+
+    
+if __name__ == "__main__":
+    main()
+

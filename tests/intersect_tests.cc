@@ -77,6 +77,16 @@ TEST(IntersectionTest, Epsilons) {
   setup_and_run();
   EXPECT_EQ(res, true);
 
+  ed_string_w = "{A}{G,}{G}";
+  ed_string_q = "{AGG}{C,}{G}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "A{G,}{GGGCT,T}{A,T}";
+  ed_string_q = "AGGG{C,}{G,}T";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
   ed_string_w = "{AT,TC}{TC,T}";
   ed_string_q = "TC{,G}{CT,T}";
   setup_and_run();
@@ -101,7 +111,6 @@ TEST(IntersectionTest, Epsilons) {
   ed_string_q = "{C,}A";
   setup_and_run();
   EXPECT_EQ(res, false);
-
 
   ed_string_w = "A{C,}G";
   ed_string_q = "{C,}G";
@@ -242,4 +251,8 @@ TEST(IntersectionTest, Epsilons) {
     "{CTTT,TCAC}";
   setup_and_run();
   EXPECT_EQ(res, true);
+
+
+  
+  
 }

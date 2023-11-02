@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+import subprocess
+
+"""
+reads the 12th column of the TSV filey
+
+./seq_dl <in_file> <out_file>
+./seq_dl output.tsv all_sequences.fasta
+"""
+
+def dl(in_file, out_file):
+  # Read the new TSV file with selected lines
+  with open(in_file, "r") as tsv_file:
+    tsv_lines = tsv_file.readlines()
+
+  # Initialize a list to store sequences
+  all_sequences = []
+
+  # Loop through each line in the TSV file
+  for line in tsv_lines:
+    parts = line.strip().split("\t")
+    if len(parts) >= 12 and parts[11]:  # Check if column 12 has a value
+        accession_number = parts[11]
+        
+        # Run efetch command and capture output
+        efetch_command = ["efetch", "-db", "nucleotide", "-id", accession_number, "-format", "fasta"]
+        sequence_output = subprocess.run(efetch_command, stdout=subprocess.PIPE, text=True).stdout
+        
+        # Append the sequence to the list
+        all_sequences.append(sequence_output)
+
+  # Write all sequences to the all_sequences.fasta file
+  with open(out_file, "w") as fasta_file:
+    for sequence in all_sequences:
+        fasta_file.write(sequence)
+
+  print("Sequences fetched and saved to " + out_file)
+
+def main():
+    #len(sys.argv) >= 4
+    in_file = sys.argv[1]
+    out_file = sys.argv[2]
+
+  
+    # print parsed args
+    print("Downloading sequence data")
+    print("Parsed options:")
+    print("  Input file: " + in_file)
+    print("  Output file: " + out_file)
+
+    dl(in_file, out_file)
+
+    
+if __name__ == "__main__":
+    main()
+

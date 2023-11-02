@@ -363,15 +363,10 @@ void update_leaves(STvertex *current_vertex,
   // return leaves;
 }
 
-/**
- *
- *
- * @param[in] query the query string
- * @param[in] current_vertex  root of the suffix tree (can taeke another vertex)
- * @param[in] x the first char to the txt
- */
+
 std::vector<match_st::STQueryResult>
-FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
+FindEndIndexes(const char *query, STvertex *current_vertex, const char *x,
+			   bool end_in_imp_imp) {
 
   std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
@@ -380,7 +375,7 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
   int i{}; // the query position of the match
   int query_len = strlen(query);
   int match_length{};
-  int d{-1};
+  int d{-1}; // TODO: give a better name
 
   std::vector<match_st::LeafData> l_data;
   STvertex *last_with_underscore{nullptr};
@@ -391,6 +386,7 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
   // TODO: read the value of l_data from scope
   auto looper = [&](std::vector<match_st::LeafData> l_data, bool b = false, bool a = false) {
     for (auto l : l_data) {
+	  //d::cout << l.get_char_idx() << std::endl;
       matches.push_back(match_st::STQueryResult(b, (a ? d : match_length), l));
     }
   };
@@ -416,6 +412,29 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
 
     // TODO: make these if statements not be order dependent?
 
+	// both has a $ and _ going out of it
+	if (has_underscore && has_dollar && matched_a_char) {
+
+	  //std::cout << "both\n";
+
+	  current_edge = current_vertex->g[core::string_separator];
+      append_underscore_matches(); // TODO: remove useless
+
+      append_matches(true);
+
+
+
+	  d = match_length;
+      last_with_underscore = current_vertex;
+
+	  current_edge = current_vertex->g[core::terminator_char];
+      append_underscore_matches();
+      //append_matches(true);
+	  
+      if (!has_qry_char) { return matches; }
+	  
+    }
+	
     // We matched at least one query to the end a text string
     // because we saw a $ sign and i > 0
     if (has_dollar && matched_a_char) {
@@ -426,6 +445,13 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
       if (!has_qry_char) { return matches; }
     }
 
+    // save the last vertex we found with an _ going out of it
+    // and is not the root
+    if (has_underscore && matched_a_char) {
+      d = match_length;
+      last_with_underscore = current_vertex;
+    }
+	
     // we can no longer match the query and we found a _
     if (!has_qry_char && has_underscore && matched_a_char) {
       current_edge = current_vertex->g[core::terminator_char];
@@ -433,14 +459,6 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
       append_matches(true);
       return matches;
     }
-
-    // save the last vertex we found with an _ going out of it
-    // and is not the root
-    if (has_underscore && matched_a_char) {
-      d = match_length;
-      last_with_underscore = current_vertex;
-    }
-
 
     // matching failed
     if (!has_qry_char) {
@@ -501,6 +519,7 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x) {
         // There's no need to check if i> 0 because it was checked when
         // last_with_underscore got set
         append_underscore_matches();
+		if (end_in_imp_imp) { append_matches(false); }
         return matches;
       }
 

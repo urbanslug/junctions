@@ -1,7 +1,26 @@
+#include <iostream>
 #include <utility>
 #include <vector>
 
 #include "./core.hpp"
+
+namespace match_st {
+  bool operator==(const STQueryResult& lhs, const STQueryResult& rhs) {
+
+	std::size_t w = lhs.is_beyond_txt();
+	std::size_t x = lhs.get_match_length();
+	std::size_t y = lhs.get_char_idx();
+	std::size_t z = lhs.get_txt_str_idx();
+
+
+	std::size_t a = rhs.is_beyond_txt();
+	std::size_t b = rhs.get_match_length();
+	std::size_t c = rhs.get_char_idx();
+	std::size_t d = rhs.get_txt_str_idx();
+	
+	return std::tie(w, x, y, z) == std::tie(a, b, c, d);
+  }
+}
 
 namespace core {
 Parameters::Parameters() {}
@@ -62,19 +81,34 @@ std::ostream &operator<<(std::ostream &os, const ed_string &value) {
 void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
                       std::pair<match_st::STvertex, std::string> *text,
                       std::vector<std::string> const &queries,
-                      std::vector<EDSMatch>* candidate_matches) {
+                      std::vector<EDSMatch>* candidate_matches,
+					  bool end_in_imp_imp) {
 
   std::vector<match_st::STQueryResult> match_positions;
 
   for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
     std::string qry_str = queries[qry_str_idx];
 
-    match_positions = match_st::FindEndIndexes(qry_str.c_str(),
-                                               &text->first,
-                                               text->second.c_str());
+	//std::cout << "qry: " << qry_str << " txt: " << text->second << std::endl;
+	
+    match_positions =
+	  match_st::FindEndIndexes(qry_str.c_str(),
+							   &text->first,
+							   text->second.c_str(),
+							   end_in_imp_imp);
 
-    for (auto match_pos : match_positions) {
 
+	
+	
+    for (match_st::STQueryResult match_pos : match_positions) {
+
+	  /*
+	  std::cout << "char idx: " << match_pos.get_char_idx()
+				<< " txt idx: " << match_pos.get_txt_str_idx() 
+				<< " match len: " << match_pos.get_match_length()
+				<< std::endl;
+	  */
+	  
       eds::slice_eds local_txt_slice =
         txt_eds.get_str_slice_local(txt_letter_idx, match_pos.get_txt_str_idx());
 
@@ -83,6 +117,8 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
       match_pos.get_txt_char_idx_mut() -=
         (match_pos.get_txt_str_idx() + local_txt_slice.start);
 
+
+	  
       candidate_matches->push_back(
         EDSMatch(qry_str_idx,
                  qry_str.substr(0, match_pos.get_match_length()),

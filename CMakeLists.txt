@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(eds)
+project(junctions)
 
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 14)
@@ -19,13 +19,15 @@ if (MSVC)
     # warning level 4
     add_compile_options(/W4)
 else()
-    # additional warnings
-    add_compile_options(-Wall -Wextra -Wpedantic)
+    # additional warnings and AVX2 flag
+    add_compile_options(-Wall -Wextra -Wpedantic -mavx2)
 endif()
 
 ADD_LIBRARY(LibsModule
   src/eds/eds.cpp
+  src/eds/common.cpp
   src/core/core.cpp
+  src/core/utils.cpp
   src/graph/graph.cpp
   src/intersect/improved.cpp
   src/core/suffix_tree.cpp
@@ -54,7 +56,9 @@ file(MAKE_DIRECTORY ${BINARY_DIR}/)
 add_custom_command(TARGET junctions
                    POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:junctions> ../${BINARY_DIR}/)
-
+# ------
+# Tests
+# ------
 add_executable( junctions_test
   tests/main_tests.cc
 )

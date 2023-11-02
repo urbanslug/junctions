@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+
+"""
+This script creates multiple sequence alignments (MSAs) for each strain
+in the metadata file.
+
+Given strain metadata and a fasta file with all sequences, this script will
+create two directories in output dir which defaults to `./`:
+  - one with strain-specific fasta files and their accession numbers in a txt file
+  - and another with MSAs.
+
+Usage:
+./do_msa.py <metadata.tsv> <all_seq.fasta> <output_dir>
+"""
+
+
+import os
+import subprocess
+import sys
+
+def do(in_file, all_seq_file, out_dir):
+  # Read the TSV file with selected lines
+  with open(in_file, "r") as tsv_file:
+    tsv_lines = tsv_file.readlines()
+
+  # Initialize a dictionary to store sequences for each strain
+  # Initialize a dictionary to store accession numbers for each strain
+  strain_sequences = {}
+
+  # Loop through each line in the TSV file
+  for line in tsv_lines:
+    parts = line.strip().split("\t")
+    if len(parts) >= 12 and parts[11]:  # Check if column 12 has a value
+        strain = parts[5]
+        accession_number = parts[11] + ".1"  # Add ".1" to the accession number
+        
+        if strain not in strain_sequences:
+            strain_sequences[strain] = []
+        
+        strain_sequences[strain].append(accession_number)
+
+  # Create a directory to store strain-specific fasta files and MSAs
+  strains_dir = os.path.join(out_dir, "strain_sequences")
+  msa_dir = os.path.join(out_dir, "msa_files")
+  
+  os.makedirs(strains_dir, exist_ok=True)
+  os.makedirs(msa_dir, exist_ok=True)
+
+  # Loop through each strain and create a text file
+  for strain, accessions in strain_sequences.items():
+    # Create a text file for the strain
+    with open(os.path.join(strains_dir, f"{strain}.txt"), "w") as txt_file:
+        for accession in accessions:
+            txt_file.write(accession + "\n")
+    
+    # Run seqtk command to extract sequences and save to a fasta file
+    seqtk_command = ["seqtk", "subseq", all_seq_file, os.path.join(strains_dir, f"{strain}.txt")]
+    strain_fasta_output = subprocess.run(seqtk_command, stdout=subprocess.PIPE, text=True).stdout
+    
+    # Write the extracted sequences to the strain-specific fasta file
+    strain_fasta_filename = os.path.join(strains_dir, f"{strain}.fasta")
+    with open(strain_fasta_filename, "w") as fasta_file:
+        fasta_file.write(strain_fasta_output)
+
+    # Create the MSA file name
+    msa_filename = os.path.join(msa_dir, f"{strain}.msa")
+    
+    # Run abpoa command to create the multiple sequence alignment
+    abpoa_command = ["abpoa", "-S", "-m", "0", "-r", "1", strain_fasta_filename]
+    msa_output = subprocess.run(abpoa_command, stdout=subprocess.PIPE, text=True).stdout
+    
+    # Write the MSA output to the MSA file
+    with open(msa_filename, "w") as msa_file:
+        msa_file.write(msa_output)
+
+  print("Multiple sequence alignments (MSAs) created for each strain.")
+
+
+def main():
+    #len(sys.argv) >= 4
+    in_file = sys.argv[1]
+    all_seq_file = sys.argv[2]
+    out_dir = "./"
+
+    if len(sys.argv) >= 4:
+      out_dir = sys.argv[3]
+  
+  
+    # print parsed args
+    print("Downloading sequence data")
+    print("Parsed options:")
+    print("  Input file: " + in_file)
+    print("  All seq file: " + all_seq_file)
+    print("  Output dir: " + out_dir)
+
+    do(in_file, all_seq_file, out_dir)
+
+    
+if __name__ == "__main__":
+    main()
+

@@ -2,9 +2,13 @@
 *.gfa
 *.png
 *.svg
+*.txt
+x*
 out
+notes.org
 data/ignore/
 tmp/
+scratch/
 Testing/
 bin/
 build/

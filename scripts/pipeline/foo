@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+import networkx as nx
+import pandas as pd
+import matplotlib.pyplot as plt  # Import the pyplot module
+
+# Read the TSV file into a pandas DataFrame
+tsv_file = '~/src/CWI/junctions/test_data/scratch/res_20231004_0938_ms.tsv'
+df = pd.read_csv(tsv_file, sep='\t')
+
+# Create an undirected graph
+G = nx.Graph()
+
+# Add nodes and edges with weights
+for index, row in df.iterrows():
+    clade1 = row['Clade 1']
+    clade2 = row['Clade 2']
+    ms_average = row['MS Avg']
+
+    G.add_edge(clade1, clade2, weight=ms_average)
+
+# Get positions for visualization (using spring_layout for initial placement)
+pos = nx.spring_layout(G, weight='weight')
+
+# Draw the graph
+nx.draw(G, pos, with_labels=True, font_weight='bold', node_color='lightblue', font_size=8, edge_color='gray')
+
+# Display the graph
+plt.show()
+

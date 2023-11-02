@@ -63,10 +63,17 @@ void handle_info(core::Parameters const &params) {
 			<< "\n";
   for (auto fp: params.input_files) {
 	core::file_format format = utils::extract_extension(fp.second);
+#ifdef AVX2_SUPPORTED
 	e = format == core::file_format::msa ?
 	  eds::Parser::from_msa(fp.second):
 	  eds::Parser::from_eds(fp.second);
-
+#else
+	if (format == core::file_format::msa) {
+	  std::cerr << "[junctions::app::handle_info] ERROR: junctions was not compiled with MSA support\n";
+	  exit(1);
+	}
+	e = eds::Parser::from_eds(fp.second);
+#endif
 	//e = eds::Parser::from_eds(fp.second);
 	std::cout << std::left << std::setw(w) << e.get_size()
 			  << std::left << std::setw(w) << e.get_length()
@@ -86,7 +93,15 @@ void handle_info(core::Parameters const &params) {
  */
 void handle_intersection(core::Parameters const &params) {
   eds::EDS w, q;
-
+/*
+#ifndef AVX2_SUPPORTED
+	if (params.w_format == core::file_format::msa || params.q_format == core::file_format::msa) {
+	  std::cerr << "[junctions::app::handle_intersection] ERROR: junctions was not compiled with MSA support\n";
+	  exit(1);
+	}
+#endif
+*/
+#ifdef AVX2_SUPPORTED
   w = params.w_format == core::file_format::msa ?
 	eds::Parser::from_msa(params.get_w_fp().second) :
 	eds::Parser::from_eds(params.get_w_fp().second);
@@ -94,7 +109,16 @@ void handle_intersection(core::Parameters const &params) {
   q = params.q_format == core::file_format::msa ?
 	eds::Parser::from_msa(params.get_q_fp().second) :
 	eds::Parser::from_eds(params.get_q_fp().second);
+#else
+  	if (params.w_format == core::file_format::msa || params.q_format == core::file_format::msa) {
+	  std::cerr << "[junctions::app::handle_intersection] ERROR: junctions was not compiled with MSA support\n";
+	  exit(1);
+	}
 
+	w =  eds::Parser::from_eds(params.get_w_fp().second);
+	q = eds::Parser::from_eds(params.get_q_fp().second);
+#endif
+  
   // w = eds::Parser::from_eds(params.get_w_fp().second);
   // q = eds::Parser::from_eds(params.get_q_fp().second);
 
@@ -196,7 +220,16 @@ void handle_graph(core::Parameters const &params) {
   eds::EDS w, q;
   // w = eds::Parser::from_eds(params.get_w_fp().second);
   // q = eds::Parser::from_eds(params.get_q_fp().second);
-
+  /*
+#ifndef AVX2_SUPPORTED
+	if (params.w_format == core::file_format::msa || params.q_format == core::file_format::msa) {
+	  std::cerr << "[junctions::app::handle_graph] ERROR: junctions was not compiled with MSA support\n";
+	  exit(1);
+	}
+#endif
+*/
+  
+#ifdef AVX2_SUPPORTED
   w = params.w_format == core::file_format::msa ?
 	eds::Parser::from_msa(params.get_w_fp().second) :
 	eds::Parser::from_eds(params.get_w_fp().second);
@@ -204,7 +237,16 @@ void handle_graph(core::Parameters const &params) {
   q = params.q_format == core::file_format::msa ?
 	eds::Parser::from_msa(params.get_q_fp().second) :
 	eds::Parser::from_eds(params.get_q_fp().second);
+#else
+	if (params.w_format == core::file_format::msa || params.q_format == core::file_format::msa) {
+	  std::cerr << "[junctions::app::handle_graph] ERROR: junctions was not compiled with MSA support\n";
+	  exit(1);
+	}
 
+	w = eds::Parser::from_eds(params.get_w_fp().second);
+	q = eds::Parser::from_eds(params.get_q_fp().second);
+#endif
+  
   std::chrono::duration<double> timeRefRead;
   auto t0 = core::Time::now();
 
@@ -270,8 +312,8 @@ void handle_graph(core::Parameters const &params) {
 	}
 
 	if (params.compute_match_stats_avg) {
-	  std::cout << "MS average is: " << std::fixed << std::setprecision(2) << avg << "\n";
-	  // std::cout << "MS average is: " << avg << "\n"; TODO: remove ? 
+	  //std::cout << "MS average is: " << std::fixed << std::setprecision(2) << avg << "\n";
+	  std::cout << "MS average is: " << avg << "\n";
 	}
 	else {
 	  std::cout << "MS[" << params.match_stats_letter_idx << "]: " << res << "\n";

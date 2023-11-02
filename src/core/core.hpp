@@ -145,8 +145,22 @@ public:
   using LeafData::get_txt_str_idx;
 };
 
+bool operator==(const STQueryResult& lhs, const STQueryResult& rhs);
+  
+  
+/**
+ * @brief Find all occurrences of the query in the suffix tree
+ *
+ * if end_in_imp_imp is true, a query in which two prefixes match should return as successful
+ *
+ * @param query the query
+ * @param current_vertex the current vertex
+ * @param x the text
+ * @param end_in_imp_imp if true, the query must end in an implicit node
+ * @return a vector of STQueryResult
+ */
 std::vector<match_st::STQueryResult>
-FindEndIndexes(const char *query, STvertex *current_vertex, const char *x);
+FindEndIndexes(const char *query, STvertex *current_vertex, const char *x, bool end_in_imp_imp = false);
 
 STvertex *Create_suffix_tree(const char *x, int n);
 
@@ -327,7 +341,7 @@ public:
 void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
                       std::pair<match_st::STvertex, std::string> *text, // TODO: rename param
                       std::vector<std::string> const &queries,
-                      std::vector<EDSMatch> *candidate_matches);
+                      std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
 
 void join(const std::vector<std::string> &v, char c, std::string &s);
 std::string indent(int level);
