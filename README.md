@@ -91,5 +91,4 @@ make static WITH_MSA=true
 Run the following for the help text
 ```
 $ ./bin/junctions
------------------
 ```
