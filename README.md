@@ -54,4 +54,4 @@ Run the following for the help text
 ./bin/junctions
 ```
 
-Further documentation can be found in the [wiki](/wiki).
+Further documentation can be found in the [wiki](https://github.com/urbanslug/junctions/wiki).
