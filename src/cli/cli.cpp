@@ -259,7 +259,9 @@ void intersect_handler(args::Subparser &parser, core::Parameters &parameters) {
    }
 
    if (input_file_paths.size() != 2) {
-	 throw std::length_error("intersect command expects exactly 2 input files");
+	 std::cerr << "intersect command expects exactly 2 input files" << std::endl;
+	 throw args::Help("intersect");
+	 //throw std::length_error("intersect command expects exactly 2 input files");
    }
 
    // assume 2 input files
