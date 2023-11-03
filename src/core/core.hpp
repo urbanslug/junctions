@@ -206,7 +206,8 @@ enum witness {shortest, longest};
 enum task {
   check_intersection, // do EDSI TODO: rename?
   compute_graph,      // compute the intersection graph
-  info                // print info about the eds file
+  info,               // print info about the eds file
+  unset  			  // default value
 };
 
 /**
@@ -236,6 +237,9 @@ struct Parameters {
   int match_stats_str; // TODO: use enum
   int match_stats_letter_idx; // TODO: use size_t
   bool compute_match_stats_avg;
+  bool compute_dist;
+  bool compute_similarity;
+  int constraint;
 
   Parameters();
   // task
@@ -257,6 +261,7 @@ struct Parameters {
 
   void set_witness(bool b);
   void set_verbosity(unsigned char v);
+  //void set_verbosity(int v);
 
   bool gen_dot() const;
   bool compute_witness() const;

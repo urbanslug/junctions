@@ -23,7 +23,17 @@ namespace match_st {
 }
 
 namespace core {
-Parameters::Parameters() {}
+Parameters::Parameters() {
+  this->t = task::unset;
+  this->output_dot = false;
+  this->size_of_multiset = false;
+  this->w = false;
+  this->compute_match_stats_avg = false;
+  this->compute_match_stats = false;
+  this->compute_dist = false;
+  this->compute_similarity = false;
+  this->constraint = 0;
+}
 
 task Parameters::get_task() const { return this->t; }
 void Parameters::set_task(task tsk){ this->t = tsk; }

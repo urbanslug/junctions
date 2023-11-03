@@ -71,9 +71,9 @@ function run_junctions {
     echo "Running junctions for $base_1 and $base_2" >> "$local_outfile"
 
     if [ "$TIME" = true ]; then
-        (/usr/bin/time -f"%S\t%M" junctions -g -s "$msa_1" "$msa_2" 2>&1) >> "$local_outfile"
+        (/usr/bin/time -f"%S\t%M" junctions graph -c 0 -d "$msa_1" "$msa_2" 2>&1) >> "$local_outfile"
     else
-        junctions -g -s "$msa_1" "$msa_2" >> "$local_outfile"
+        junctions graph -c 0 -d "$msa_1" "$msa_2" >> "$local_outfile"
     fi
 
     if [ "$REDUNDANT" = false ]; then

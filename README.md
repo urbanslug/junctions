@@ -2,7 +2,7 @@
 
 Compare ED strings
 
-Supports the DNA alphabet: `{A, T, C, G, N, }`.
+Supports the DNA alphabet: `{A, T, C, G}` as well as `{N, Ɛ}` for the indeterminate base and empty string respectively.
 
 Takes at least one of two args
 
@@ -49,26 +49,26 @@ For larger graphs you may want to visualize them in
 cat x.dot | ./scripts/dot2gfa > x.gfa
 ```
 
-## Compile and Run
 
-### Download the source code
-using git
+## Download the source code
+using `git`
 ```sh
 git clone https://github.com/urbanslug/junctions
 cd junctions
 ```
 
-using curl and zip
+or using `curl` and `zip`
 ```
 curl -LO https://github.com/urbanslug/junctions/archive/refs/heads/master.zip
 unzip master.zip
 cd junctions
 ```
 
-### Compile
+## Compile
 
-#### Using make
-creates a dynamically linked binary
+Compilation is done with `make` and can be done in different ways.
+
+To creates a dynamically linked binary (advisable)
 ```
 make
 ```
@@ -78,17 +78,26 @@ in case of need of statically linked binary
 make static
 ```
 
-for junctions to internally convert MSA to EDS only supported on newer processors
+
+When compiled with MSA support junctions is able to internally convert MSA 
+files in RC-MSA format to ED-Strings however this is only supported on newer 
+intel processors.
+
+To compile a dynamically linked binary
 ```
 make WITH_MSA=true
 ```
-or
+
+or for a statically linked binary
 ```
 make static WITH_MSA=true
 ```
 
 ## Usage
 Run the following for the help text
+
 ```
-$ ./bin/junctions
+./bin/junctions
 ```
+
+Further documentation can be found in the [wiki](/wiki).

@@ -1,21 +1,18 @@
 #include "./cli/cli.hpp"
 
+#include "./core/core.hpp"
+
+
+
 /**
  * junctions entrypoint
  */
 int main(int argc, char **argv) {
-
-  // CLI
-  CommandLineProcessing::ArgvParser cmd;
-
   // Setup command line options
-  cli::initCmdParser(cmd);
-
-  // Parse command line arguments
   core::Parameters parameters;
-  cli::parseandSave(argc, argv, cmd, parameters);
-
-  app::dispatch(parameters);
+  
+  // parse command line args and run the app
+  cli::cli(argc, argv, parameters);
 
   return 0;
 }
