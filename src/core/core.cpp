@@ -23,7 +23,7 @@ namespace match_st {
 }
 
 namespace core {
-Parameters::Parameters() {
+AppConfig::AppConfig() {
   this->t = task::unset;
   this->output_dot = false;
   this->size_of_multiset = false;
@@ -35,28 +35,28 @@ Parameters::Parameters() {
   this->constraint = 0;
 }
 
-task Parameters::get_task() const { return this->t; }
-void Parameters::set_task(task tsk){ this->t = tsk; }
-bool Parameters::is_task(task tsk) { return this->t == tsk; }
+task AppConfig::get_task() const { return this->t; }
+void AppConfig::set_task(task tsk){ this->t = tsk; }
+bool AppConfig::is_task(task tsk) { return this->t == tsk; }
 
-algorithm Parameters::get_algo() const { return this->algo; }
-void Parameters::set_algo(algorithm a){ this->algo = a; }
-bool Parameters::is_algo(algorithm a) { return this->algo == a; }
+algorithm AppConfig::get_algo() const { return this->algo; }
+void AppConfig::set_algo(algorithm a){ this->algo = a; }
+bool AppConfig::is_algo(algorithm a) { return this->algo == a; }
 
-void Parameters::set_verbosity(unsigned char v) { this->v = v; };
-void Parameters::set_witness(bool b) { this->w = b; };
+void AppConfig::set_verbosity(unsigned char v) { this->v = v; };
+void AppConfig::set_witness(bool b) { this->w = b; };
 
-bool Parameters::gen_dot() const { return this->output_dot; }
-bool Parameters::compute_witness() const { return this->w; }
-bool Parameters::multiset() const { return this->size_of_multiset; }
-witness Parameters::get_witness_choice() const { return this->witness_choice; }
-unsigned char Parameters::verbosity() const { return this->v; }
+bool AppConfig::gen_dot() const { return this->output_dot; }
+bool AppConfig::compute_witness() const { return this->w; }
+bool AppConfig::multiset() const { return this->size_of_multiset; }
+witness AppConfig::get_witness_choice() const { return this->witness_choice; }
+unsigned char AppConfig::verbosity() const { return this->v; }
 
-std::pair<file_format, std::string> Parameters::get_w_fp() const {
+std::pair<file_format, std::string> AppConfig::get_w_fp() const {
   return std::make_pair(this->w_format, this->w_file_path);
 }
 
-std::pair<file_format, std::string> Parameters::get_q_fp() const {
+std::pair<file_format, std::string> AppConfig::get_q_fp() const {
   return std::make_pair(this->q_format, this->q_file_path);
 }
 
@@ -147,8 +147,7 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
 void join(const std::vector<std::string> &v, char c, std::string &s) {
   s.clear();
 
-  for (std::vector<std::string>::const_iterator p = v.begin(); p != v.end();
-       ++p) {
+  for (std::vector<std::string>::const_iterator p = v.begin(); p != v.end(); ++p) {
     s += *p;
     if (p != v.end() - 1)
       s += c;

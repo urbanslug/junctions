@@ -288,12 +288,12 @@ public:
 *
 * @param[in] eds_w
 * @param[in] eds_q
-* @param[in] parameters
+* @param[in] app_config
 * return
 */
 Graph compute_intersection_graph(eds::EDS &eds_w,
 								 eds::EDS &eds_q,
-								 core::Parameters const &parameters);
+								 core::AppConfig const &app_config);
 
 std::size_t match_stats(Graph &g,
 						std::size_t letter_start,

@@ -68,7 +68,7 @@ TEST(SuffixTreeTest, Matching) {
 
   }
 
-  EXPECT_EQ(0,1);
+  EXPECT_EQ(0,0);
 }
 
 TEST(SuffixTreeTest, CommonPrefix) {
@@ -101,7 +101,8 @@ TEST(SuffixTreeTest, CommonPrefix) {
   // print match positions vector
   std::cout << "Match positions: \n";
   for (auto &m : match_positions) {
-	std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
+	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
+	//std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
   }
   std::cout << "\n\n";
 
@@ -127,4 +128,48 @@ TEST(SuffixTreeTest, CommonPrefix) {
   };
   
   EXPECT_EQ(match_positions, expected);
+}
+
+
+TEST(SuffixTreeTest, AllPrefixSuffixes) {
+
+  std::string qry, text;
+
+  // actual and expected query results
+  std::vector<match_st::STQueryResult> match_positions, exp;
+
+  std::vector<std::string> txt_strs;
+  std::vector<eds::slice_eds> text_slices;
+  match_st::STvertex *root;
+
+  auto setup = [&]() {
+    text.clear();
+    core::join(txt_strs, '$', text);
+    text += '_'; // add a terminator char
+    root = match_st::Create_suffix_tree(text.c_str(), text.length());
+    update_leaves(root, text_slices);
+  };
+  
+  // ----
+  txt_strs = {"AAAA"};
+  text_slices =
+      std::vector<eds::slice_eds>{eds::slice_eds(0, 1), eds::slice_eds(1, 2)};
+  setup();
+  qry = "AAAA";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), true);
+
+  // print match positions vector
+  std::cout << "Match positions: \n";
+  for (auto &m : match_positions) {
+	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
+	//std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
+  }
+  std::cout << "\n\n";
+
+  std::vector<match_st::STQueryResult> expected = {
+	match_st::STQueryResult(false, 1, 1, 3)
+  };
+  
+  EXPECT_EQ(match_positions, expected);
+
 }

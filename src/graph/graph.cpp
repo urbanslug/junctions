@@ -148,7 +148,6 @@ void graph::Graph::add_edge(std::size_t N_1,
   int stop, start;
   int l, k, l_prime, k_prime;
 
-
   l = m_typ.left1() == graph::match_type::exp ? bounds.left1() : N_1;
   k = m_typ.left2() == graph::match_type::exp ? bounds.left2() : N_2;
 
@@ -375,7 +374,6 @@ int graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx
   } else {
     return -1;
   }
-
 }
 
 void graph::Graph::dbg_print(int indent_level = 0) {
@@ -511,13 +509,10 @@ void filter_matches_new(std::vector<core::EDSMatch> const &candidate_matches,
     // explicit or implicit match
     graph::match_type g_t_m_start, g_t_m_stop, g_q_m_start, g_q_m_stop;
 
-
     // TODO: rename t_start in N to something like match_start_in_N
     int t_start_in_N =
         txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) +
         local_txt_slice.start;
-
-	/*    */
 	
     // is the active suffix valid?
     bool valid_as{false};
@@ -664,7 +659,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
                     int qry_letter_idx,
                     int txt_letter_idx,
                     std::vector<graph::GraphSlice>* valid_matches,
-					core::Parameters const &parameters) {
+					core::AppConfig const &app_config) {
   for (auto candiate_match : candidate_matches) {
 
     eds::slice_eds local_txt_slice =
@@ -684,7 +679,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
         txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) +
         local_txt_slice.start;
 
-	if (parameters.constraint) {
+	if (app_config.constraint) {
 	  // is the active suffix valid?
 	  bool valid_as{false};
 
@@ -795,7 +790,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
 		//                                      : graph::match_type::exp;
 
 
-	if (parameters.constraint && g_q_m_stop == graph::match_type::imp && g_t_m_stop == graph::match_type::imp) {
+	if (app_config.constraint && g_q_m_stop == graph::match_type::imp && g_t_m_stop == graph::match_type::imp) {
 	  continue;
 	}
 	
@@ -872,13 +867,13 @@ void graph::Graph::create_edge(
 *
 * @param[in] eds_w T1
 * @param[in] eds_q T2
-* @param[in] parameters
+* @param[in] app_config
 * return an intersection graph
 */
 graph::Graph graph::compute_intersection_graph(
   eds::EDS &eds_w,
   eds::EDS &eds_q,
-  core::Parameters const &parameters) {
+  core::AppConfig const &app_config) {
 
   size_t size_w = eds_w.get_size();
   size_t size_q = eds_q.get_size();
@@ -923,7 +918,7 @@ graph::Graph graph::compute_intersection_graph(
   graph::Graph g = graph::Graph(eds_w.get_size() + eds_w.get_eps_count(),
                                 eds_q.get_size() + eds_q.get_eps_count());
 
-  if (parameters.verbosity() > 0) { g.dbg_print(); }
+  if (app_config.verbosity() > 0) { g.dbg_print(); }
 
   eds::LetterBoundary j_boundary;
   eds::LetterBoundary i_boundary;
@@ -1072,7 +1067,7 @@ graph::Graph graph::compute_intersection_graph(
                      j,
                      i,
                      &valid_matches,
-					 parameters);
+					 app_config);
 
       g.create_edge(valid_matches, 2, bounds);
 
@@ -1099,7 +1094,7 @@ graph::Graph graph::compute_intersection_graph(
                       i,
                       j,
                       &valid_matches,
-					  parameters);
+					  app_config);
 
        g.create_edge(valid_matches, 1, bounds);
 
@@ -1118,7 +1113,6 @@ graph::Graph graph::compute_intersection_graph(
  * @param[in] letter_start the start of i in N
  * @param[in] last the last positon in the other ed string
  * @param[in] match_stats_str the string in which i lies (either T_1 or T_2)
-
  */
 std::size_t graph::match_stats(graph::Graph &g,
                         std::size_t letter_start,
@@ -1181,8 +1175,7 @@ std::double_t match_stats_self(eds::EDS& e) {
   return ms_t1_t1;
 }
 
-std::double_t
-graph::match_stats_avg_normalized(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
+std::double_t graph::match_stats_avg_normalized(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
   g.compute_match_stats();
 
   // the last letter in T_1 and T_2
@@ -1273,8 +1266,7 @@ graph::match_stats_avg_normalized(graph::Graph &g, eds::EDS& eds_w, eds::EDS& ed
   return (d_t1_t2 + d_t2_t1) / 2.0;
 }
 
-std::double_t graph::match_stats_avg(
-  graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
+std::double_t graph::match_stats_avg(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
   g.compute_match_stats();
 
   // the last letter in T_1 and T_2
@@ -1333,8 +1325,7 @@ std::double_t graph::match_stats_avg(
   return t1_avg + t2_avg;
 }
 
-std::double_t
-graph::distance(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
+std::double_t graph::distance(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
   g.compute_match_stats();
 
   // the last letter in T_1 and T_2
@@ -1429,9 +1420,7 @@ graph::distance(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
   return (d_t1_t2 + d_t2_t1) / 2.0;
 }
 
-
-std::double_t graph::similarity(
-  graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
+std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
   g.compute_match_stats();
 
   // the last letter in T_1 and T_2
@@ -1502,7 +1491,6 @@ std::double_t graph::similarity(
 
   return t1_avg + t2_avg;
 }
-
 
 int graph::longest_witness(graph::Graph &g) {
   return g.witness(0, g.get_size() - 1 );

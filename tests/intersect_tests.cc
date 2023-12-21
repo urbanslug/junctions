@@ -8,7 +8,7 @@ TEST(IntersectionTest, LacksIntersection) {
   eds::EDS w, q;
   std::string ed_string_w, ed_string_q;
   bool res; // result
-  core::Parameters params;
+  core::AppConfig params;
   params.set_verbosity(0); // TODO: remove
   
 
@@ -32,7 +32,7 @@ TEST(IntersectionTest, ActiveSuffixes) {
   eds::EDS w, q;
   std::string ed_string_w, ed_string_q;
   bool res; // result
-  core::Parameters params;
+  core::AppConfig params;
   params.set_verbosity(0); // TODO: remove
 
   auto setup_and_run = [&]() {
@@ -60,7 +60,7 @@ TEST(IntersectionTest, Epsilons) {
   eds::EDS w, q;
   std::string ed_string_w, ed_string_q;
   bool res; // result
-  core::Parameters params;
+  core::AppConfig params;
   params.set_verbosity(0); // TODO: remove
 
   auto setup_and_run = [&]() {

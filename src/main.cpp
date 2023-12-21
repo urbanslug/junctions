@@ -9,10 +9,10 @@
  */
 int main(int argc, char **argv) {
   // Setup command line options
-  core::Parameters parameters;
+  core::AppConfig app_config;
   
   // parse command line args and run the app
-  cli::cli(argc, argv, parameters);
+  cli::cli(argc, argv, app_config);
 
   return 0;
 }

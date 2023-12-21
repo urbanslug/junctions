@@ -29,9 +29,10 @@
 #include <unordered_set>
 #include <unordered_map>
 
-
-
 #include "../eds/eds.hpp"
+#include "./constants.hpp"
+
+
 
 namespace match_st {
 /*
@@ -115,20 +116,19 @@ class STQueryResult : private LeafData {
 public:
   // constructor(s)
   STQueryResult(bool beyond_text, std::size_t match_length, LeafData&& l_data)
-    : LeafData(std::move(l_data)),
-      beyond_text(beyond_text),
-      match_length(match_length) {}
+	: LeafData(std::move(l_data)),
+	  beyond_text(beyond_text),
+	  match_length(match_length) {}
 
- STQueryResult(bool beyond_text, std::size_t match_length, LeafData& l_data)
-    : LeafData(std::move(l_data)),
-      beyond_text(beyond_text),
-      match_length(match_length) {}
+  STQueryResult(bool beyond_text, std::size_t match_length, LeafData& l_data)
+	: LeafData(std::move(l_data)),
+	  beyond_text(beyond_text),
+	  match_length(match_length) {}
 
-  STQueryResult(bool beyond_text, std::size_t match_length, std::size_t str_idx,
-                std::size_t char_idx)
-    : LeafData(str_idx, char_idx),
-      beyond_text(beyond_text),
-      match_length(match_length) {}
+  STQueryResult(bool beyond_text, std::size_t match_length, std::size_t str_idx, std::size_t char_idx)
+	: LeafData(str_idx, char_idx),
+	  beyond_text(beyond_text),
+	  match_length(match_length) {}
 
   // getters
   bool is_beyond_txt() const { return this->beyond_text; }
@@ -144,8 +144,8 @@ public:
 };
 
 bool operator==(const STQueryResult& lhs, const STQueryResult& rhs);
-  
-  
+
+
 /**
  * @brief Find all occurrences of the query in the suffix tree
  *
@@ -163,12 +163,12 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x, bool 
 STvertex *Create_suffix_tree(const char *x, int n);
 
 void gen_suffix_tree(
-    eds::EDS &eds, std::vector<std::pair<STvertex, std::string>> *suffix_trees);
+eds::EDS &eds, std::vector<std::pair<STvertex, std::string>> *suffix_trees);
 
 void update_leaves(STvertex *current_vertex,
-                   std::vector<eds::slice_eds> const &text_offsets,
-                   eds::EDS& eds,
-                   std::size_t letter_idx);
+std::vector<eds::slice_eds> const &text_offsets,
+eds::EDS& eds,
+std::size_t letter_idx);
 
 } // namespace match
 
@@ -180,12 +180,16 @@ bool_matrix gen_matrix(size_t rows, size_t cols);
 typedef std::chrono::high_resolution_clock Time;
 
 enum file_format {
-  msa, // msa in PIR format
-  eds, // eds file
-  unknown
+  msa,    // msa in PIR format
+  eds,    // eds file
+  unknown //
 };
 
-enum ed_string { w, q };
+// TODO: rename to T1 and T2
+enum ed_string {
+  w,
+  q
+};
 
 std::ostream &operator<<(std::ostream &os, const ed_string &value);
 
@@ -198,22 +202,20 @@ enum algorithm {
 
 enum witness {shortest, longest};
 
-  //std::ostream &operator<<(std::ostream &os, const core::witness &value);
-
-
 enum task {
   check_intersection, // do EDSI TODO: rename?
   compute_graph,      // compute the intersection graph
   info,               // print info about the eds file
-  unset  			  // default value
+  unset				  // default value
 };
 
+// TODO: rename parameters to app config
 /**
- * @brief   parameters for cli args
+ * @brief parameters for cli args
  */
-struct Parameters {
+struct AppConfig {
   algorithm algo;
-  unsigned char v; // verbosity
+  unsigned char v;         // verbosity
   std::string w_file_path; // reference sequence(s)
   file_format w_format;
   std::string q_file_path; // query sequence(s)
@@ -239,7 +241,8 @@ struct Parameters {
   bool compute_similarity;
   int constraint;
 
-  Parameters();
+  AppConfig();
+
   // task
   task get_task() const;
   void set_task(task tsk);
@@ -253,7 +256,7 @@ struct Parameters {
   // is the current task tsk?
   bool is_algo(algorithm a);
 
-  //fp (file path)
+  // fp (file path)
   std::pair<file_format, std::string> get_w_fp() const;
   std::pair<file_format, std::string> get_q_fp() const;
 
@@ -268,51 +271,41 @@ struct Parameters {
   unsigned char verbosity() const;
 };
 
-
 // TODO call this an eds match and move to core?
 struct EDSMatch {
   std::size_t query_str_index;
   std::string str;
   // in this case we modify the char idx in q_res.l_data.char_idx
   // to be actual position in the text string
-  //match_st::STQueryResult &q_res;
+  // match_st::STQueryResult &q_res;
 
   match_st::STQueryResult q_res;
 
 public:
   // constructor(s)
-  EDSMatch(std::size_t query_str_index, std::string str,
-           match_st::STQueryResult &&q_res)
-      : query_str_index(query_str_index),
-        str(str),
-        q_res(std::move(q_res)) {}
+  EDSMatch(std::size_t query_str_index, std::string str, match_st::STQueryResult &&q_res)
+	: query_str_index(query_str_index),
+	  str(str),
+	  q_res(std::move(q_res)) {}
 
-  EDSMatch(std::size_t query_str_index,
-           std::string str,
-           match_st::STQueryResult& q_res)
-    : query_str_index(query_str_index),
-      str(str),
-      q_res(std::move(q_res)) {}
+  EDSMatch(std::size_t query_str_index, std::string str, match_st::STQueryResult& q_res)
+	: query_str_index(query_str_index),
+	  str(str),
+	  q_res(std::move(q_res)) {}
 
-  EDSMatch(std::size_t qry_str_index,
-           std::size_t txt_str_idx,
-           std::size_t txt_char_idx,
-           std::string str,
-           bool beyond_txt,
-           std::size_t m_len
-           )
-    : query_str_index(qry_str_index),
-      str(str),
-      q_res(std::move(match_st::STQueryResult(beyond_txt,
-                                    m_len,
-                                    txt_str_idx,
-                                    txt_char_idx))) {}
+  EDSMatch(std::size_t qry_str_index, std::size_t txt_str_idx,
+		   std::size_t txt_char_idx, std::string str, bool beyond_txt,
+		   std::size_t m_len)
+	: query_str_index(qry_str_index),
+	  str(str),
+	  q_res(match_st::STQueryResult(beyond_txt,
+									m_len,
+									txt_str_idx,
+									txt_char_idx)) {}
 
   //
   std::size_t get_qry_str_idx() const { return this->query_str_index; }
   std::string const& get_str() const { return this->str; }
-
-
 
   // modifiers
   std::string& get_str_mut() { return this->str; }
@@ -342,13 +335,15 @@ public:
 };
 
 void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
-                      std::pair<match_st::STvertex, std::string> *text, // TODO: rename param
-                      std::vector<std::string> const &queries,
-                      std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
+					  std::pair<match_st::STvertex, std::string> *text, // TODO: rename param
+					  std::vector<std::string> const &queries,
+					  std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
 
+// TODO: move to utils
 void join(const std::vector<std::string> &v, char c, std::string &s);
 std::string indent(int level);
 
+// TODO [c] move to core::constants
 const std::string unicode_eps = "\u03B5";
 const std::string unicode_sub_1 = "\u2081";
 const std::string unicode_sub_2 = "\u2082";
@@ -363,6 +358,4 @@ const std::string q_a = "q\u2090";
 const char string_separator = '$';
 const char terminator_char = '_';
 } // namespace core
-
-
 #endif

@@ -15,7 +15,7 @@ TEST(GraphTest, ComputeGraph) {
   std::string input_string{""};
   std::string ed_string_w, ed_string_q;
 
-  core::Parameters params;
+  core::AppConfig params;
   params.set_verbosity(0);
 
   auto setup_and_run = [&]() {
@@ -211,7 +211,7 @@ TEST(GraphTest, Witness) {
   int shortest, longest;
   std::string ed_string_w, ed_string_q;
 
-  core::Parameters params;
+  core::AppConfig params;
   params.set_verbosity(0);
 
   auto setup_and_run = [&]() {
@@ -289,7 +289,7 @@ TEST(GraphTest, Multiset) {
   size_t multiset_size;
   std::string ed_string_w, ed_string_q;
 
-  core::Parameters params;
+  core::AppConfig params;
   params.set_verbosity(0);
 
   auto setup_and_run = [&]() {
