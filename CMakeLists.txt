@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(junctions)
 
-# GoogleTest requires at least C++14
-set(CMAKE_CXX_STANDARD 14)
+# GoogleTest requires at least C++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
@@ -33,8 +33,7 @@ ADD_LIBRARY(LibsModule
   src/core/suffix_tree.cpp
   src/intersect/naive.cpp
   src/cli/cli.cpp
-  src/cli/argvparser.cpp
-  src/cli/parseCmdArgs.cpp
+  src/cli/app.cpp
 )
 
 set(SOURCE_FILES

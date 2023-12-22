@@ -35,7 +35,7 @@ make static
 
 When compiled with MSA support junctions is able to internally convert MSA 
 files in RC-MSA format to ED-Strings however this is only supported on newer 
-intel processors.
+x86 processors.
 
 To compile a dynamically linked binary
 ```
