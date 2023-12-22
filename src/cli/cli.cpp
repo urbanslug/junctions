@@ -46,8 +46,8 @@ void printCmdOptions(core::AppConfig &app_config) {
 	}
   }
   else {
-	std::cerr << "w = " << app_config.w_file_path << " (format: " << (app_config.w_format == 0 ? "msa" : "eds") << ")" << std::endl;
-	std::cerr << "q = " << app_config.q_file_path << " (format: " << (app_config.q_format == 0 ? "msa" : "eds") << ")" << std::endl;
+	std::cerr << core::constants::T_1 << " = " << app_config.t1_file_path << " (format: " << (app_config.t1_format == 0 ? "msa" : "eds") << ")" << std::endl;
+	std::cerr << core::constants::T_2 << " = " << app_config.t2_file_path << " (format: " << (app_config.t2_format == 0 ? "msa" : "eds") << ")" << std::endl;
   }
 
   std::cerr << "Task(s):\n";
@@ -179,11 +179,11 @@ void graph_handler(args::Subparser &parser, core::AppConfig &app_config) {
    }
 
    // assume 2 input files
-   app_config.w_format = utils::extract_extension(input_file_paths[0]);
-   app_config.w_file_path = input_file_paths[0];
+   app_config.t1_format = utils::extract_extension(input_file_paths[0]);
+   app_config.t1_file_path = input_file_paths[0];
 
-   app_config.q_format = utils::extract_extension(input_file_paths[1]);
-   app_config.q_file_path = input_file_paths[1];
+   app_config.t2_format = utils::extract_extension(input_file_paths[1]);
+   app_config.t2_file_path = input_file_paths[1];
 }
 
 void info_handler(args::Subparser &parser, core::AppConfig &app_config) {
@@ -243,11 +243,11 @@ void intersect_handler(args::Subparser &parser, core::AppConfig &app_config) {
    }
 
    // assume 2 input files
-   app_config.w_format = utils::extract_extension(input_file_paths[0]);
-   app_config.w_file_path = input_file_paths[0];
+   app_config.t1_format = utils::extract_extension(input_file_paths[0]);
+   app_config.t1_file_path = input_file_paths[0];
 
-   app_config.q_format = utils::extract_extension(input_file_paths[1]);
-   app_config.q_file_path = input_file_paths[1];
+   app_config.t2_format = utils::extract_extension(input_file_paths[1]);
+   app_config.t2_file_path = input_file_paths[1];
 }
 
 int cli(int argc, char **argv, core::AppConfig &app_config) {

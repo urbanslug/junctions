@@ -286,30 +286,30 @@ public:
 /**
 *
 *
-* @param[in] eds_w
-* @param[in] eds_q
+* @param[in] eds_t1
+* @param[in] eds_t2
 * @param[in] app_config
 * return
 */
-Graph compute_intersection_graph(eds::EDS &eds_w,
-								 eds::EDS &eds_q,
+Graph compute_intersection_graph(eds::EDS &eds_t1,
+								 eds::EDS &eds_t2,
 								 core::AppConfig const &app_config);
 
 std::size_t match_stats(Graph &g,
 						std::size_t letter_start,
 						std::size_t last,
-						core::ed_string match_stats_str);
+						core::ed_string_e match_stats_str);
 
 std::double_t match_stats_avg(Graph &g,
-     						  eds::EDS& eds_w,
-							  eds::EDS& eds_q);
+     						  eds::EDS& eds_t1,
+							  eds::EDS& eds_t2);
 
 std::double_t match_stats_avg_normalized(Graph &g,
-										 eds::EDS& eds_w,
-										 eds::EDS& eds_q);
+										 eds::EDS& eds_t1,
+										 eds::EDS& eds_t2);
   
-std::double_t distance(Graph &g, eds::EDS& eds_w, eds::EDS& eds_q);
-std::double_t similarity(Graph &g, eds::EDS& eds_w, eds::EDS& eds_q);
+std::double_t distance(Graph &g, eds::EDS& eds_t1, eds::EDS& eds_t2);
+std::double_t similarity(Graph &g, eds::EDS& eds_t1, eds::EDS& eds_t2);
 
 std::size_t multiset(graph::Graph &g);
 

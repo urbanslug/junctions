@@ -4,16 +4,13 @@
 #include "../core/core.hpp"
 #include "../eds/eds.hpp"
 
-// TODO: find a better name and namespacing
-namespace intersect {
 
-  namespace improved {
+namespace intersect::improved {
+  bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q);
+} // namespace improved
+
+namespace intersect::naive {
     bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q);
-  } // namespace improved
+} // namespace intersect::naive
 
-  namespace naive {
-    bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q);
-  } // namespace naive
-
-} //namespace intersect
 #endif

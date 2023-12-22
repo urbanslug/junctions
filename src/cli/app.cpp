@@ -95,24 +95,24 @@ void handle_info(core::AppConfig const &params) {
  * Compute intersection
  */
 void handle_intersection(core::AppConfig const &params) {
-  eds::EDS w, q;
+  eds::EDS t1, t2;
 
 #ifdef AVX2_SUPPORTED
-  w = params.w_format == core::file_format::msa ?
+  t1 = params.t1_format == core::file_format::msa ?
 	eds::Parser::from_msa(params.get_w_fp().second) :
 	eds::Parser::from_eds(params.get_w_fp().second);
 
-  q = params.q_format == core::file_format::msa ?
+  t2 = params.t2_format == core::file_format::msa ?
 	eds::Parser::from_msa(params.get_q_fp().second) :
 	eds::Parser::from_eds(params.get_q_fp().second);
 #else
-  	if (params.w_format == core::file_format::msa || params.q_format == core::file_format::msa) {
+  	if (params.t1_format == core::file_format::msa || params.t2_format == core::file_format::msa) {
 	  std::cerr << "[junctions::app::handle_intersection] ERROR: junctions was not compiled with MSA support\n";
 	  exit(1);
 	}
 
-	w =  eds::Parser::from_eds(params.get_w_fp().second);
-	q = eds::Parser::from_eds(params.get_q_fp().second);
+	t1 =  eds::Parser::from_eds(params.get_w_fp().second);
+	t2 = eds::Parser::from_eds(params.get_q_fp().second);
 #endif
   
   // w = eds::Parser::from_eds(params.get_w_fp().second);
@@ -145,14 +145,14 @@ void handle_intersection(core::AppConfig const &params) {
 
   switch (params.get_algo()) {
   case core::algorithm::improved: {
-	res_i = intersect::improved::has_intersection(w, q);
+	res_i = intersect::improved::has_intersection(t1, t2);
 	timeRefRead = core::Time::now() - t0;
 	report_res(res_i);
 	report_time("improved");
   }
 	break;
   case core::algorithm::naive: {
-	res_n = intersect::naive::has_intersection(w, q);
+	res_n = intersect::naive::has_intersection(t1, t2);
 	timeRefRead = core::Time::now() - t0;
 	report_res(res_n);
 	report_time("naive");
@@ -161,13 +161,13 @@ void handle_intersection(core::AppConfig const &params) {
   case core::algorithm::both: {
 	// Both (for tests & benchmarks)
 	// -----------------------------
-	res_i = intersect::improved::has_intersection(w, q);
+	res_i = intersect::improved::has_intersection(t1, t2);
 	timeRefRead = core::Time::now() - t0;
 	report_res(res_i);
 	report_time("improved");
 
 	t0 = core::Time::now();
-	res_n = intersect::naive::has_intersection(w, q);
+	res_n = intersect::naive::has_intersection(t1, t2);
 	timeRefRead = core::Time::now() - t0;
 
 	if (res_i != res_n) { err(); }
@@ -195,7 +195,7 @@ void handle_intersection(core::AppConfig const &params) {
  *
  */
 void handle_graph(core::AppConfig const &app_config) {
-  eds::EDS w, q;
+  eds::EDS t1, t2;
   // w = eds::Parser::from_eds(params.get_w_fp().second);
   // q = eds::Parser::from_eds(params.get_q_fp().second);
   /*
@@ -208,21 +208,21 @@ void handle_graph(core::AppConfig const &app_config) {
 */
   
 #ifdef AVX2_SUPPORTED
-  w = app_config.w_format == core::file_format::msa ?
+  t1 = app_config.t1_format == core::file_format::msa ?
 	eds::Parser::from_msa(app_config.get_w_fp().second) :
 	eds::Parser::from_eds(app_config.get_w_fp().second);
 
-  q = app_config.q_format == core::file_format::msa ?
+  t2 = app_config.t2_format == core::file_format::msa ?
 	eds::Parser::from_msa(app_config.get_q_fp().second) :
 	eds::Parser::from_eds(app_config.get_q_fp().second);
 #else
-	if (app_config.w_format == core::file_format::msa || app_config.q_format == core::file_format::msa) {
+	if (app_config.t1_format == core::file_format::msa || app_config.t2_format == core::file_format::msa) {
 	  std::cerr << "[junctions::app::handle_graph] ERROR: junctions was not compiled with MSA support\n";
 	  exit(1);
 	}
 
-	w = eds::Parser::from_eds(app_config.get_w_fp().second);
-	q = eds::Parser::from_eds(app_config.get_q_fp().second);
+	t1 = eds::Parser::from_eds(app_config.get_w_fp().second);
+	t2 = eds::Parser::from_eds(app_config.get_q_fp().second);
 #endif
   
   std::chrono::duration<double> timeRefRead;
@@ -232,7 +232,7 @@ void handle_graph(core::AppConfig const &app_config) {
 	std::cerr << "INFO computing intersection graph\n";
   }
 
-  graph::Graph g = graph::compute_intersection_graph(w, q, app_config);
+  graph::Graph g = graph::compute_intersection_graph(t1, t2, app_config);
   timeRefRead = core::Time::now() - t0;
 
   if (app_config.verbosity() > 0) {
@@ -302,17 +302,14 @@ void handle_graph(core::AppConfig const &app_config) {
   }
 
   if (app_config.compute_dist) {
-	//std::size_t res{std::numeric_limits<std::size_t>::max()};
 	std::double_t distance{};
-	distance = graph::distance(g, w, q);
+	distance = graph::distance(g, t1, t2);
 	std::cout << "Distance measure is: " << distance << "\n";
   }
-
   
   if (app_config.compute_similarity) {
-	//std::size_t res{std::numeric_limits<std::size_t>::max()};
 	std::double_t distance{};
-	distance = graph::similarity(g, w, q);
+	distance = graph::similarity(g, t1, t2);
 	std::cout << "Similarity measure is: " << distance << "\n";
   }
   
@@ -326,27 +323,26 @@ void handle_graph(core::AppConfig const &app_config) {
 	  std::cerr << "INFO computing matching statistics\n";
 	}
 
-
 	if (app_config.compute_match_stats_avg) {
-	  avg = graph::match_stats_avg(g, w, q);
+	  avg = graph::match_stats_avg(g, t1, t2);
 	}
 	else {
-	switch (app_config.match_stats_str) {
-	case 1:
-	  res = graph::match_stats(g,
-							   w.get_letter_boundaries(app_config.match_stats_letter_idx).left(),
-							   q.get_size() + q.get_eps_count(),
-							   core::ed_string::w);
-	  break;
-	case 2:
-	  res = graph::match_stats(g,
-							   q.get_letter_boundaries(app_config.match_stats_letter_idx).left(),
-							   w.get_size() + w.get_eps_count(),
-							   core::ed_string::q);
-	  break;
-	default:
-	  throw std::invalid_argument("invalid match stats string");
-	}
+	  switch (app_config.match_stats_str) {
+	  case 1:
+		res = graph::match_stats(g,
+								 t1.get_letter_boundaries(app_config.match_stats_letter_idx).left(),
+								 t2.get_size() + t2.get_eps_count(),
+								 core::ed_string_e::t1);
+		break;
+	  case 2:
+		res = graph::match_stats(g,
+								 t2.get_letter_boundaries(app_config.match_stats_letter_idx).left(),
+								 t1.get_size() + t1.get_eps_count(),
+								 core::ed_string_e::t2);
+		break;
+	  default:
+		throw std::invalid_argument("invalid match stats string");
+	  }
 	}
 
 	if (app_config.compute_match_stats_avg) {

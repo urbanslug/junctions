@@ -17,10 +17,7 @@
 
 #include "./intersect.hpp"
 
-namespace intersect {
-namespace improved {
-
-
+namespace intersect::improved {
 
 /**
 
@@ -63,7 +60,7 @@ namespace improved {
 
  */
 bool exp_exp(int i, int j,
-			 eds::EDS& eds_w, eds::EDS& eds_q,
+			 eds::EDS& eds_t1, eds::EDS& eds_t2,
 			 core::bool_matrix const &t1, core::bool_matrix const &t2) {
 	if (i == 0 && j == 0) { return true; }
 
@@ -71,15 +68,15 @@ bool exp_exp(int i, int j,
 
 	  bool exp_1{false}, exp_2{false};
 
-	  std::size_t col = eds_q.get_letter_boundaries(j - 1).left();
-	  std::size_t end = eds_q.get_letter_boundaries(j - 1).right();
+	  std::size_t col = eds_t2.get_letter_boundaries(j - 1).left();
+	  std::size_t end = eds_t2.get_letter_boundaries(j - 1).right();
 
 	  for (; col <= end; col++) {
 		if (t2[i - 1][col]) { exp_1 = true; break; }
 	  }
 
-	  col = eds_w.get_letter_boundaries(i-1).left();
-	  end = eds_w.get_letter_boundaries(i-1).right();
+	  col = eds_t1.get_letter_boundaries(i-1).left();
+	  end = eds_t1.get_letter_boundaries(i-1).right();
 
 	  for (; col <= end; col++) {
 		if (t1[j - 1][col]) {	exp_2 = true; break; }
@@ -88,18 +85,18 @@ bool exp_exp(int i, int j,
 	  return exp_1 && exp_2;
 	}
 	else if (i == 0 && j > 0) {
-	  if (!eds_q.is_letter_eps(j-1) ) { return false; }
+	  if (!eds_t2.is_letter_eps(j-1) ) { return false; }
 
 
-	  for (auto x : eds_w.get_slice(0)) {
+	  for (auto x : eds_t1.get_slice(0)) {
 		if (t1[j-1][x.start +x.length -1]) { return true; }
 	  }
 
 	}
 	else if (i > 0 && j == 0) {
-	  if (!eds_w.is_letter_eps(i-1)) { return false; }
+	  if (!eds_t1.is_letter_eps(i-1)) { return false; }
 
-	  for (auto x : eds_q.get_slice(0)) {
+	  for (auto x : eds_t2.get_slice(0)) {
 		if (t2[i-1][x.start +x.length -1]) { return true; }
 	  }
 	}
@@ -108,18 +105,18 @@ bool exp_exp(int i, int j,
 }
 
 bool imp_exp(int i, int j,
-			 eds::EDS& eds_w, eds::EDS& eds_q,
+			 eds::EDS& eds_t1, eds::EDS& eds_t2,
 			 core::bool_matrix const &t1, core::bool_matrix const &t2) {
 
   if (j> 0) {
 	
 	std::set<std::size_t> str_ends;
-	for (auto x : eds_w.get_slice(i)) {
+	for (auto x : eds_t1.get_slice(i)) {
 	 if (!x.eps_slice){ str_ends.insert(x.start +x.length -1 ); }
 	}
 
-	std::size_t col = eds_w.get_letter_boundaries(i).left();
-	std::size_t end = eds_w.get_letter_boundaries(i).right();
+	std::size_t col = eds_t1.get_letter_boundaries(i).left();
+	std::size_t end = eds_t1.get_letter_boundaries(i).right();
 	for (; col <= end; col++) {
 	  if (!str_ends.count(col) && t1[j - 1][col]) {	return true; }
 	}
@@ -128,19 +125,19 @@ bool imp_exp(int i, int j,
 }
 
 bool exp_imp(int i, int j,
-			 eds::EDS& eds_w, eds::EDS& eds_q,
+			 eds::EDS& eds_t1, eds::EDS& eds_t2,
 			 core::bool_matrix const &t1, core::bool_matrix const &t2) {
 
   if (i> 0) {
 
 	// to be implicit you must match only internally
 	std::set<std::size_t> str_ends;
-	for (auto x : eds_q.get_slice(j)) {
+	for (auto x : eds_t2.get_slice(j)) {
 	  if (!x.eps_slice){ str_ends.insert(x.start +x.length -1 ); }
 	}
 
-	std::size_t col = eds_q.get_letter_boundaries(j).left();
-	std::size_t end = eds_q.get_letter_boundaries(j).right();
+	std::size_t col = eds_t2.get_letter_boundaries(j).left();
+	std::size_t end = eds_t2.get_letter_boundaries(j).right();
 	for (; col <= end; col++) {
 	  if (!str_ends.count(col) && t2[i - 1][col]) {	return true; }
 	}
@@ -300,16 +297,16 @@ Is there an intersection between ED strings W and Q?
 		 |--------------------|
 		 n_1
 */
-bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
+bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 
-  size_t size_w = eds_w.get_size();
-  size_t size_q = eds_q.get_size();
+  size_t size_w = eds_t1.get_size();
+  size_t size_q = eds_t2.get_size();
 
-  int len_w = eds_w.get_length();
-  int len_q = eds_q.get_length();
+  int len_w = eds_t1.get_length();
+  int len_q = eds_t2.get_length();
 
-  core::bool_matrix w_matrix = core::gen_matrix(len_q, size_w + eds_w.get_eps_count());
-  core::bool_matrix q_matrix = core::gen_matrix(len_w, size_q + eds_q.get_eps_count());
+  core::bool_matrix w_matrix = core::gen_matrix(len_q, size_w + eds_t1.get_eps_count());
+  core::bool_matrix q_matrix = core::gen_matrix(len_w, size_q + eds_t2.get_eps_count());
 
   /*
 	Generate suffix trees
@@ -324,11 +321,11 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   auto t0 = core::Time::now();
   std::chrono::duration<double> timeRefRead;
 
-  gen_suffix_tree(eds_w, &w_suffix_trees);
-  gen_suffix_tree(eds_q, &q_suffix_trees);
+  gen_suffix_tree(eds_t1, &w_suffix_trees);
+  gen_suffix_tree(eds_t2, &q_suffix_trees);
 
-  // std::thread t1(gen_suffix_tree, std::ref(eds_w), len_w, &w_suffix_trees);
-  // std::thread t2(gen_suffix_tree, std::ref(eds_q), len_q, &q_suffix_trees);
+  // std::thread t1(gen_suffix_tree, std::ref(eds_t1), len_w, &w_suffix_trees);
+  // std::thread t2(gen_suffix_tree, std::ref(eds_t2), len_q, &q_suffix_trees);
   // t1.join();
   // t2.join();
 
@@ -356,28 +353,28 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	   */
 
 	  if (i == 0 && j == 0) {
-		if (eds_w.is_letter_eps(0)) {
-		  for (auto sl : eds_q.get_slice(0)) {
+		if (eds_t1.is_letter_eps(0)) {
+		  for (auto sl : eds_t2.get_slice(0)) {
 			std::size_t str_end = sl.start + sl.length - 1;
 			q_matrix[0][str_end] = true;
 		  }
 		}
-		else if (eds_q.is_letter_eps(0)) {
-		  for (auto sl : eds_w.get_slice(0)) {
+		else if (eds_t2.is_letter_eps(0)) {
+		  for (auto sl : eds_t1.get_slice(0)) {
 			std::size_t str_end = sl.start + sl.length - 1;
 			w_matrix[0][str_end] = true;
 		  }
 		}
 	  }
 
-	  if (eds_w.is_letter_eps(i)) {
+	  if (eds_t1.is_letter_eps(i)) {
 		if (i > 0) {
 		  // copy right
 		  // ----------
 
-		  for (std::size_t s : eds_w.get_letter_ends_global(i - 1)) {
+		  for (std::size_t s : eds_t1.get_letter_ends_global(i - 1)) {
 			if (w_matrix[j][s]) {
-			  w_matrix[j][eds_w.get_global_eps_idx(i)] = true;
+			  w_matrix[j][eds_t1.get_global_eps_idx(i)] = true;
 			  // copied = true;
 			  break;
 			}
@@ -388,10 +385,10 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		  // copy down
 		  // --------
 
-		  std::size_t col = eds_q.get_letter_boundaries(j).left();
+		  std::size_t col = eds_t2.get_letter_boundaries(j).left();
 
 		  // in case of active suffix
-		  std::size_t col_end = eds_q.get_letter_boundaries(j).right();
+		  std::size_t col_end = eds_t2.get_letter_boundaries(j).right();
 
 		  for (; col <= col_end; col++) {
 			//continue;
@@ -404,10 +401,10 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		  // --------
 
 		  // TODO: combine with previous by starting with j or j-1 only when possible
-		  std::size_t col = eds_q.get_letter_boundaries(j-1).left();
+		  std::size_t col = eds_t2.get_letter_boundaries(j-1).left();
 
 		  // in case of active suffix
-		  std::size_t col_end = eds_q.get_letter_boundaries(j).right();
+		  std::size_t col_end = eds_t2.get_letter_boundaries(j).right();
 
 		  for (; col <= col_end; col++) {
 			//continue;
@@ -416,14 +413,14 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		}
 	  }
 
-	  if (eds_q.is_letter_eps(j)) {
+	  if (eds_t2.is_letter_eps(j)) {
 		if (j > 0) {
 		  // copy right
 		  // ----------
 
-		  for(std::size_t s : eds_q.get_letter_ends_global(j - 1)) {
+		  for(std::size_t s : eds_t2.get_letter_ends_global(j - 1)) {
 			if (q_matrix[i][s]) {
-			  q_matrix[i][eds_q.get_global_eps_idx(j)] = true;
+			  q_matrix[i][eds_t2.get_global_eps_idx(j)] = true;
 			  break;
 			}
 		  }
@@ -434,10 +431,10 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		  // copy down
 		  // --------
 
-		  std::size_t col = eds_w.get_letter_boundaries(i).left();
+		  std::size_t col = eds_t1.get_letter_boundaries(i).left();
 
 		  // in case of active suffix
-		  std::size_t col_end = eds_w.get_letter_boundaries(i).right();
+		  std::size_t col_end = eds_t1.get_letter_boundaries(i).right();
 
 		  for (; col <= col_end; col++) {
 			if (w_matrix[j - 1][col]) { w_matrix[j][col] = true; }
@@ -448,10 +445,10 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		  // copy down
 		  // --------
 
-		  std::size_t col = eds_w.get_letter_boundaries(i-1).left();
+		  std::size_t col = eds_t1.get_letter_boundaries(i-1).left();
 
 		  // in case of active suffix
-		  std::size_t col_end = eds_w.get_letter_boundaries(i).right();
+		  std::size_t col_end = eds_t1.get_letter_boundaries(i).right();
 
 		  for (; col <= col_end; col++) {
 			if (w_matrix[j - 1][col]) { w_matrix[j][col] = true; }
@@ -465,9 +462,9 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 		.....................
 	   */
 
-	  bool exp_exp_val = exp_exp(i, j, eds_w, eds_q, w_matrix, q_matrix);
-	  bool imp_exp_val = imp_exp(i, j, eds_w, eds_q, w_matrix, q_matrix);
-	  bool exp_imp_val = exp_imp(i, j, eds_w, eds_q, w_matrix, q_matrix);
+	  bool exp_exp_val = exp_exp(i, j, eds_t1, eds_t2, w_matrix, q_matrix);
+	  bool imp_exp_val = imp_exp(i, j, eds_t1, eds_t2, w_matrix, q_matrix);
+	  bool exp_imp_val = exp_imp(i, j, eds_t1, eds_t2, w_matrix, q_matrix);
 
 	  /*	 
 	  //print i j values and their exp_exp_val values, etc.
@@ -508,10 +505,10 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	  //std::cout << "text T1: " << i << " query T2: " << j << "\n";
 	  
 	  core::perform_matching(
-		eds_w,
+		eds_t1,
 		i,
 		&w_suffix_trees[i],
-		eds_q.get_strs(j),
+		eds_t2.get_strs(j),
 		&candidate_matches);
 
 	  // print candidate matches
@@ -524,8 +521,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	  */
 	  
 	  update_matrices(candidate_matches,
-					  eds_w,
-					  eds_q.get_slice(j),
+					  eds_t1,
+					  eds_t2.get_slice(j),
 					  &w_matrix, &q_matrix,
 					  j, i, reachability);
 
@@ -541,10 +538,10 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 	  //std::cout << "text T2: " << j << " query T1: " << i << "\n";
 	  
 	  core::perform_matching(
-		eds_q,
+		eds_t2,
 		j,
 		&q_suffix_trees[j],
-		eds_w.get_strs(i),
+		eds_t1.get_strs(i),
 		&candidate_matches);
 
 
@@ -556,8 +553,8 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 
 
 	  update_matrices(candidate_matches,
-					  eds_q,
-					  eds_w.get_slice(i),
+					  eds_t2,
+					  eds_t1.get_slice(i),
 					  &q_matrix, &w_matrix,
 					  i, j, reachability);
 
@@ -566,9 +563,9 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   }
 
   std::vector<std::size_t> q_cols =
-	eds_q.get_letter_ends_global(eds_q.get_length() - 1);
+	eds_t2.get_letter_ends_global(eds_t2.get_length() - 1);
   std::vector<std::size_t> w_cols =
-	eds_w.get_letter_ends_global(eds_w.get_length() - 1);
+	eds_t1.get_letter_ends_global(eds_t1.get_length() - 1);
 
   bool accept_w{false}, accept_q{false};
   for (size_t col : q_cols) {
@@ -583,7 +580,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 #ifdef DEBUG
   // print the w_matrix
   for (int n = 0; n < len_q; n++) {
-	for (int j = 0; j < (size_w + eds_w.get_eps_count()); j++) {
+	for (int j = 0; j < (size_w + eds_t1.get_eps_count()); j++) {
 	  std::cout << w_matrix[n][j] << " ";
 	}
 	std::cout << std::endl;
@@ -593,7 +590,7 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
 
   // print the q_matrix / t2 matrix
   for (int n = 0; n < len_w; n++) {
-	for (int j = 0; j < (size_q + eds_q.get_eps_count()); j++) {
+	for (int j = 0; j < (size_q + eds_t2.get_eps_count()); j++) {
 	  std::cout << q_matrix[n][j] << " ";
 	}
 	std::cout << std::endl;
@@ -604,5 +601,4 @@ bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q) {
   return accept_q && accept_w;
 }
 
-}
-}
+} // namespace intersect::improved

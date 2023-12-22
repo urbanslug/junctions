@@ -185,13 +185,12 @@ enum file_format {
   unknown //
 };
 
-// TODO: rename to T1 and T2
-enum ed_string {
-  w,
-  q
+enum ed_string_e {
+  t1, // w or t1
+  t2, // q or t2
 };
 
-std::ostream &operator<<(std::ostream &os, const ed_string &value);
+std::ostream &operator<<(std::ostream &os, const ed_string_e &value);
 
 // for use with intersection check
 enum algorithm {
@@ -209,17 +208,16 @@ enum task {
   unset				  // default value
 };
 
-// TODO: rename parameters to app config
 /**
  * @brief parameters for cli args
  */
 struct AppConfig {
   algorithm algo;
   unsigned char v;         // verbosity
-  std::string w_file_path; // reference sequence(s)
-  file_format w_format;
-  std::string q_file_path; // query sequence(s)
-  file_format q_format;
+  std::string t1_file_path; // reference sequence(s)
+  file_format t1_format;
+  std::string t2_file_path; // query sequence(s)
+  file_format t2_format;
   //
   task t;
 

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "./core.hpp"
+#include "constants.hpp"
 
 namespace match_st {
   bool operator==(const STQueryResult& lhs, const STQueryResult& rhs) {
@@ -53,11 +54,11 @@ witness AppConfig::get_witness_choice() const { return this->witness_choice; }
 unsigned char AppConfig::verbosity() const { return this->v; }
 
 std::pair<file_format, std::string> AppConfig::get_w_fp() const {
-  return std::make_pair(this->w_format, this->w_file_path);
+  return std::make_pair(this->t1_format, this->t1_file_path);
 }
 
 std::pair<file_format, std::string> AppConfig::get_q_fp() const {
-  return std::make_pair(this->q_format, this->q_file_path);
+  return std::make_pair(this->t2_format, this->t2_file_path);
 }
 
 bool_matrix gen_matrix(std::size_t rows, std::size_t cols) {
@@ -75,8 +76,8 @@ bool_matrix gen_matrix(std::size_t rows, std::size_t cols) {
 
 // ed string
 // ---------
-std::ostream &operator<<(std::ostream &os, const ed_string &value) {
-  os << (value == ed_string::q ? "Q" : "W");
+std::ostream &operator<<(std::ostream &os, const ed_string_e &value) {
+  os << (value == ed_string_e::t1 ? core::constants::T_1 : core::constants::T_2);
   return os;
 }
 
