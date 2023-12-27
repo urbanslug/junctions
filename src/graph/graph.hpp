@@ -203,19 +203,21 @@ struct Vertex {
  * adj adjacency list to store edges
  */
 class Graph {
-  std::size_t V;                    // number of vertices
+  std::size_t V;                    // number of vertices of uncompacted graph
   std::size_t N_1;                  // yyy
   std::size_t N_2;                  // xxx
   // std::set<int> q_0; // start node // TODO: remove
   std::vector<Edge> q_a; // accept node // TODO: remove
-  std::vector<Vertex> adj; // adjacency list to store edges
+ // std::vector<Vertex> adj; // adjacency list to store edges
+ std::map<size_t,Vertex> sparse_adj;
 
-  std::vector<std::size_t> match_stats; // match stats
+  std::map<size_t,size_t> match_stats; // match stats
 
-  Vertex const& get_node(std::size_t node_idx);
+  Vertex & get_node(std::size_t node_idx);
 
 public:
 
+	
   std::size_t get_size();
 
   std::size_t last_node() const;
@@ -224,9 +226,11 @@ public:
 
   void compute_match_stats();
 
+  bool check_match_stats(std::size_t node_idx);
+  
   std::size_t get_match_stats(std::size_t node_idx);
 
-  std::vector<std::size_t> const& get_match_stats_vec() const;
+  std::map<std::size_t,size_t> const& get_match_stats_vec() const;
 
   /**
    *  compute the size of the multiset, i.e the number of unique paths to q_a

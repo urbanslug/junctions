@@ -78,6 +78,7 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
   this->N_2 = N_2;
   this->V = (N_1 + 1) * (N_2 + 1);
 
+/*
   try {
     adj.resize(V);
   } catch (const std::bad_alloc & e) {
@@ -92,7 +93,8 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
   } catch (const std::length_error &) {
     std::cerr << "graph would be too large" << std::endl;
     exit(-1);
-  }
+  }*/
+  
 }
 
 // x in [1 - n1 -1], also l
@@ -103,15 +105,27 @@ std::size_t graph::Graph::compute_index(std::size_t x, std::size_t y) {
   return (x * (this->N_2 + 1)) + y;
 }
 
-graph::Vertex const& graph::Graph::get_node(std::size_t node_idx) {
-  return this->adj[node_idx];
+graph::Vertex & graph::Graph::get_node(std::size_t node_idx) {
+	std::map<size_t,graph::Vertex>::iterator it=sparse_adj.find(node_idx);
+	if(it!=sparse_adj.end()){
+		return it->second;
+	}else{
+		graph::Vertex v;
+		sparse_adj.insert(std::make_pair(node_idx,v));		
+		return sparse_adj[node_idx];
+	}
+  //return this->adj[node_idx];
+}
+
+bool graph::Graph::check_match_stats(std::size_t node_idx) {
+  return (this->match_stats.find(node_idx)!=match_stats.end());
 }
 
 std::size_t graph::Graph::get_match_stats(std::size_t node_idx) {
   return this->match_stats[node_idx];
 }
 
-std::vector<std::size_t> const& graph::Graph::get_match_stats_vec() const {
+std::map<std::size_t,size_t> const& graph::Graph::get_match_stats_vec() const {
   return this->match_stats;
 }
 
@@ -149,6 +163,7 @@ void graph::Graph::add_edge(std::size_t N_1,
 
   stop = compute_index(l_prime, k_prime);
 
+
   bool is_eps = (eps_side == 1 || eps_side == 2) ? true : false;
 
   if (is_eps ) { weight = 0; str = "";}
@@ -156,23 +171,29 @@ void graph::Graph::add_edge(std::size_t N_1,
   graph::Edge e_rev = graph::Edge(start, weight, str, is_eps);
   graph::Edge e = graph::Edge(stop, weight, str, is_eps);
 
-  adj[start].meta = std::to_string(l) + "," + std::to_string(k);
-  adj[stop].meta = std::to_string(l_prime) + "," + std::to_string(k_prime);
+	//graph::Vertex start_ver=this->get_node(start);
+	//graph::Vertex stop_ver=this->get_node(stop);
+
+  this->get_node(start).meta = std::to_string(l) + "," + std::to_string(k);
+  this->get_node(stop).meta = std::to_string(l_prime) + "," + std::to_string(k_prime);
   
-  adj[start].outgoing.insert(e);
-  adj[stop].incoming.insert(e_rev);
+  this->get_node(start).outgoing.insert(e);
+  this->get_node(stop).incoming.insert(e_rev);
 
   // start type, end type
-  adj[start].vertex_type = m_typ.get_val_left();
-  adj[stop].vertex_type = m_typ.get_val_right();
+  this->get_node(start).vertex_type = m_typ.get_val_left();
+  this->get_node(stop).vertex_type = m_typ.get_val_right();
 }
 
 std::size_t graph::Graph::multiset_size() {
-  std::vector<std::size_t> dp_table(this->V, 0);
+ //std::vector<std::size_t> dp_table(this->V, 0);
+	std::map<size_t,size_t> dp_map;
+ 
   std::size_t start_node, stop_node;
   start_node = 0;
   stop_node = this->V - 1;
-  dp_table[start_node] = 1;
+  //dp_table[start_node] = 1;
+  dp_map[start_node] = 1;
 
   std::set<Edge> out;
 
@@ -184,12 +205,13 @@ std::size_t graph::Graph::multiset_size() {
 
   while (!to_visit.empty()) {
     current_node = to_visit.front();
+    //Vertex current_ver = this->get_node(current_node);
     to_visit.pop();
 
 
-    out = this->adj[current_node].outgoing;
+    out = this->get_node(current_node).outgoing;
     for (auto e : out) {	  
-      dp_table[e.dest] += dp_table[current_node];
+      dp_map[e.dest] += dp_map[current_node];
 	  if (!queued.count(e.dest)) {
 		to_visit.push(e.dest);
 		queued.insert(e.dest);
@@ -197,31 +219,35 @@ std::size_t graph::Graph::multiset_size() {
     }
   }
 
-  return dp_table[stop_node];
+  return dp_map[stop_node];
 }
 
 void graph::Graph::compute_match_stats() {
   //std::size_t last_node = this->last_node();
 
-  std::vector<size_t> dp_tbl(this->get_size(), 0);
+  //std::vector<size_t> dp_tbl(this->get_size(), 0);
+  std::map<size_t,size_t> dp_map;
   std::size_t max_k = 0;
 
   // Note that this expects that idx will overflow when we attempt to go below
   // zero therefore assumes the last node is not max size_t value
-  for (std::size_t idx{this->last_node()}; idx <= this->last_node(); idx--) {
-    Vertex const& v = this->get_node(idx);
+  for(std::map<size_t,Vertex>::reverse_iterator riter=sparse_adj.rbegin();riter!=sparse_adj.rend();++riter){
+  //for (std::size_t idx{this->last_node()}; idx <= this->last_node(); idx--) {
+    //Vertex const& v = this->get_node(idx);
 
-    for (auto e: v.outgoing) {
-      if (max_k < (e.weight + dp_tbl[e.dest]) ) {
-        max_k = e.weight + dp_tbl[e.dest];
+    for (auto e: riter->second.outgoing) {
+      if (max_k < (e.weight + dp_map[e.dest]) ) {
+        max_k = e.weight + dp_map[e.dest];
       }
     }
-
-    dp_tbl[idx] += max_k;
+	if(dp_map.find(riter->first)==dp_map.end()){
+		dp_map.insert(std::make_pair(riter->first,0));
+	}
+    dp_map[riter->first] += max_k;
     max_k = 0;
   }
   
-  this->match_stats = dp_tbl;
+  this->match_stats = dp_map;
 }
 
 
@@ -239,7 +265,8 @@ int graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_node_idx)
   // auto gr_idx = [&start_node_idx](int tbl_idx) -> int { return tbl_idx + start_node_idx + 1; };
 
   // int size = stop_node_idx - start_node_idx + 1;
-  std::vector<int> dists(this->V, INT_MIN);
+ // std::vector<int> dists(this->V, INT_MIN);
+  std::map<size_t,int> dists_map;
 
   std::stack<std::size_t> to_visit;
   std::set<std::size_t> visited;
@@ -248,24 +275,25 @@ int graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_node_idx)
   bool end_reached{false};
 
   std::size_t current_node = start_node_idx;
-  dists[current_node] = 0;
+  dists_map[current_node] = 0;
   to_visit.push(current_node);
 
 
   while (!to_visit.empty()) {
     current_node = to_visit.top();
+    //Vertex current_ver=this->get_node(current_node);
     to_visit.pop();
-    out = this->adj[current_node].outgoing;
+    out = this->get_node(current_node).outgoing;
 
     if (visited.count(current_node) > 0) { continue; }
 
-    current_dist = dists[current_node];
+    current_dist = dists_map[current_node];
 
     for (auto e : out) {
 
-      if (dists[tbl_idx(e.dest)] < current_dist + static_cast<int>(e.weight)) {
+      if (dists_map[tbl_idx(e.dest)] < current_dist + static_cast<int>(e.weight)) {
         if (e.dest == stop_node_idx) { end_reached = true; }
-        dists[tbl_idx(e.dest)] = current_dist + static_cast<int>(e.weight);
+        dists_map[tbl_idx(e.dest)] = current_dist + static_cast<int>(e.weight);
       }
 
       to_visit.push(e.dest);
@@ -274,7 +302,7 @@ int graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_node_idx)
   }
 
   if (end_reached) {
-    return dists[tbl_idx(stop_node_idx)];
+    return dists_map[tbl_idx(stop_node_idx)];
   } else {
     return -1;
   }
@@ -295,9 +323,11 @@ int graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_node_idx)
 int graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx) {
 
   // a vector of distances from start_node_idx to every other node
-  std::vector<int> dists(this->V, INT_MAX);
-  std::vector<bool> explored(this->V, false);
-
+  //std::vector<int> dists(this->V, INT_MAX);
+  //std::vector<bool> explored(this->V, false);
+  std::map<size_t,int> dists_map;
+  std::map<size_t,bool> explored_map;
+  
   bool end_reached{false};
 
   std::priority_queue<std::pair<std::size_t, std::size_t>, std::vector<std::pair<std::size_t, std::size_t>>,
@@ -305,9 +335,9 @@ int graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx
       min_queue;
 
   // set distance from start_node_idx to itself as 0
-  dists[start_node_idx] = 0;
+  dists_map[start_node_idx] = 0;
 
-  min_queue.push(std::make_pair(start_node_idx, dists[start_node_idx]));
+  min_queue.push(std::make_pair(start_node_idx, dists_map[start_node_idx]));
 
   // a pair of node idx and weight
   std::pair<std::size_t, std::size_t> u;
@@ -316,31 +346,32 @@ int graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx
   while (!min_queue.empty()) {
     u = min_queue.top();
     i = u.first;
+    //Vertex curr_ver=this->get_node(i);
 
     if (i == stop_node_idx) {
-      return dists[i];
+      return dists_map[i];
     }
 
-    explored[i] = true;
+    explored_map[i] = true;
     min_queue.pop();
 
-    for (auto ej : this->adj[i].outgoing) {
+    for (auto ej : get_node(i).outgoing) {
 
       // relax
-      if (dists[i] + static_cast<int>(ej.weight) < dists[ej.dest]) {
+      if((dists_map.find(ej.dest)==dists_map.end())|| (dists_map[i] + static_cast<int>(ej.weight) < dists_map[ej.dest])) {
         if (ej.dest == stop_node_idx) { end_reached = true; }
-        dists[ej.dest] = dists[i] + ej.weight;
+        dists_map[ej.dest] = dists_map[i] + ej.weight;
       }
 
       // add to min queue
-      if (!explored[ej.dest]) {
-        min_queue.push(std::make_pair(ej.dest, dists[ej.dest]));
+      if ((explored_map.find(ej.dest)==explored_map.end()) || (!explored_map[ej.dest])) {
+        min_queue.push(std::make_pair(ej.dest, dists_map[ej.dest]));
       }
     }
   }
 
   if (end_reached) {
-    return dists[stop_node_idx];
+    return dists_map[stop_node_idx];
   } else {
     return -1;
   }
@@ -355,7 +386,7 @@ void graph::Graph::dbg_print(int indent_level = 0) {
             << core::indent(indent_level + 1) << "nodes in " << core::T_2
             << ": " << this->N_2 << std::endl
             << core::indent(indent_level + 1)
-            << "size of intersection graph: " << this->V << std::endl
+            << "size of uncompacted intersection graph: " << this->V << std::endl
             << core::indent(indent_level) << "}" << std::endl;
 }
 
@@ -370,7 +401,8 @@ void graph::Graph::print_dot() {
   auto print_node_label = [&](std::size_t idx) -> std::string {
     if (idx == 0) { return core::q_0; }
     if (idx == this->V - 1) { return core::q_a; }
-    return std::to_string(idx) + "\\n" + "(" + this->adj[idx].meta + ")";
+    //Vertex ver=this->get_node(idx);
+    return std::to_string(idx) + "\\n" + "(" + this->get_node(idx).meta + ")";
   };
 
   auto print_node = [&](std::size_t idx, std::string color) {
@@ -396,17 +428,19 @@ void graph::Graph::print_dot() {
             << "\tnode[shape = circle];\n";
 
   // print nodes
-  for (std::size_t i{}; i < this->V; i++) {
-    switch (this->adj[i].vertex_type) {
+  //for (std::size_t i{}; i < this->V; i++) {
+  for(std::map<size_t,Vertex>::iterator iter=sparse_adj.begin();iter!=sparse_adj.end();++iter){
+	//std::cout<< iter->second.vertex_type<<std::endl;
+    switch (iter->second.vertex_type) {
     case 0:
-      print_node(i, "blue");
+      print_node(iter->first, "blue");
       break;
     case 1:
     case 2:
-      print_node(i, "orange");
+      print_node(iter->first, "orange");
       break;
     case 3:
-      print_node(i, "red");
+      print_node(iter->first, "red");
       break;
     default:
       break;
@@ -415,19 +449,20 @@ void graph::Graph::print_dot() {
 
   // print edges
   std::string s, label;
-  Vertex v;
+  //Vertex v;
 
-  for (std::size_t i{}; i < this->V; i++) {
-    v = this->adj[i];
+	for(std::map<size_t,Vertex>::iterator iter=sparse_adj.begin();iter!=sparse_adj.end();++iter){
+  //for (std::size_t i{}; i < this->V; i++) {
+    //v = this->get_node(i);
 
     // unreachable
-    if (v.incoming.empty() && v.outgoing.empty()) {
+    if (iter->second.incoming.empty() && iter->second.outgoing.empty()) {
       // if (false) { std::cout << "\t" + print_idx(i) + ";\n"; }
       continue;
     }
 
-    for (auto e : v.outgoing) {
-      std::cout << "\t" << print_idx(i) << " -> " << print_idx(e.dest)
+    for (auto e : iter->second.outgoing) {
+      std::cout << "\t" << print_idx(iter->first) << " -> " << print_idx(e.dest)
                 << " [label=" << print_label(e)
                 << ", weight=" << std::to_string(e.weight) << "];\n";
     }
@@ -1322,9 +1357,11 @@ graph::distance(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
 	for (std::size_t l{}; l < last_q; l++) {
 	  node_idx = g.compute_index(i_start, l);
 	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
+	  if(g.check_match_stats(node_idx)){
+			if (max < g.get_match_stats(node_idx)) {
+				max = g.get_match_stats(node_idx);
+			}
+		}
 	}
 
 	ms_w[i] = max;
@@ -1336,9 +1373,11 @@ graph::distance(graph::Graph &g, eds::EDS& eds_w, eds::EDS& eds_q) {
 	for (std::size_t k{}; k < last_w; k++) {
 	  node_idx = g.compute_index(k, j_start);
 	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
+	  if(g.check_match_stats(node_idx)){
+			if (max < g.get_match_stats(node_idx)) {
+				max = g.get_match_stats(node_idx);
+			}
+		}
 	}
 
 	ms_q[j] = max;
@@ -1409,15 +1448,16 @@ std::double_t graph::similarity(
   std::size_t max{}, i_start{}, j_start{};
 
   std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
-	
+
   for (std::size_t i{}; i < len_w; i++) {
 	i_start = eds_w.get_letter_boundaries(i).left();
 	for (std::size_t l{}; l < last_q; l++) {
 	  node_idx = g.compute_index(i_start, l);
-	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
+	  if(g.check_match_stats(node_idx)){
+			if (max < g.get_match_stats(node_idx)) {
+				max = g.get_match_stats(node_idx);
+			}
+		}
 	}
 
 	ms_w[i] = max;
@@ -1429,9 +1469,11 @@ std::double_t graph::similarity(
 	for (std::size_t k{}; k < last_w; k++) {
 	  node_idx = g.compute_index(k, j_start);
 	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
+	  if(g.check_match_stats(node_idx)){
+			if (max < g.get_match_stats(node_idx)) {
+				max = g.get_match_stats(node_idx);
+			}
+		}
 	}
 
 	ms_q[j] = max;
@@ -1442,6 +1484,16 @@ std::double_t graph::similarity(
   //std::size_t sum_vals = ms_q.sum() + ms_w.sum();
   //std::size_t sum_size = len_w + len_q;
 
+	std::cout<< "MS[S_1,S_2]: ";
+	for(int i=0;i<len_w;++i){
+		std::cout << ms_w[i]<<" ";
+	}
+	std::cout<<std::endl;
+	std::cout<< "MS[S_2,S_1]: ";
+	for(int i=0;i<len_q;++i){
+		std::cout << ms_q[i]<<" ";
+	}
+	std::cout<<std::endl;
   
   //return static_cast<std::double_t>(sum_vals) / static_cast<std::double_t>(sum_size);
   
