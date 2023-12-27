@@ -16,19 +16,19 @@ namespace match_st {
 
 STvertex *root;
 const char *txt;
-int liscie; /* liczba utworzonych lisci */
+int leaves; /* number of created leaves */
 
 /**
  *
  *
  */
-inline void Canonize(STedge &kraw,const char *x) {
-  if (kraw.l<=kraw.r) {
-    STedge e=kraw.v->g[x[kraw.l]];
-    while (e.r-e.l <= kraw.r-kraw.l) {
-      kraw.l+=e.r-e.l+1;
-      kraw.v=e.v;
-      if (kraw.l<=kraw.r) e=kraw.v->g[x[kraw.l]];
+inline void Canonize(STedge &edge,const char *x) {
+  if (edge.l<=edge.r) {
+    STedge e=edge.v->g[x[edge.l]];
+    while (e.r-e.l <= edge.r-edge.l) {
+      edge.l+=e.r-e.l+1;
+      edge.v=e.v;
+      if (edge.l<=edge.r) e=edge.v->g[x[edge.l]];
     }
   }
 }
@@ -37,40 +37,40 @@ inline void Canonize(STedge &kraw,const char *x) {
  *
  *
  */
-inline bool Test_and_split(STvertex* &w,const STedge &kraw) {
-  w=kraw.v;
-  if (kraw.l<=kraw.r) {
-    char c=txt[kraw.l];
-    STedge e=kraw.v->g[c];
-    if (txt[kraw.r+1] == txt[e.l+kraw.r-kraw.l+1]) return true;
-    w=new STvertex; w->numer=-1;
-    kraw.v->g[c].r = e.l+kraw.r-kraw.l;
-    kraw.v->g[c].v = w;
-    e.l+=kraw.r-kraw.l+1;
+inline bool Test_and_split(STvertex* &w,const STedge &edge) {
+  w=edge.v;
+  if (edge.l<=edge.r) {
+    char c=txt[edge.l];
+    STedge e=edge.v->g[c];
+    if (txt[edge.r+1] == txt[e.l+edge.r-edge.l+1]) return true;
+    w=new STvertex; w->number=-1;
+    edge.v->g[c].r = e.l+edge.r-edge.l;
+    edge.v->g[c].v = w;
+    e.l+=edge.r-edge.l+1;
     w->g[txt[e.l]]=e;
     return false;
   }
-  return kraw.v->g.find(txt[kraw.l]) != kraw.v->g.end();
+  return edge.v->g.find(txt[edge.l]) != edge.v->g.end();
 }
 
 /**
  *
  *
  */
-void Update(STedge &kraw,int n) {
+void Update(STedge &edge,int n) {
   STvertex *oldr=root,*w;
-  while (!Test_and_split(w,kraw))
+  while (!Test_and_split(w,edge))
   {
     STedge e;
-    e.v=new STvertex; e.l=kraw.r+1; e.r=n-1;
-    e.v->numer=liscie++;
-    w->g[txt[kraw.r+1]]=e;
+    e.v=new STvertex; e.l=edge.r+1; e.r=n-1;
+    e.v->number=leaves++;
+    w->g[txt[edge.r+1]]=e;
     if (oldr!=root) oldr->f=w;
     oldr=w;
-    kraw.v=kraw.v->f;
-    Canonize(kraw,txt);
+    edge.v=edge.v->f;
+    Canonize(edge,txt);
   }
-  if (oldr!=root) oldr->f=kraw.v;
+  if (oldr!=root) oldr->f=edge.v;
 }
 
 /**
@@ -78,11 +78,11 @@ void Update(STedge &kraw,int n) {
  *
  */
 STvertex* Create_suffix_tree(const char* x, int n) {
-  STvertex *top; /* pinezka */
+  STvertex *top; /* pin */
   STedge e;
   top=new STvertex; root=new STvertex; txt=x;
-  top->numer = root->numer = root->string_id = top->string_id =  -1;
-  e.v=root; liscie=0;
+  top->number = root->number = root->string_id = top->string_id =  -1;
+  e.v=root; leaves=0;
   REP(i,n) { e.r=-i; e.l=-i; top->g[x[i]]=e; }
   root->f=top;
   e.l=0; e.v=root;
@@ -134,7 +134,7 @@ bool Find(const char *query, STvertex *r, const char *x) {
  *
  */
 bool is_leaf (STvertex const *v) {
-  return v->numer >= 0;
+  return v->number >= 0;
 };
 
 
@@ -172,7 +172,7 @@ std::vector<int> DFS(STvertex const *current_vertex) {
       visited.pop();
 
       if (is_leaf(current_vertex)) {
-        leaves.push_back(current_vertex->numer);
+        leaves.push_back(current_vertex->number);
       }
 
     } else {
@@ -223,7 +223,7 @@ std::vector<match_st::LeafData> Get_Leaf_Data(STvertex const *current_vertex) {
       if (is_leaf(current_vertex)) {
         leaves.push_back(
            match_st::LeafData(current_vertex->string_id,
-                              current_vertex->numer));
+                              current_vertex->number));
       }
     } else {
       for (auto a : temp_store) { visited.push(a); }
@@ -277,7 +277,7 @@ void update_leaves(STvertex *current_vertex,
 
 
           // in the middle
-          if (current_vertex->numer < string_start) {
+          if (current_vertex->number < string_start) {
             current_vertex->string_id = i - 1;
             break;
           }
@@ -285,7 +285,7 @@ void update_leaves(STvertex *current_vertex,
           // suffix starts at an entire string
           // or
           // we are at the end of text offsets
-          if (string_start == current_vertex->numer || i == text_offsets.size() - 1) {
+          if (string_start == current_vertex->number || i == text_offsets.size() - 1) {
             current_vertex->string_id = (int)i;
             break;
           }
@@ -338,7 +338,7 @@ void update_leaves(STvertex *current_vertex,
 
 
           // in the middle
-          if (current_vertex->numer < string_start) {
+          if (current_vertex->number < string_start) {
             current_vertex->string_id = i - 1;
             break;
           }
@@ -346,7 +346,7 @@ void update_leaves(STvertex *current_vertex,
           // suffix starts at an entire string
           // or
           // we are at the end of text offsets
-          if (string_start == current_vertex->numer || i == text_offsets_local.size() - 1) {
+          if (string_start == current_vertex->number || i == text_offsets_local.size() - 1) {
             current_vertex->string_id = (int)i;
             break;
           }

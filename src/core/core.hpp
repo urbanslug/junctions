@@ -67,9 +67,9 @@ int chg(char ch);
 
 int los(int m);
 
-/* Budowa drzewa sufiksowego algorytmem Ukkonena
- * (z przykladem wyszukiwania w nim slow)
- * Zlozonosc: O(n).
+/* Suffix tree construction using Ukkonen's algorithm
+ * (with an example of searching for a word)
+ * Complexity: O(n).
  */
 
 struct STedge;
@@ -78,9 +78,7 @@ struct STvertex {
   STvertex *f;         /* suffix link */
   // suffix number
   // (0 is an inch word, -1 means that the vertex is not a leaf)
-  /* numer sufiksu (0 to cale slowo, -1 oznacza ze wierzcholek
-   * nie jest lisciem) */
-  int numer;
+  int number;
   int string_id;
 };
 
