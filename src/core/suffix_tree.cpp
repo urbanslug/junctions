@@ -364,9 +364,10 @@ void update_leaves(STvertex *current_vertex,
 }
 
 
-std::vector<match_st::STQueryResult>
-FindEndIndexes(const char *query, STvertex *current_vertex, const char *x,
-			   bool end_in_imp_imp) {
+std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
+                                                    STvertex *current_vertex,
+                                                    const char *x,
+                                                    bool end_in_imp_imp) {
 
   std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
@@ -385,7 +386,7 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x,
 
   // TODO: read the value of l_data from scope
   auto looper = [&](std::vector<match_st::LeafData> l_data, bool b = false, bool a = false) {
-    for (auto l : l_data) {
+    for (match_st::LeafData l : l_data) {
 	  //d::cout << l.get_char_idx() << std::endl;
       matches.push_back(match_st::STQueryResult(b, (a ? d : match_length), l));
     }
@@ -501,6 +502,10 @@ FindEndIndexes(const char *query, STvertex *current_vertex, const char *x,
         append_matches(true);
         append_underscore_matches();
         return matches;
+      }
+
+      if (has_underscore) {
+        append_underscore_matches();
       }
 
       // In the process of matching we find a $
