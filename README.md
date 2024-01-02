@@ -9,13 +9,14 @@ An ED string is a sequence of sets of strings. We currently support only the DNA
 ```
 
 ## Download the source code
-using `git`
+
+Using `git`
 ```sh
 git clone https://github.com/urbanslug/junctions
 cd junctions
 ```
 
-or using `curl` and `zip`
+or using `curl` and `zip`:
 ```
 curl -LO https://github.com/urbanslug/junctions/archive/refs/heads/master.zip
 unzip master.zip
@@ -26,7 +27,7 @@ cd junctions
 
 Compilation is done with `make` and can be done in different ways.
 
-To creates a dynamically linked binary (advisable)
+To create a dynamically linked binary (advisable)
 ```
 make
 ```
@@ -36,9 +37,8 @@ in case of need of statically linked binary
 make static
 ```
 
-
 When compiled with MSA support junctions is able to internally convert MSA 
-files in RC-MSA format to ED-Strings however this is only supported on newer 
+files in RC-MSA format to ED strings however this is only supported on newer 
 x86 processors.
 
 To compile a dynamically linked binary
