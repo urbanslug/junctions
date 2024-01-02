@@ -1,4 +1,4 @@
-$ # Junctions
+# Junctions
 
 This is a software suite for pangenome comparison via elastic-degenerate (ED) strings.
 
@@ -73,12 +73,58 @@ $ cat x.eds
 ```
 $ cat y.eds 
 {,T}{GCA,AC}
+```
+
+We can determine whether x and y have a nonempty intersection by running the following:
 
 ```
-We can determine whether x and y have a nonempty intersection by running the following
-
-```
-$ ./bin/junctions intersect -a 0 x.eds y.eds 
+$ ./bin/junctions intersect x.eds y.eds 
 INFO intersection exists
 ```
 Indeed, x and y share the string `AC`.
+
+## Example 2: ED Matching Statistics
+Consider two ED strings x and y encoded in the corresponding files below:
+
+```
+$ cat x.eds 
+{A,AC,TGCT}{CA,}
+```
+
+```
+$ cat y.eds 
+{,T}{GCA,AC}
+
+```
+We can compute their matching statistics by running the following:
+
+```
+$ ./bin/junctions graph -c 0 -s x.eds y.eds 
+MS[S_1,S_2]: 3 2 
+MS[S_2,S_1]: 3 2 
+Similarity measure is: 5
+```
+
+## Example 3: Breakpoint Matching Statistics
+Consider two ED strings x and y encoded in the corresponding files below:
+
+```
+$ cat x.eds 
+{A,AC,TGCT}{CA,}
+```
+
+```
+$ cat y.eds 
+{,T}{GCA,AC}
+
+```
+We can compute their breakpoint matching statistics by running the following:
+
+```
+$ ./bin/junctions graph -c 1 -s x.eds y.eds 
+MS[S_1,S_2]: 2 1 
+MS[S_2,S_1]: 2 2 
+Similarity measure is: 3.5
+```
+
+
