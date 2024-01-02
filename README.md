@@ -94,7 +94,8 @@ $ cat x.eds
 ```
 $ cat y.eds 
 {,T}{GCA,AC}
-
+$ ./bin/junctions intersect x.eds y.eds 
+INFO intersection exists
 ```
 We can compute their matching statistics by running the following:
 
@@ -127,4 +128,13 @@ MS[S_2,S_1]: 2 2
 Similarity measure is: 3.5
 ```
 
+## Citations
 
+```
+Estéban Gabory, Njagi Moses Mwaniki, Nadia Pisanti, Solon P. Pissis, Jakub Radoszewski, Michelle Sweering, Wiktor Zuba:
+Comparing Elastic-Degenerate Strings: Algorithms, Lower Bounds, and Applications. CPM 2023.
+
+
+Estéban Gabory, Njagi Moses Mwaniki, Nadia Pisanti, Solon P. Pissis, Jakub Radoszewski, Michelle Sweering, Wiktor Zuba:
+Pangenome Comparison via ED Strings. (in preparation)
+```
