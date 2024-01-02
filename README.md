@@ -59,3 +59,25 @@ Run the following for the help text
 ```
 
 Further documentation can be found in the [wiki](https://github.com/urbanslug/junctions/wiki).
+
+
+## Example 1: ED string intersection
+Consider two ED strings x and y encoded in the corresponding files below:
+
+```
+$ cat x.eds 
+{A,AC,TGCT}{CA,}
+```
+
+```
+$ cat y.eds 
+{,T}{GCA,AC}
+
+```
+We can determine whether x and y have a nonempty intersection by running the following
+
+```
+$ ./bin/junctions intersect -a 0 x.eds y.eds 
+INFO intersection exists
+```
+Indeed, x and y share the string `AC`.
