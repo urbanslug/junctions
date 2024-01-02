@@ -2,9 +2,10 @@
 
 This is a software suite for pangenome comparison via elastic-degenerate (ED) strings.
 
-An ED string is a sequence of sets of strings. We currently support only the DNA alphabet `{A, T, C, G}`, the letter `N` for the indeterminate base, and the empty string `Ɛ`. For example, the ED string below has 3 sets. The first set has two strings (`AGT` and `A`); the second set has three strings (`A`, `T`, and the empty string `Ɛ`), and the third set has one string (`ACGTN`).
+An ED string is a sequence of sets of strings. We currently support only the DNA alphabet `{A, T, C, G}`, the letter `N` for the indeterminate base, and the empty string `Ɛ`. For example, the ED string x below has 3 sets. The first set has two strings (`AGT` and `A`); the second set has three strings (`A`, `T`, and the empty string `Ɛ`), and the third set has one string (`ACGTN`).
 
 ```
+$ cat x.eds
 {AGT,A}{A,T,}{ACGTN}
 ```
 
