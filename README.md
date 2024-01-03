@@ -94,8 +94,6 @@ $ cat x.eds
 ```
 $ cat y.eds 
 {,T}{GCA,AC}
-$ ./bin/junctions intersect x.eds y.eds 
-INFO intersection exists
 ```
 We can compute their matching statistics by running the following:
 
@@ -105,6 +103,10 @@ MS[S_1,S_2]: 3 2
 MS[S_2,S_1]: 3 2 
 Similarity measure is: 5
 ```
+
+In particular, the option `-c 0` denotes that no constraint is imposed to the
+matching statistics; the option `-s` denotes that a similarity measure will be
+computed from the matching statistics.
 
 ## Example 3: Breakpoint Matching Statistics
 Consider two ED strings x and y encoded in the corresponding files below:
@@ -127,6 +129,10 @@ MS[S_1,S_2]: 2 1
 MS[S_2,S_1]: 2 2 
 Similarity measure is: 3.5
 ```
+
+In particular, the option `-c 1` denotes that a constraint related to breakpoints 
+is imposed to the matching statistics; the option `-s` denotes that a similarity 
+measure will be computed from the matching statistics.
 
 ## Citations
 
