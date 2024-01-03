@@ -1,0 +1,962 @@
+Sample1	Sample2	Intersection
+22C (BA.2.12.1)	22C (BA.2.12.1)	1
+22C (BA.2.12.1)	20B	0
+20B	22C (BA.2.12.1)	0
+22D (BA.2.75)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	22D (BA.2.75)	0
+22C (BA.2.12.1)	21L (BA.2)	0
+21L (BA.2)	22C (BA.2.12.1)	0
+22F (XBB)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	22F (XBB)	0
+22A (BA.4)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	22A (BA.4)	0
+21C (Epsilon)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	21C (Epsilon)	0
+20H (Beta)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20H (Beta)	0
+22C (BA.2.12.1)	21I (Delta)	0
+21I (Delta)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	21A (Delta)	0
+21A (Delta)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20E	0
+20E	22C (BA.2.12.1)	0
+21K (BA.1)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	21K (BA.1)	0
+22C (BA.2.12.1)	21J (Delta)	0
+21J (Delta)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	23B (XBB.1.16)	0
+23B (XBB.1.16)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	21G (Lambda)	0
+21G (Lambda)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	22E (BQ.1)	0
+22E (BQ.1)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20D	0
+20D	22C (BA.2.12.1)	0
+20G	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20G	0
+21D (Eta)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	21D (Eta)	0
+19B	22C (BA.2.12.1)	0
+20B	20B	1
+22C (BA.2.12.1)	19B	0
+20I (Alpha)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20I (Alpha)	0
+20A	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20A	0
+20J (Gamma)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20J (Gamma)	0
+23A (XBB.1.5)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	23A (XBB.1.5)	0
+20C	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	20C	0
+22D (BA.2.75)	20B	0
+20B	22D (BA.2.75)	0
+21L (BA.2)	20B	0
+20B	21L (BA.2)	0
+22D (BA.2.75)	22D (BA.2.75)	1
+22D (BA.2.75)	21L (BA.2)	0
+21L (BA.2)	22D (BA.2.75)	0
+20B	22F (XBB)	0
+22F (XBB)	20B	0
+22A (BA.4)	20B	0
+20B	22A (BA.4)	0
+20B	21C (Epsilon)	0
+21C (Epsilon)	20B	0
+20H (Beta)	20B	0
+20B	20H (Beta)	0
+21L (BA.2)	21L (BA.2)	1
+22F (XBB)	22D (BA.2.75)	0
+22D (BA.2.75)	22F (XBB)	0
+22D (BA.2.75)	22A (BA.4)	0
+22A (BA.4)	22D (BA.2.75)	0
+21C (Epsilon)	22D (BA.2.75)	0
+22D (BA.2.75)	21C (Epsilon)	0
+20H (Beta)	22D (BA.2.75)	0
+22D (BA.2.75)	20H (Beta)	0
+20B	21I (Delta)	0
+21I (Delta)	20B	0
+21L (BA.2)	22F (XBB)	0
+22F (XBB)	21L (BA.2)	0
+20B	21A (Delta)	0
+21A (Delta)	20B	0
+21L (BA.2)	22A (BA.4)	0
+22A (BA.4)	21L (BA.2)	0
+21L (BA.2)	21C (Epsilon)	0
+21C (Epsilon)	21L (BA.2)	0
+20E	20B	0
+20B	20E	0
+20H (Beta)	21L (BA.2)	0
+21L (BA.2)	20H (Beta)	0
+20B	21K (BA.1)	0
+21K (BA.1)	20B	0
+21I (Delta)	22D (BA.2.75)	0
+22D (BA.2.75)	21I (Delta)	0
+21J (Delta)	20B	0
+20B	21J (Delta)	0
+22D (BA.2.75)	21A (Delta)	0
+21A (Delta)	22D (BA.2.75)	0
+22F (XBB)	22F (XBB)	1
+20B	23B (XBB.1.16)	0
+23B (XBB.1.16)	20B	0
+20B	21G (Lambda)	0
+21G (Lambda)	20B	0
+20E	22D (BA.2.75)	0
+22D (BA.2.75)	20E	0
+22A (BA.4)	22F (XBB)	0
+22F (XBB)	22A (BA.4)	0
+22E (BQ.1)	20B	0
+20B	22E (BQ.1)	0
+21C (Epsilon)	22F (XBB)	0
+22F (XBB)	21C (Epsilon)	0
+21L (BA.2)	21I (Delta)	0
+21I (Delta)	21L (BA.2)	0
+21K (BA.1)	22D (BA.2.75)	0
+22D (BA.2.75)	21K (BA.1)	0
+20H (Beta)	22F (XBB)	0
+22F (XBB)	20H (Beta)	0
+20B	20D	0
+20D	20B	0
+21A (Delta)	21L (BA.2)	0
+21L (BA.2)	21A (Delta)	0
+22D (BA.2.75)	21J (Delta)	0
+22A (BA.4)	22A (BA.4)	1
+21J (Delta)	22D (BA.2.75)	0
+21C (Epsilon)	22A (BA.4)	0
+22A (BA.4)	21C (Epsilon)	0
+21C (Epsilon)	21C (Epsilon)	1
+23B (XBB.1.16)	22D (BA.2.75)	0
+22D (BA.2.75)	23B (XBB.1.16)	0
+22A (BA.4)	20H (Beta)	0
+20H (Beta)	22A (BA.4)	0
+21C (Epsilon)	20H (Beta)	0
+20H (Beta)	21C (Epsilon)	0
+21G (Lambda)	22D (BA.2.75)	0
+22D (BA.2.75)	21G (Lambda)	0
+20H (Beta)	20H (Beta)	1
+20B	20G	0
+20E	21L (BA.2)	0
+20G	20B	0
+21L (BA.2)	20E	0
+22E (BQ.1)	22D (BA.2.75)	0
+22D (BA.2.75)	22E (BQ.1)	0
+21K (BA.1)	21L (BA.2)	0
+21L (BA.2)	21K (BA.1)	0
+21I (Delta)	22F (XBB)	0
+22F (XBB)	21I (Delta)	0
+20D	22D (BA.2.75)	0
+22D (BA.2.75)	20D	0
+21J (Delta)	21L (BA.2)	0
+21L (BA.2)	21J (Delta)	0
+21A (Delta)	22F (XBB)	0
+22F (XBB)	21A (Delta)	0
+21L (BA.2)	23B (XBB.1.16)	0
+23B (XBB.1.16)	21L (BA.2)	0
+21G (Lambda)	21L (BA.2)	0
+21L (BA.2)	21G (Lambda)	0
+22A (BA.4)	21I (Delta)	0
+21I (Delta)	22A (BA.4)	0
+21I (Delta)	21C (Epsilon)	0
+21C (Epsilon)	21I (Delta)	0
+22D (BA.2.75)	20G	0
+20G	22D (BA.2.75)	0
+22A (BA.4)	21A (Delta)	0
+20H (Beta)	21I (Delta)	0
+21A (Delta)	22A (BA.4)	0
+21I (Delta)	20H (Beta)	0
+22E (BQ.1)	21L (BA.2)	0
+21L (BA.2)	22E (BQ.1)	0
+21A (Delta)	21C (Epsilon)	0
+22F (XBB)	20E	0
+20E	22F (XBB)	0
+21C (Epsilon)	21A (Delta)	0
+20B	21D (Eta)	0
+21D (Eta)	20B	0
+19B	20B	0
+20B	19B	0
+21A (Delta)	20H (Beta)	0
+20H (Beta)	21A (Delta)	0
+20B	20I (Alpha)	0
+20I (Alpha)	20B	0
+20A	20B	0
+20B	20A	0
+20B	20J (Gamma)	0
+20D	21L (BA.2)	0
+20J (Gamma)	20B	0
+21L (BA.2)	20D	0
+22F (XBB)	21K (BA.1)	0
+21K (BA.1)	22F (XBB)	0
+20B	23A (XBB.1.5)	0
+23A (XBB.1.5)	20B	0
+22A (BA.4)	20E	0
+20E	22A (BA.4)	0
+22F (XBB)	21J (Delta)	0
+21J (Delta)	22F (XBB)	0
+20E	21C (Epsilon)	0
+21C (Epsilon)	20E	0
+22F (XBB)	23B (XBB.1.16)	0
+23B (XBB.1.16)	22F (XBB)	0
+20E	20H (Beta)	0
+20H (Beta)	20E	0
+21K (BA.1)	22A (BA.4)	0
+22A (BA.4)	21K (BA.1)	0
+21C (Epsilon)	21K (BA.1)	0
+21K (BA.1)	21C (Epsilon)	0
+20B	20C	0
+20C	20B	0
+21L (BA.2)	20G	0
+21G (Lambda)	22F (XBB)	0
+22F (XBB)	21G (Lambda)	0
+20G	21L (BA.2)	0
+21J (Delta)	22A (BA.4)	0
+22A (BA.4)	21J (Delta)	0
+21K (BA.1)	20H (Beta)	0
+20H (Beta)	21K (BA.1)	0
+21C (Epsilon)	21J (Delta)	0
+21J (Delta)	21C (Epsilon)	0
+21I (Delta)	21I (Delta)	1
+22D (BA.2.75)	21D (Eta)	0
+21D (Eta)	22D (BA.2.75)	0
+19B	22D (BA.2.75)	0
+22D (BA.2.75)	19B	0
+22A (BA.4)	23B (XBB.1.16)	0
+23B (XBB.1.16)	22A (BA.4)	0
+22F (XBB)	22E (BQ.1)	0
+22E (BQ.1)	22F (XBB)	0
+20H (Beta)	21J (Delta)	0
+21J (Delta)	20H (Beta)	0
+23B (XBB.1.16)	21C (Epsilon)	0
+21C (Epsilon)	23B (XBB.1.16)	0
+22D (BA.2.75)	20I (Alpha)	0
+20I (Alpha)	22D (BA.2.75)	0
+20A	22D (BA.2.75)	0
+21I (Delta)	21A (Delta)	0
+22D (BA.2.75)	20A	0
+21A (Delta)	21I (Delta)	0
+22D (BA.2.75)	20J (Gamma)	0
+21G (Lambda)	22A (BA.4)	0
+22A (BA.4)	21G (Lambda)	0
+20J (Gamma)	22D (BA.2.75)	0
+21G (Lambda)	21C (Epsilon)	0
+21C (Epsilon)	21G (Lambda)	0
+20H (Beta)	23B (XBB.1.16)	0
+23B (XBB.1.16)	20H (Beta)	0
+23A (XBB.1.5)	22D (BA.2.75)	0
+22D (BA.2.75)	23A (XBB.1.5)	0
+20D	22F (XBB)	0
+22F (XBB)	20D	0
+21A (Delta)	21A (Delta)	1
+21G (Lambda)	20H (Beta)	0
+20H (Beta)	21G (Lambda)	0
+22A (BA.4)	22E (BQ.1)	0
+22E (BQ.1)	22A (BA.4)	0
+21C (Epsilon)	22E (BQ.1)	0
+22E (BQ.1)	21C (Epsilon)	0
+20E	21I (Delta)	0
+21I (Delta)	20E	0
+22E (BQ.1)	20H (Beta)	0
+20H (Beta)	22E (BQ.1)	0
+20C	22D (BA.2.75)	0
+22D (BA.2.75)	20C	0
+20D	22A (BA.4)	0
+22A (BA.4)	20D	0
+20D	21C (Epsilon)	0
+21C (Epsilon)	20D	0
+22F (XBB)	20G	0
+20G	22F (XBB)	0
+21A (Delta)	20E	0
+20E	21A (Delta)	0
+21D (Eta)	21L (BA.2)	0
+21L (BA.2)	21D (Eta)	0
+21K (BA.1)	21I (Delta)	0
+21I (Delta)	21K (BA.1)	0
+21L (BA.2)	19B	0
+19B	21L (BA.2)	0
+20H (Beta)	20D	0
+20D	20H (Beta)	0
+20I (Alpha)	21L (BA.2)	0
+21L (BA.2)	20I (Alpha)	0
+21L (BA.2)	20A	0
+20A	21L (BA.2)	0
+20J (Gamma)	21L (BA.2)	0
+21L (BA.2)	20J (Gamma)	0
+21J (Delta)	21I (Delta)	0
+21I (Delta)	21J (Delta)	0
+21A (Delta)	21K (BA.1)	0
+21K (BA.1)	21A (Delta)	0
+21L (BA.2)	23A (XBB.1.5)	0
+23A (XBB.1.5)	21L (BA.2)	0
+22A (BA.4)	20G	0
+20G	22A (BA.4)	0
+21I (Delta)	23B (XBB.1.16)	0
+23B (XBB.1.16)	21I (Delta)	0
+21J (Delta)	21A (Delta)	0
+21A (Delta)	21J (Delta)	0
+21C (Epsilon)	20G	0
+20G	21C (Epsilon)	0
+20E	20E	1
+21I (Delta)	21G (Lambda)	0
+21G (Lambda)	21I (Delta)	0
+20G	20H (Beta)	0
+20H (Beta)	20G	0
+21A (Delta)	23B (XBB.1.16)	0
+23B (XBB.1.16)	21A (Delta)	0
+21K (BA.1)	20E	0
+20E	21K (BA.1)	0
+20C	21L (BA.2)	0
+21L (BA.2)	20C	0
+21G (Lambda)	21A (Delta)	0
+21A (Delta)	21G (Lambda)	0
+22E (BQ.1)	21I (Delta)	0
+21I (Delta)	22E (BQ.1)	0
+20E	21J (Delta)	0
+21J (Delta)	20E	0
+21K (BA.1)	21K (BA.1)	1
+22E (BQ.1)	21A (Delta)	0
+21A (Delta)	22E (BQ.1)	0
+21I (Delta)	20D	0
+20D	21I (Delta)	0
+21D (Eta)	22F (XBB)	0
+22F (XBB)	21D (Eta)	0
+22F (XBB)	19B	0
+23B (XBB.1.16)	20E	0
+19B	22F (XBB)	0
+20E	23B (XBB.1.16)	0
+21K (BA.1)	21J (Delta)	0
+21J (Delta)	21K (BA.1)	0
+22F (XBB)	20I (Alpha)	0
+20I (Alpha)	22F (XBB)	0
+21G (Lambda)	20E	0
+20E	21G (Lambda)	0
+22F (XBB)	20A	0
+20A	22F (XBB)	0
+22F (XBB)	20J (Gamma)	0
+20J (Gamma)	22F (XBB)	0
+21A (Delta)	20D	0
+20D	21A (Delta)	0
+23B (XBB.1.16)	21K (BA.1)	0
+21K (BA.1)	23B (XBB.1.16)	0
+21J (Delta)	21J (Delta)	1
+22F (XBB)	23A (XBB.1.5)	1
+23A (XBB.1.5)	22F (XBB)	1
+21G (Lambda)	21K (BA.1)	0
+21K (BA.1)	21G (Lambda)	0
+21D (Eta)	22A (BA.4)	0
+22A (BA.4)	21D (Eta)	0
+19B	22A (BA.4)	0
+22A (BA.4)	19B	0
+20E	22E (BQ.1)	0
+22E (BQ.1)	20E	0
+23B (XBB.1.16)	21J (Delta)	0
+21J (Delta)	23B (XBB.1.16)	0
+21C (Epsilon)	21D (Eta)	0
+21D (Eta)	21C (Epsilon)	0
+19B	21C (Epsilon)	0
+21C (Epsilon)	19B	0
+21I (Delta)	20G	0
+20G	21I (Delta)	0
+22A (BA.4)	20I (Alpha)	0
+20I (Alpha)	22A (BA.4)	0
+20A	22A (BA.4)	0
+22A (BA.4)	20A	0
+22A (BA.4)	20J (Gamma)	0
+20J (Gamma)	22A (BA.4)	0
+21G (Lambda)	21J (Delta)	0
+21J (Delta)	21G (Lambda)	0
+20I (Alpha)	21C (Epsilon)	0
+21C (Epsilon)	20I (Alpha)	0
+20H (Beta)	21D (Eta)	0
+21D (Eta)	20H (Beta)	0
+20H (Beta)	19B	0
+23B (XBB.1.16)	23B (XBB.1.16)	1
+19B	20H (Beta)	0
+21C (Epsilon)	20A	0
+20A	21C (Epsilon)	0
+20J (Gamma)	21C (Epsilon)	0
+22E (BQ.1)	21K (BA.1)	0
+21C (Epsilon)	20J (Gamma)	0
+21K (BA.1)	22E (BQ.1)	0
+22A (BA.4)	23A (XBB.1.5)	0
+20E	20D	0
+20D	20E	0
+23A (XBB.1.5)	22A (BA.4)	0
+22F (XBB)	20C	0
+20C	22F (XBB)	0
+20G	21A (Delta)	0
+21A (Delta)	20G	0
+23A (XBB.1.5)	21C (Epsilon)	0
+21C (Epsilon)	23A (XBB.1.5)	0
+20H (Beta)	20I (Alpha)	0
+20I (Alpha)	20H (Beta)	0
+21G (Lambda)	23B (XBB.1.16)	0
+23B (XBB.1.16)	21G (Lambda)	0
+20H (Beta)	20A	0
+20A	20H (Beta)	0
+20H (Beta)	20J (Gamma)	0
+20J (Gamma)	20H (Beta)	0
+22E (BQ.1)	21J (Delta)	0
+21J (Delta)	22E (BQ.1)	0
+23A (XBB.1.5)	20H (Beta)	0
+20H (Beta)	23A (XBB.1.5)	0
+21K (BA.1)	20D	0
+21G (Lambda)	21G (Lambda)	1
+20D	21K (BA.1)	0
+23B (XBB.1.16)	22E (BQ.1)	0
+22E (BQ.1)	23B (XBB.1.16)	0
+22A (BA.4)	20C	0
+20C	22A (BA.4)	0
+21J (Delta)	20D	0
+20D	21J (Delta)	0
+21C (Epsilon)	20C	0
+20C	21C (Epsilon)	0
+21G (Lambda)	22E (BQ.1)	0
+22E (BQ.1)	21G (Lambda)	0
+20E	20G	0
+20G	20E	0
+20D	23B (XBB.1.16)	0
+23B (XBB.1.16)	20D	0
+20H (Beta)	20C	0
+20C	20H (Beta)	0
+21G (Lambda)	20D	0
+20D	21G (Lambda)	0
+20G	21K (BA.1)	0
+21K (BA.1)	20G	0
+22E (BQ.1)	22E (BQ.1)	1
+21D (Eta)	21I (Delta)	0
+21I (Delta)	21D (Eta)	0
+21I (Delta)	19B	0
+19B	21I (Delta)	0
+20G	21J (Delta)	0
+21J (Delta)	20G	0
+20D	22E (BQ.1)	0
+22E (BQ.1)	20D	0
+21I (Delta)	20I (Alpha)	0
+20I (Alpha)	21I (Delta)	0
+20A	21I (Delta)	0
+21I (Delta)	20A	0
+21I (Delta)	20J (Gamma)	0
+20J (Gamma)	21I (Delta)	0
+20G	23B (XBB.1.16)	0
+21D (Eta)	21A (Delta)	0
+21A (Delta)	21D (Eta)	0
+23B (XBB.1.16)	20G	0
+19B	21A (Delta)	0
+21A (Delta)	19B	0
+23A (XBB.1.5)	21I (Delta)	0
+21I (Delta)	23A (XBB.1.5)	0
+20D	20D	1
+20I (Alpha)	21A (Delta)	0
+20G	21G (Lambda)	0
+21G (Lambda)	20G	0
+21A (Delta)	20I (Alpha)	0
+20A	21A (Delta)	0
+21A (Delta)	20A	0
+21A (Delta)	20J (Gamma)	0
+20J (Gamma)	21A (Delta)	0
+23A (XBB.1.5)	21A (Delta)	0
+21A (Delta)	23A (XBB.1.5)	0
+20G	22E (BQ.1)	0
+22E (BQ.1)	20G	0
+20E	21D (Eta)	0
+21D (Eta)	20E	0
+20C	21I (Delta)	0
+21I (Delta)	20C	0
+19B	20E	0
+20E	19B	0
+20E	20I (Alpha)	0
+20I (Alpha)	20E	0
+20A	20E	0
+20E	20A	0
+20D	20G	0
+20J (Gamma)	20E	0
+20E	20J (Gamma)	0
+20G	20D	0
+21D (Eta)	21K (BA.1)	0
+20C	21A (Delta)	0
+21K (BA.1)	21D (Eta)	0
+21A (Delta)	20C	0
+19B	21K (BA.1)	0
+21K (BA.1)	19B	0
+20E	23A (XBB.1.5)	0
+23A (XBB.1.5)	20E	0
+21K (BA.1)	20I (Alpha)	0
+20I (Alpha)	21K (BA.1)	0
+20A	21K (BA.1)	0
+21K (BA.1)	20A	0
+21K (BA.1)	20J (Gamma)	0
+20J (Gamma)	21K (BA.1)	0
+21D (Eta)	21J (Delta)	0
+21J (Delta)	21D (Eta)	0
+19B	21J (Delta)	0
+21J (Delta)	19B	0
+21K (BA.1)	23A (XBB.1.5)	0
+23A (XBB.1.5)	21K (BA.1)	0
+21J (Delta)	20I (Alpha)	0
+20I (Alpha)	21J (Delta)	0
+21J (Delta)	20A	0
+20A	21J (Delta)	0
+21D (Eta)	23B (XBB.1.16)	0
+23B (XBB.1.16)	21D (Eta)	0
+21J (Delta)	20J (Gamma)	0
+20J (Gamma)	21J (Delta)	0
+19B	23B (XBB.1.16)	0
+23B (XBB.1.16)	19B	0
+20C	20E	0
+20E	20C	0
+21J (Delta)	23A (XBB.1.5)	0
+23A (XBB.1.5)	21J (Delta)	0
+20G	20G	1
+20I (Alpha)	23B (XBB.1.16)	0
+21D (Eta)	21G (Lambda)	0
+21G (Lambda)	21D (Eta)	0
+23B (XBB.1.16)	20I (Alpha)	0
+19B	21G (Lambda)	0
+21G (Lambda)	19B	0
+20A	23B (XBB.1.16)	0
+23B (XBB.1.16)	20A	0
+20J (Gamma)	23B (XBB.1.16)	0
+23B (XBB.1.16)	20J (Gamma)	0
+21G (Lambda)	20I (Alpha)	0
+20I (Alpha)	21G (Lambda)	0
+23B (XBB.1.16)	23A (XBB.1.5)	0
+23A (XBB.1.5)	23B (XBB.1.16)	0
+21G (Lambda)	20A	0
+21K (BA.1)	20C	0
+20C	21K (BA.1)	0
+20A	21G (Lambda)	0
+21G (Lambda)	20J (Gamma)	0
+20J (Gamma)	21G (Lambda)	0
+22E (BQ.1)	21D (Eta)	0
+21D (Eta)	22E (BQ.1)	0
+21G (Lambda)	23A (XBB.1.5)	0
+23A (XBB.1.5)	21G (Lambda)	0
+19B	22E (BQ.1)	0
+22E (BQ.1)	19B	0
+20C	21J (Delta)	0
+21J (Delta)	20C	0
+20I (Alpha)	22E (BQ.1)	0
+22E (BQ.1)	20I (Alpha)	0
+20A	22E (BQ.1)	0
+22E (BQ.1)	20A	0
+22E (BQ.1)	20J (Gamma)	0
+20J (Gamma)	22E (BQ.1)	0
+21D (Eta)	20D	0
+20D	21D (Eta)	0
+20D	19B	0
+19B	20D	0
+23A (XBB.1.5)	22E (BQ.1)	0
+22E (BQ.1)	23A (XBB.1.5)	0
+20C	23B (XBB.1.16)	0
+23B (XBB.1.16)	20C	0
+20D	20I (Alpha)	0
+20I (Alpha)	20D	0
+20C	21G (Lambda)	0
+20D	20A	0
+21G (Lambda)	20C	0
+20A	20D	0
+20D	20J (Gamma)	0
+20J (Gamma)	20D	0
+20D	23A (XBB.1.5)	0
+23A (XBB.1.5)	20D	0
+22E (BQ.1)	20C	0
+20C	22E (BQ.1)	0
+20G	21D (Eta)	0
+21D (Eta)	20G	0
+20G	19B	0
+19B	20G	0
+20I (Alpha)	20G	0
+20G	20I (Alpha)	0
+20C	20D	0
+20D	20C	0
+20A	20G	0
+20G	20A	0
+20J (Gamma)	20G	0
+20G	20J (Gamma)	0
+23A (XBB.1.5)	20G	0
+20G	23A (XBB.1.5)	0
+20C	20G	0
+20G	20C	0
+21D (Eta)	21D (Eta)	1
+19B	21D (Eta)	0
+21D (Eta)	19B	0
+19B	19B	1
+20I (Alpha)	21D (Eta)	0
+21D (Eta)	20I (Alpha)	0
+19B	20I (Alpha)	0
+20I (Alpha)	19B	0
+20A	21D (Eta)	0
+21D (Eta)	20A	0
+21D (Eta)	20J (Gamma)	0
+20J (Gamma)	21D (Eta)	0
+19B	20A	0
+20A	19B	0
+20J (Gamma)	19B	0
+19B	20J (Gamma)	0
+20I (Alpha)	20I (Alpha)	1
+23A (XBB.1.5)	21D (Eta)	0
+21D (Eta)	23A (XBB.1.5)	0
+19B	23A (XBB.1.5)	0
+23A (XBB.1.5)	19B	0
+20I (Alpha)	20A	0
+20A	20I (Alpha)	0
+20J (Gamma)	20I (Alpha)	0
+20I (Alpha)	20J (Gamma)	0
+20A	20A	1
+20A	20J (Gamma)	0
+20J (Gamma)	20A	0
+20J (Gamma)	20J (Gamma)	1
+20I (Alpha)	23A (XBB.1.5)	0
+23A (XBB.1.5)	20I (Alpha)	0
+20A	23A (XBB.1.5)	0
+23A (XBB.1.5)	20A	0
+23A (XBB.1.5)	20J (Gamma)	0
+20J (Gamma)	23A (XBB.1.5)	0
+23A (XBB.1.5)	23A (XBB.1.5)	1
+21D (Eta)	20C	0
+20C	21D (Eta)	0
+19B	20C	0
+20C	19B	0
+20C	20I (Alpha)	0
+20I (Alpha)	20C	0
+20C	20A	0
+20A	20C	0
+20J (Gamma)	20C	0
+20C	20J (Gamma)	0
+23A (XBB.1.5)	20C	0
+20C	23A (XBB.1.5)	0
+20C	20C	1
+22B (BA.5)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	22B (BA.5)	0
+22C (BA.2.12.1)	19A	0
+19A	22C (BA.2.12.1)	0
+20B	22B (BA.5)	0
+22B (BA.5)	20B	0
+22B (BA.5)	22D (BA.2.75)	0
+22D (BA.2.75)	22B (BA.5)	0
+20B	19A	0
+19A	20B	0
+22B (BA.5)	21L (BA.2)	0
+21L (BA.2)	22B (BA.5)	0
+19A	22D (BA.2.75)	0
+22D (BA.2.75)	19A	0
+21L (BA.2)	19A	0
+19A	21L (BA.2)	0
+22F (XBB)	22B (BA.5)	0
+22B (BA.5)	22F (XBB)	0
+22A (BA.4)	22B (BA.5)	0
+22B (BA.5)	22A (BA.4)	0
+21C (Epsilon)	22B (BA.5)	0
+22B (BA.5)	21C (Epsilon)	0
+20H (Beta)	22B (BA.5)	0
+22B (BA.5)	20H (Beta)	0
+22F (XBB)	19A	0
+19A	22F (XBB)	0
+22A (BA.4)	19A	0
+19A	22A (BA.4)	0
+19A	21C (Epsilon)	0
+21C (Epsilon)	19A	0
+19A	20H (Beta)	0
+20H (Beta)	19A	0
+21I (Delta)	22B (BA.5)	0
+22B (BA.5)	21I (Delta)	0
+22B (BA.5)	21A (Delta)	0
+21A (Delta)	22B (BA.5)	0
+20E	22B (BA.5)	0
+22B (BA.5)	20E	0
+21K (BA.1)	22B (BA.5)	0
+22B (BA.5)	21K (BA.1)	0
+21I (Delta)	19A	0
+19A	21I (Delta)	0
+22B (BA.5)	21J (Delta)	0
+21J (Delta)	22B (BA.5)	0
+21A (Delta)	19A	0
+19A	21A (Delta)	0
+23B (XBB.1.16)	22B (BA.5)	0
+22B (BA.5)	23B (XBB.1.16)	0
+21G (Lambda)	22B (BA.5)	0
+22B (BA.5)	21G (Lambda)	0
+19A	20E	0
+20E	19A	0
+22E (BQ.1)	22B (BA.5)	0
+22B (BA.5)	22E (BQ.1)	0
+21K (BA.1)	19A	0
+19A	21K (BA.1)	0
+22B (BA.5)	20D	0
+20D	22B (BA.5)	0
+19A	21J (Delta)	0
+21J (Delta)	19A	0
+19A	23B (XBB.1.16)	0
+23B (XBB.1.16)	19A	0
+21G (Lambda)	19A	0
+19A	21G (Lambda)	0
+22B (BA.5)	20G	0
+20G	22B (BA.5)	0
+22E (BQ.1)	19A	0
+19A	22E (BQ.1)	0
+19A	20D	0
+20D	19A	0
+19A	20G	0
+20G	19A	0
+21D (Eta)	22B (BA.5)	0
+22B (BA.5)	21D (Eta)	0
+22B (BA.5)	19B	0
+19B	22B (BA.5)	0
+22B (BA.5)	20I (Alpha)	0
+20I (Alpha)	22B (BA.5)	0
+20A	22B (BA.5)	0
+22B (BA.5)	20A	0
+22B (BA.5)	20J (Gamma)	0
+20J (Gamma)	22B (BA.5)	0
+22B (BA.5)	23A (XBB.1.5)	0
+23A (XBB.1.5)	22B (BA.5)	0
+22B (BA.5)	20C	0
+20C	22B (BA.5)	0
+19A	21D (Eta)	0
+21D (Eta)	19A	0
+19A	19B	0
+19B	19A	0
+19A	20I (Alpha)	0
+20I (Alpha)	19A	0
+19A	20A	0
+20A	19A	0
+20J (Gamma)	19A	0
+19A	20J (Gamma)	0
+23A (XBB.1.5)	19A	0
+19A	23A (XBB.1.5)	0
+20C	19A	0
+19A	20C	0
+21H (Mu)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	21H (Mu)	0
+20B	21H (Mu)	0
+21H (Mu)	20B	0
+21H (Mu)	22D (BA.2.75)	0
+22D (BA.2.75)	21H (Mu)	0
+21H (Mu)	21L (BA.2)	0
+21L (BA.2)	21H (Mu)	0
+21H (Mu)	22F (XBB)	0
+22F (XBB)	21H (Mu)	0
+22A (BA.4)	21H (Mu)	0
+21H (Mu)	22A (BA.4)	0
+21C (Epsilon)	21H (Mu)	0
+21H (Mu)	21C (Epsilon)	0
+21H (Mu)	20H (Beta)	0
+20H (Beta)	21H (Mu)	0
+21I (Delta)	21H (Mu)	0
+21H (Mu)	21I (Delta)	0
+21A (Delta)	21H (Mu)	0
+21H (Mu)	21A (Delta)	0
+20E	21H (Mu)	0
+21H (Mu)	20E	0
+21K (BA.1)	21H (Mu)	0
+21H (Mu)	21K (BA.1)	0
+21H (Mu)	21J (Delta)	0
+21J (Delta)	21H (Mu)	0
+21H (Mu)	23B (XBB.1.16)	0
+23B (XBB.1.16)	21H (Mu)	0
+21H (Mu)	21G (Lambda)	0
+21G (Lambda)	21H (Mu)	0
+21H (Mu)	22E (BQ.1)	0
+22E (BQ.1)	21H (Mu)	0
+20D	21H (Mu)	0
+21H (Mu)	20D	0
+21H (Mu)	20G	0
+20G	21H (Mu)	0
+21D (Eta)	21H (Mu)	0
+21H (Mu)	21D (Eta)	0
+19B	21H (Mu)	0
+21H (Mu)	19B	0
+21H (Mu)	20I (Alpha)	0
+20I (Alpha)	21H (Mu)	0
+21H (Mu)	20A	0
+20A	21H (Mu)	0
+20J (Gamma)	21H (Mu)	0
+21H (Mu)	20J (Gamma)	0
+23A (XBB.1.5)	21H (Mu)	0
+21H (Mu)	23A (XBB.1.5)	0
+20C	21H (Mu)	0
+21H (Mu)	20C	0
+22B (BA.5)	22B (BA.5)	1
+22B (BA.5)	19A	0
+19A	22B (BA.5)	0
+19A	19A	1
+22C (BA.2.12.1)	20F	0
+20F	22C (BA.2.12.1)	0
+20F	20B	0
+20B	20F	0
+20F	22D (BA.2.75)	0
+22D (BA.2.75)	20F	0
+20F	21L (BA.2)	0
+21L (BA.2)	20F	0
+21H (Mu)	22B (BA.5)	0
+22B (BA.5)	21H (Mu)	0
+21H (Mu)	19A	0
+19A	21H (Mu)	0
+20F	22F (XBB)	0
+22F (XBB)	20F	0
+22A (BA.4)	20F	0
+20F	22A (BA.4)	0
+21C (Epsilon)	20F	0
+20F	21C (Epsilon)	0
+20H (Beta)	20F	0
+20F	20H (Beta)	0
+21I (Delta)	20F	0
+20F	21I (Delta)	0
+21A (Delta)	20F	0
+20F	21A (Delta)	0
+20E	20F	0
+20F	20E	0
+21K (BA.1)	20F	0
+20F	21K (BA.1)	0
+21J (Delta)	20F	0
+20F	21J (Delta)	0
+20F	23B (XBB.1.16)	0
+23B (XBB.1.16)	20F	0
+20F	21G (Lambda)	0
+21G (Lambda)	20F	0
+20F	22E (BQ.1)	0
+22E (BQ.1)	20F	0
+20F	20D	0
+20D	20F	0
+20F	20G	0
+20G	20F	0
+21D (Eta)	20F	0
+20F	21D (Eta)	0
+20F	19B	0
+19B	20F	0
+20I (Alpha)	20F	0
+20F	20I (Alpha)	0
+20F	20A	0
+20A	20F	0
+20F	20J (Gamma)	0
+20J (Gamma)	20F	0
+20F	23A (XBB.1.5)	0
+23A (XBB.1.5)	20F	0
+20C	20F	0
+20F	20C	0
+21B (Kappa)	22C (BA.2.12.1)	0
+22C (BA.2.12.1)	21B (Kappa)	0
+21H (Mu)	21H (Mu)	1
+20B	21B (Kappa)	0
+21B (Kappa)	20B	0
+22D (BA.2.75)	21B (Kappa)	0
+21B (Kappa)	22D (BA.2.75)	0
+21B (Kappa)	21L (BA.2)	0
+21L (BA.2)	21B (Kappa)	0
+21B (Kappa)	22F (XBB)	0
+22F (XBB)	21B (Kappa)	0
+22A (BA.4)	21B (Kappa)	0
+21B (Kappa)	22A (BA.4)	0
+21C (Epsilon)	21B (Kappa)	0
+21B (Kappa)	21C (Epsilon)	0
+21B (Kappa)	20H (Beta)	0
+20H (Beta)	21B (Kappa)	0
+21B (Kappa)	21I (Delta)	0
+21I (Delta)	21B (Kappa)	0
+21A (Delta)	21B (Kappa)	0
+21B (Kappa)	21A (Delta)	0
+21B (Kappa)	20E	0
+20E	21B (Kappa)	0
+21B (Kappa)	21K (BA.1)	0
+21K (BA.1)	21B (Kappa)	0
+21B (Kappa)	21J (Delta)	0
+21J (Delta)	21B (Kappa)	0
+23B (XBB.1.16)	21B (Kappa)	0
+21B (Kappa)	23B (XBB.1.16)	0
+21B (Kappa)	21G (Lambda)	0
+21G (Lambda)	21B (Kappa)	0
+21B (Kappa)	22E (BQ.1)	0
+22E (BQ.1)	21B (Kappa)	0
+21B (Kappa)	20D	0
+20D	21B (Kappa)	0
+20G	21B (Kappa)	0
+21B (Kappa)	20G	0
+21B (Kappa)	21D (Eta)	0
+21D (Eta)	21B (Kappa)	0
+21B (Kappa)	19B	0
+19B	21B (Kappa)	0
+20I (Alpha)	21B (Kappa)	0
+21B (Kappa)	20I (Alpha)	0
+20A	21B (Kappa)	0
+21B (Kappa)	20A	0
+21B (Kappa)	20J (Gamma)	0
+20J (Gamma)	21B (Kappa)	0
+21B (Kappa)	23A (XBB.1.5)	0
+23A (XBB.1.5)	21B (Kappa)	0
+21B (Kappa)	20C	0
+20C	21B (Kappa)	0
+22B (BA.5)	20F	0
+20F	22B (BA.5)	0
+20F	19A	0
+19A	20F	0
+20F	21H (Mu)	0
+21H (Mu)	20F	0
+22B (BA.5)	21B (Kappa)	0
+21B (Kappa)	22B (BA.5)	0
+21B (Kappa)	19A	0
+19A	21B (Kappa)	0
+21B (Kappa)	21H (Mu)	0
+21H (Mu)	21B (Kappa)	0
+20F	20F	1
+21B (Kappa)	20F	0
+20F	21B (Kappa)	0
+22C (BA.2.12.1)	21F (Iota)	0
+21F (Iota)	22C (BA.2.12.1)	0
+21F (Iota)	20B	0
+20B	21F (Iota)	0
+22D (BA.2.75)	21F (Iota)	0
+21F (Iota)	22D (BA.2.75)	0
+21F (Iota)	21L (BA.2)	0
+21L (BA.2)	21F (Iota)	0
+21F (Iota)	22F (XBB)	0
+22F (XBB)	21F (Iota)	0
+21F (Iota)	22A (BA.4)	0
+22A (BA.4)	21F (Iota)	0
+21F (Iota)	21C (Epsilon)	0
+21C (Epsilon)	21F (Iota)	0
+21F (Iota)	20H (Beta)	0
+20H (Beta)	21F (Iota)	0
+21B (Kappa)	21B (Kappa)	1
+21I (Delta)	21F (Iota)	0
+21F (Iota)	21I (Delta)	0
+21F (Iota)	21A (Delta)	0
+21A (Delta)	21F (Iota)	0
+20E	21F (Iota)	0
+21F (Iota)	20E	0
+21F (Iota)	21K (BA.1)	0
+21K (BA.1)	21F (Iota)	0
+21J (Delta)	21F (Iota)	0
+21F (Iota)	21J (Delta)	0
+21F (Iota)	23B (XBB.1.16)	0
+23B (XBB.1.16)	21F (Iota)	0
+21G (Lambda)	21F (Iota)	0
+21F (Iota)	21G (Lambda)	0
+22E (BQ.1)	21F (Iota)	0
+21F (Iota)	22E (BQ.1)	0
+21F (Iota)	20D	0
+20D	21F (Iota)	0
+20G	21F (Iota)	0
+21F (Iota)	20G	0
+21F (Iota)	21D (Eta)	0
+21D (Eta)	21F (Iota)	0
+21F (Iota)	19B	0
+19B	21F (Iota)	0
+21F (Iota)	20I (Alpha)	0
+20I (Alpha)	21F (Iota)	0
+21F (Iota)	20A	0
+20A	21F (Iota)	0
+20J (Gamma)	21F (Iota)	0
+21F (Iota)	20J (Gamma)	0
+21F (Iota)	23A (XBB.1.5)	0
+23A (XBB.1.5)	21F (Iota)	0
+21F (Iota)	20C	0
+20C	21F (Iota)	0
+21F (Iota)	22B (BA.5)	0
+22B (BA.5)	21F (Iota)	0
+21F (Iota)	19A	0
+19A	21F (Iota)	0
+21F (Iota)	21H (Mu)	0
+21H (Mu)	21F (Iota)	0
+21F (Iota)	20F	0
+20F	21F (Iota)	0
+21F (Iota)	21B (Kappa)	0
+21B (Kappa)	21F (Iota)	0
+21F (Iota)	21F (Iota)	1
