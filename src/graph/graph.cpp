@@ -1308,7 +1308,7 @@ std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds
 
   //std::size_t sum_vals = ms_q.sum() + ms_w.sum();
   //std::size_t sum_size = len_t1 + len_t2;
-
+#ifdef DEBUG
 	std::cout<< "MS[S_1,S_2]: ";
 	for(int i=0;i<len_t1;++i){
 		std::cout << ms_w[i]<<" ";
@@ -1319,7 +1319,8 @@ std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds
 		std::cout << ms_q[i]<<" ";
 	}
 	std::cout<<std::endl;
-  
+#endif
+
   //return static_cast<std::double_t>(sum_vals) / static_cast<std::double_t>(sum_size);
   
   std::double_t t1_avg = static_cast<std::double_t>(ms_w.sum()) / static_cast<std::double_t>(len_t1);
