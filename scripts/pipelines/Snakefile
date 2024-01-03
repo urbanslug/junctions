@@ -1,0 +1,87 @@
+# Snakefile
+import os
+
+########
+# Common
+########
+
+# Define the directory containing your files
+in_dir = config["in_dir"] if "in_dir" in config else "test_data/SARS_CoV_2/msa_files"
+out_dir = config["out_dir"] if "out_dir" in config else "out"
+all_file = os.path.join(out_dir, "all.txt")
+
+# Get a list of all files in the directory
+files = [f for f in os.listdir(in_dir) if os.path.isfile(os.path.join(in_dir, f))]
+
+
+#######
+# Graph
+#######
+
+
+# Create a list of output file paths for the rule
+g_output_files = [
+    os.path.join(out_dir, f"g_{file1}_vs_{file2}.txt")
+    for file1 in files
+    for file2 in files
+]
+ 
+# Rule to generate all unique pairs of files
+rule graph:
+    input:
+        g_output_files
+
+
+# Rule to perform the comparison for each unique pair of files
+rule graph_:
+    input:
+        file1=in_dir + "/{file1}",
+        file2=in_dir + "/{file2}"
+    output:
+        os.path.join(out_dir, "g_{file1}_vs_{file2}.txt")
+    benchmark:
+        os.path.join(out_dir, "gb_{file1}_vs_{file2}.txt")
+    params:
+        mode=config["mode"]  # "-s" for similarity, "-d" for distance
+    shell:
+        """
+        echo $(basename '{input.file1}' | rev | cut -d. -f2- | rev ) >> '{output}'
+        echo $(basename '{input.file2}' | rev | cut -d. -f2- | rev ) >> '{output}'
+        junctions graph -c 1 '{config["mode"]}' -- '{input.file1}' '{input.file2}' >> '{output}'
+        awk 'NR==3 {{gsub(/[^0-9.]/, ""); printf $0}} NR!=3 {{printf "%s\\t", $0}} END {{printf "\\n"}}' '{output}' >> {all_file}
+        """
+
+
+
+##############
+# Intersection
+##############
+
+# Create a list of output file paths for the rule
+i_output_files = [
+    os.path.join(out_dir, f"i_{file1}_vs_{file2}.txt")
+    for file1 in files
+    for file2 in files
+]
+
+
+# Rule to generate all unique pairs of files
+rule intersect:
+    input:
+        i_output_files
+
+
+# Rule to perform the comparison for each unique pair of files
+rule intersection:
+    input:
+        file1=in_dir + "/{file1}",
+        file2=in_dir + "/{file2}"
+    output:
+        os.path.join(out_dir, "i_{file1}_vs_{file2}.txt")
+    shell:
+        """
+        echo $(basename '{input.file1}' | rev | cut -d. -f2- | rev ) >> '{output}'
+        echo $(basename '{input.file2}' | rev | cut -d. -f2- | rev ) >> '{output}'
+        junctions intersect -- '{input.file1}' '{input.file2}' | sed -e 's/INFO intersection exists/1/g' -e 's/INFO no intersection/0/g' >> '{output}'
+        awk 'NR==3 {{printf $0}} NR!=3 {{printf "%s\\t", $0}} END {{printf "\\n"}}' '{output}' >> {all_file}
+        """

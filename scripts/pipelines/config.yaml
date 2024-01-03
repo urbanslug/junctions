@@ -1,0 +1,3 @@
+in_dir: "test_data/SARS_CoV_2/msa_files"
+out_dir: "out"
+mode: "-d"
