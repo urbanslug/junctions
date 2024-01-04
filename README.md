@@ -99,8 +99,6 @@ We can compute their matching statistics by running the following:
 
 ```
 $ ./bin/junctions graph -c 0 -s x.eds y.eds 
-MS[S_1,S_2]: 3 2 
-MS[S_2,S_1]: 3 2 
 Similarity measure is: 5
 ```
 
@@ -125,8 +123,6 @@ We can compute their breakpoint matching statistics by running the following:
 
 ```
 $ ./bin/junctions graph -c 1 -s x.eds y.eds 
-MS[S_1,S_2]: 2 1 
-MS[S_2,S_1]: 2 2 
 Similarity measure is: 3.5
 ```
 
