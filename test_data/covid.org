@@ -14,7 +14,6 @@ We computed matching statistics metrics from them and obtained the following tab
 
 * Results
 
-|-----------------+---------+---------+---------+---------+---------+---------+--------+---------+--------+------------+-------------+-------------+-------------+-------------+---------------+-----------+------------+--------------+----------+-------------+-------------+------------+------------+------------+------------+-----------------+---------------+------------+-----------+---------------+----------------|
 | Clade           |     19A |     19B |     20A |     20B |     20C |     20D |    20E |     20F |    20G | 20H (Beta) | 20I (Alpha) | 20J (Gamma) | 21A (Delta) | 21B (Kappa) | 21C (Epsilon) | 21D (Eta) | 21F (Iota) | 21G (Lambda) | 21H (Mu) | 21I (Delta) | 21J (Delta) | 21K (BA.1) | 21L (BA.2) | 22A (BA.4) | 22B (BA.5) | 22C (BA.2.12.1) | 22D (BA.2.75) | 22E (BQ.1) | 22F (XBB) | 23A (XBB.1.5) | 23B (XBB.1.16) |
 |-----------------+---------+---------+---------+---------+---------+---------+--------+---------+--------+------------+-------------+-------------+-------------+-------------+---------------+-----------+------------+--------------+----------+-------------+-------------+------------+------------+------------+------------+-----------------+---------------+------------+-----------+---------------+----------------|
 | 19A             | 33217.9 |  8482.2 |    40.5 |   406.4 |    37.7 |   269.9 |  105.8 |     3.1 |   75.8 |      182.2 |        42.6 |         5.6 |        34.1 |       142.1 |         263.3 |      37.0 |        2.8 |         38.7 |     59.1 |        56.7 |        48.6 |      199.1 |       73.4 |       38.2 |       63.6 |            70.3 |          46.7 |       70.4 |      44.5 |          51.4 |           54.9 |
@@ -59,11 +58,12 @@ for performance measurement.
 
 
 Further explanation of the columns other than from the benchmark documentation
+(credit for the table: https://stackoverflow.com/a/66872577).
 
 | Metric    | Type   | Unit    | Description                                                               |
 |-----------+--------+---------+---------------------------------------------------------------------------|
-| Sample_1  | -      | -       | Name of a given sample (Sample_1)                                         |
-| Sample_2  | -      | -       | Name of a given sample (Sample_2)                                         |
+| Sample_1  | string | -       | Name of a given sample (Sample_1)                                         |
+| Sample_2  | string | -       | Name of a given sample (Sample_2)                                         |
 | s         | float  | seconds | Running time in seconds                                                   |
 | h:m:s     | string | -       | Running time in hour, minutes, seconds format                             |
 | max_rss   | float  | MB      | Maximum "Resident Set Size": Non-swapped physical memory                  |
@@ -76,8 +76,8 @@ Further explanation of the columns other than from the benchmark documentation
 | cpu_time  | float  | -       | Sum of user and system CPU time                                           |
 
 
+** Benchmark table
 
-|-----------------+-----------------+---------+---------+---------+---------+---------+---------+-------+--------+-----------|
 | Sample_1        | Sample_2        |       s |   h:m:s | max_rss | max_vms | max_uss | max_pss | io_in | io_out | mean_load |
 |-----------------+-----------------+---------+---------+---------+---------+---------+---------+-------+--------+-----------|
 | 20D             | 21C (Epsilon)   |  5.0028 | 0:00:05 |  103.26 |  109.79 |   96.25 |   96.37 |  0.00 |   0.00 |      0.00 |

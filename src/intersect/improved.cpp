@@ -62,46 +62,44 @@ namespace intersect::improved {
 bool exp_exp(int i, int j,
 			 eds::EDS& eds_t1, eds::EDS& eds_t2,
 			 core::bool_matrix const &t1, core::bool_matrix const &t2) {
-	if (i == 0 && j == 0) { return true; }
-
-	if (i > 0 && j > 0) {
-
-	  bool exp_1{false}, exp_2{false};
-
-	  std::size_t col = eds_t2.get_letter_boundaries(j - 1).left();
-	  std::size_t end = eds_t2.get_letter_boundaries(j - 1).right();
-
-	  for (; col <= end; col++) {
-		if (t2[i - 1][col]) { exp_1 = true; break; }
-	  }
-
-	  col = eds_t1.get_letter_boundaries(i-1).left();
-	  end = eds_t1.get_letter_boundaries(i-1).right();
-
-	  for (; col <= end; col++) {
-		if (t1[j - 1][col]) {	exp_2 = true; break; }
-	  }
-
-	  return exp_1 && exp_2;
-	}
-	else if (i == 0 && j > 0) {
-	  if (!eds_t2.is_letter_eps(j-1) ) { return false; }
+  if (i == 0 && j == 0) { return true; }
 
 
-	  for (auto x : eds_t1.get_slice(0)) {
-		if (t1[j-1][x.start +x.length -1]) { return true; }
-	  }
+  if (i > 0 && j > 0) {
 
-	}
-	else if (i > 0 && j == 0) {
-	  if (!eds_t1.is_letter_eps(i-1)) { return false; }
+	bool exp_1{false}, exp_2{false};
 
-	  for (auto x : eds_t2.get_slice(0)) {
-		if (t2[i-1][x.start +x.length -1]) { return true; }
-	  }
+	for (auto x : eds_t2.get_slice(j-1)) {
+	  std::size_t l = x.length > 0 ? x.length - 1 : 0;
+	  if (t2[i-1][x.start + l]) { exp_1 = true; break; }
 	}
 
-	return false;
+
+	for (auto x : eds_t1.get_slice(i-1)) {
+	  std::size_t l = x.length > 0 ? x.length - 1 : 0;
+	  if (t1[j-1][x.start + l]) { exp_2 = true; break; }
+	}
+
+	return exp_1 && exp_2;
+  }
+  else if (i == 0 && j > 0) {
+	if (!eds_t2.is_letter_eps(j-1) ) { return false; }
+
+
+	for (auto x : eds_t1.get_slice(0)) {
+	  if (t1[j-1][x.start +x.length -1]) { return true; }
+	}
+
+  }
+  else if (i > 0 && j == 0) {
+	if (!eds_t1.is_letter_eps(i-1)) { return false; }
+
+	for (auto x : eds_t2.get_slice(0)) {
+	  if (t2[i-1][x.start +x.length -1]) { return true; }
+	}
+  }
+
+  return false;
 }
 
 bool imp_exp(int i, int j,
@@ -109,7 +107,7 @@ bool imp_exp(int i, int j,
 			 core::bool_matrix const &t1, core::bool_matrix const &t2) {
 
   if (j> 0) {
-	
+
 	std::set<std::size_t> str_ends;
 	for (auto x : eds_t1.get_slice(i)) {
 	 if (!x.eps_slice){ str_ends.insert(x.start +x.length -1 ); }
@@ -233,7 +231,7 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
 
 	// mark the end of the match as reachable in N_1 and N_2
 	// match end in N
-	
+
 	// where the match ends locally
 	std::size_t candidate_match_end =
 	local_txt_slice.start + candiate_match.get_char_idx() + candiate_match.get_match_length();
@@ -242,13 +240,13 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
 	// where the matched string actually ends in l/k (locally)
 	std::size_t txt_slice_end = local_txt_slice.start + local_txt_slice.length;
 	if (candidate_match_end >= txt_slice_end) { text_stop_exp = true; }
-	
+
 	//std::size_t global_candidate_match_end = local_txt_slice.start + candidate_match_end;
 	// in the txt
 	//std::size_t in_N = txt_eds.to_global_idx(txt_letter_idx, candidate_match_end);
 
 	std::size_t t_end_in_N = t_start_in_N + candiate_match.get_match_length();
-	
+
 	/*
 	  Handle query
 	  ============
@@ -440,7 +438,7 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 			if (w_matrix[j - 1][col]) { w_matrix[j][col] = true; }
 		  }
 		}
-		
+
 		if (i > 0 && j > 0) {
 		  // copy down
 		  // --------
@@ -466,7 +464,7 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 	  bool imp_exp_val = imp_exp(i, j, eds_t1, eds_t2, w_matrix, q_matrix);
 	  bool exp_imp_val = exp_imp(i, j, eds_t1, eds_t2, w_matrix, q_matrix);
 
-	  /*	 
+	  /*
 	  //print i j values and their exp_exp_val values, etc.
 	  std::cout << "\n..............................\n";
 		std::cout << "i: " << i << " j: " << j
@@ -475,7 +473,7 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 				  << " exp_imp_val: " << exp_imp_val
 				  << " res: " << (exp_exp_val || imp_exp_val || exp_imp_val)
 				  << std::endl;
-	   */
+	  */
 
 
 	  // at least one of these must be true
@@ -500,10 +498,10 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 	  // Query => T_2[j]
 	  // -------------------------------------------------
 
-	  
+
 	  //std::cout << "Match positions:  \n";
 	  //std::cout << "text T1: " << i << " query T2: " << j << "\n";
-	  
+
 	  core::perform_matching(
 		eds_t1,
 		i,
@@ -519,7 +517,7 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 	  std::cout << "-> txt str idx: " << m.get_txt_str_idx()  << " txt char idx: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
 	  }
 	  */
-	  
+
 	  update_matrices(candidate_matches,
 					  eds_t1,
 					  eds_t2.get_slice(j),
@@ -536,7 +534,7 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 	  //std::cout << "\n";
 	  //std::cout << "Match positions: \n";
 	  //std::cout << "text T2: " << j << " query T1: " << i << "\n";
-	  
+
 	  core::perform_matching(
 		eds_t2,
 		j,
