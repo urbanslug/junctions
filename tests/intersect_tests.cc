@@ -10,7 +10,7 @@ TEST(IntersectionTest, LacksIntersection) {
   bool res; // result
   core::AppConfig params;
   params.set_verbosity(0); // TODO: remove
-  
+
 
   auto setup_and_run = [&]() {
     w = eds::Parser::from_string(ed_string_w);
@@ -136,17 +136,30 @@ TEST(IntersectionTest, Epsilons) {
   setup_and_run();
   EXPECT_EQ(res, false);
 
+  ed_string_w = "{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{AT,TC}{ATC,A}";
+  ed_string_q = "{,G}{CT,T}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{AT,TC}{ATC,}";
+  ed_string_q = "{TC,G}{CT,T}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "{,G}AT{CT,T}";
   setup_and_run();
   EXPECT_EQ(res, true);
 
-
   ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
   ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
   setup_and_run();
   EXPECT_EQ(res, true);
-
 
   // ed_string_w = "{GT,}{A,C}{T}";
   // ed_string_q = "{G,}{AT}";
@@ -165,21 +178,6 @@ TEST(IntersectionTest, Epsilons) {
   setup_and_run();
   EXPECT_EQ(res, true);
 
-  ed_string_w = "{GCGGTGGCTT}{AC,G}";
-  ed_string_q = "{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
-  setup_and_run();
-  EXPECT_EQ(res, false);
-
-  ed_string_w = "{AT,TC}{ATC,A}";
-  ed_string_q = "{,G}{CT,T}";
-  setup_and_run();
-  EXPECT_EQ(res, false);
-
-  ed_string_w = "{AT,TC}{ATC,}";
-  ed_string_q = "{TC,G}{CT,T}";
-  setup_and_run();
-  EXPECT_EQ(res, false);
-
   ed_string_w = "{AT,TC}{CGA,}{AGC,ATGC,}{ATC,T}";
   ed_string_q = "{TC,G}{CT,T}";
   setup_and_run();
@@ -190,6 +188,24 @@ TEST(IntersectionTest, Epsilons) {
   setup_and_run();
   EXPECT_EQ(res, false); //
 
+  ed_string_w = "{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
+  ed_string_q = "{AACCACTTTTCCATGAC}{A,}{AGGA}{G,}{TT}{A,}{"
+    "GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
+  ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
+  ed_string_q =
+      "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCC}{T,}{T}{CGG,T}{C}{CG,}"
+      "{GATGATCGCAGGGAGCGTT}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
   ed_string_w = "{GATGATC}{G,}{CA}{AGC,}{GGGAGCG}{TTA,}{G}";
   ed_string_q = "{GATGATCGCAGGGAGCGTT}{AG,T}";
   setup_and_run();
@@ -199,27 +215,6 @@ TEST(IntersectionTest, Epsilons) {
   ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCA}";
   setup_and_run();
   EXPECT_EQ(res, true);
-
-  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
-  ed_string_q = "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCCTTC}";
-  setup_and_run();
-  EXPECT_EQ(res, false);
-
-
-  ed_string_w = "{AGGA}{G,}{TTGAATATGGCATTC}{A,C}{GTAATCCCT}{CG,}{TCGATGATC}";
-  ed_string_q =
-      "{AGGA}{G,}{TT}{A,}{GAATATGGCATTCAGTAATCCC}{T,}{T}{CGG,T}{C}{CG,}"
-      "{GATGATCGCAGGGAGCGTT}";
-  setup_and_run();
-  EXPECT_EQ(res, false);
-
-
-  ed_string_w =
-      "{AAC}{CAC,GGT}{TTTTCCATGAC}{A,}{AGGA}{G,}{TTGAATATGGCATTC}{A,C}";
-  ed_string_q = "{AACCACTTTTCCATGAC}{A,}{AGGA}{G,}{TT}{A,}{"
-                "GAATATGGCATTCAGTAATCCCTTC}{GGCCG,}";
-  setup_and_run();
-  EXPECT_EQ(res, false);
 
   ed_string_w = "{T,}{GC}{G,}{GT}{CTT,GGC}";
   ed_string_q = "{T}{G,}{GCGTCTT}";
@@ -251,8 +246,90 @@ TEST(IntersectionTest, Epsilons) {
     "{CTTT,TCAC}";
   setup_and_run();
   EXPECT_EQ(res, true);
+}
 
 
-  
-  
+TEST(IntersectionTest, EpsilonStart) {
+  eds::EDS w, q;
+  std::string ed_string_w, ed_string_q;
+  bool res; // result
+  core::AppConfig params;
+  params.set_verbosity(0); // TODO: remove
+
+  auto setup_and_run = [&]() {
+    w = eds::Parser::from_string(ed_string_w);
+    q = eds::Parser::from_string(ed_string_q);
+
+    res = intersect::improved::has_intersection(w, q);
+    // TODO: call naive
+    //res = intersect::improved(w, q, params);
+  };
+
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}";
+  ed_string_q = "{G,}{AT}{CC,GA}{T}{C,G}{A,C}{G}{C,G}{TT}";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
+  ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
+  ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
+  ed_string_w = "{G,}{T,}{TTTACCC}{A,}{G}{A,G}";
+  ed_string_q = "{T,}{TTTACCC}{AG,GA}{T}{G,T}{CAGG}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "A{C,}";
+  ed_string_q = "{C,}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{C,}";
+  ed_string_q = "{C,}A";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "A{C,}G";
+  ed_string_q = "{C,}G";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{C,}";
+  ed_string_q = "{C,}A";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{AT,TC}";
+  ed_string_q = "{,G}AT";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
+  ed_string_w = "{GT,}{A,C}{T}";
+  ed_string_q = "{AT,}{G}{T}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{AT,TC}{ATC,A}";
+  ed_string_q = "{,G}{CT,T}";
+  setup_and_run();
+  EXPECT_EQ(res, false);
+
+  ed_string_w = "{AT,TC}{ATC,T}";
+  ed_string_q = "{,G}AT{CT,T}";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
+  ed_string_w = "{T,}{GC}{G,}{GT}{CTT,GGC}";
+  ed_string_q = "{T}{G,}{GCGTCTT}";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
+
 }

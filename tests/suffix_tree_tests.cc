@@ -54,7 +54,7 @@ TEST(SuffixTreeTest, Matching) {
 
   txt_strs = {"AAGT","CT"};
   text_slices =
-	std::vector<eds::slice_eds>{eds::slice_eds(0, 4), eds::slice_eds(4, 2)};
+    std::vector<eds::slice_eds>{eds::slice_eds(0, 4), eds::slice_eds(4, 2)};
   setup();
   qry = "TG";
   match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str());
@@ -63,8 +63,8 @@ TEST(SuffixTreeTest, Matching) {
   std::cout << "Match positions.......: \n";
   for (auto &m : match_positions) {
 
-	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
-		//std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
+    std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
+        //std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
 
   }
 
@@ -89,44 +89,37 @@ TEST(SuffixTreeTest, CommonPrefix) {
     root = match_st::Create_suffix_tree(text.c_str(), text.length());
     update_leaves(root, text_slices);
   };
-  
+
   // ----
   txt_strs = {"G", "TG"};
-  text_slices =
-      std::vector<eds::slice_eds>{eds::slice_eds(0, 1), eds::slice_eds(1, 2)};
+  text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0, 1), eds::slice_eds(1, 2)};
   setup();
   qry = "TT";
   match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), true);
 
-  // print match positions vector
-  std::cout << "Match positions: \n";
-  for (auto &m : match_positions) {
-	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
-	//std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
-  }
-  std::cout << "\n\n";
-
   std::vector<match_st::STQueryResult> expected = {
-	match_st::STQueryResult(false, 1, 1, 3)
+    match_st::STQueryResult(false, 1, 1, 2)
   };
-  
+
   EXPECT_EQ(match_positions, expected);
 
+
   // ----
+  //setup();
   qry = "TG";
   match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), true);
 
   std::cout << "Match positions: \n";
   for (auto &m : match_positions) {
-	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
+    std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
   }
   std::cout << "\n\n";
 
-  
+
   expected = {
-	match_st::STQueryResult(false, 2, 1, 3)
+    match_st::STQueryResult(false, 2, 1, 2)
   };
-  
+
   EXPECT_EQ(match_positions, expected);
 }
 
@@ -149,27 +142,22 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
     root = match_st::Create_suffix_tree(text.c_str(), text.length());
     update_leaves(root, text_slices);
   };
-  
+
   // ----
   txt_strs = {"AAAA"};
   text_slices =
-      std::vector<eds::slice_eds>{eds::slice_eds(0, 1), eds::slice_eds(1, 2)};
+      std::vector<eds::slice_eds>{eds::slice_eds(0, 4)};
   setup();
   qry = "AAAA";
   match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), true);
 
-  // print match positions vector
-  std::cout << "Match positions: \n";
-  for (auto &m : match_positions) {
-	std::cout << "str: " << m.get_txt_str_idx()  << " char: " << m.get_char_idx() << " len: " << m.get_match_length() << "\n";
-	//std::cout << m.get_txt_str_idx()  << " " << m.get_char_idx() << " " << m.get_match_length() << "\n";
-  }
-  std::cout << "\n\n";
-
   std::vector<match_st::STQueryResult> expected = {
-	match_st::STQueryResult(false, 1, 1, 3)
+    match_st::STQueryResult(true, 1, 0, 3),
+    match_st::STQueryResult(true, 2, 0, 2),
+    match_st::STQueryResult(true, 3, 0, 1),
+    match_st::STQueryResult(false, 4, 0, 0),
+    match_st::STQueryResult(true, 3, 0, 1),
   };
-  
-  EXPECT_EQ(match_positions, expected);
 
+  EXPECT_EQ(match_positions, expected);
 }

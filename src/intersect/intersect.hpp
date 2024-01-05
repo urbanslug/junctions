@@ -10,7 +10,7 @@ namespace intersect::improved {
 } // namespace improved
 
 namespace intersect::naive {
-    bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q);
+  bool has_intersection(eds::EDS &eds_w, eds::EDS &eds_q);
 } // namespace intersect::naive
 
 #endif
