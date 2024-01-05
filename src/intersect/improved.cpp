@@ -87,7 +87,7 @@ bool exp_exp(int i, int j,
 
 
 	for (auto x : eds_t1.get_slice(0)) {
-	  if (t1[j-1][x.start +x.length -1]) { return true; }
+	  if (t1[j-1][x.start + x.length -1]) { return true; }
 	}
 
   }
@@ -95,7 +95,7 @@ bool exp_exp(int i, int j,
 	if (!eds_t1.is_letter_eps(i-1)) { return false; }
 
 	for (auto x : eds_t2.get_slice(0)) {
-	  if (t2[i-1][x.start +x.length -1]) { return true; }
+	  if (t2[i-1][x.start + x.length -1]) { return true; }
 	}
   }
 
@@ -165,16 +165,15 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
 					 core::bool_matrix *q_matrix,
 					 int qry_letter_idx,
 					 int txt_letter_idx,
-					 std::bitset<2> reachability) {
-  for (auto candiate_match : candidate_matches) {
-
+                     std::tuple<std::bitset<2>, std::bitset<2>, std::bitset<2>> reachability) {
+  for (core::EDSMatch candiate_match : candidate_matches) {
 	// matches always start at the beginning of a query so no need to check for that
-	if (candiate_match.get_char_idx() == 0 && reachability.to_ulong() < 3) {
+	if (candiate_match.get_char_idx() == 0 && std::get<2>(reachability).to_ulong() < 3) {
 	  continue;
 	}
 
-	eds::slice_eds local_txt_slice = txt_eds.get_str_slice_local(
-		txt_letter_idx, candiate_match.get_txt_str_idx());
+    eds::slice_eds local_txt_slice =
+      txt_eds.get_str_slice_local(txt_letter_idx, candiate_match.get_txt_str_idx());
 
 	/*
 	  evaluate the start of the match
@@ -196,7 +195,7 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
 	// second condition because actv suff can only be extended ...
 	if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
 	  // is valid active suffix
-			// do we need to confirm t_start_in_N - 1
+	  // do we need to confirm t_start_in_N - 1
 	  valid_as = ((*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1] == 1);
 
 	  int pos{};
@@ -234,16 +233,11 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
 
 	// where the match ends locally
 	std::size_t candidate_match_end =
-	local_txt_slice.start + candiate_match.get_char_idx() + candiate_match.get_match_length();
-
+      local_txt_slice.start + candiate_match.get_char_idx() + candiate_match.get_match_length();
 
 	// where the matched string actually ends in l/k (locally)
 	std::size_t txt_slice_end = local_txt_slice.start + local_txt_slice.length;
 	if (candidate_match_end >= txt_slice_end) { text_stop_exp = true; }
-
-	//std::size_t global_candidate_match_end = local_txt_slice.start + candidate_match_end;
-	// in the txt
-	//std::size_t in_N = txt_eds.to_global_idx(txt_letter_idx, candidate_match_end);
 
 	std::size_t t_end_in_N = t_start_in_N + candiate_match.get_match_length();
 
@@ -254,14 +248,13 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
 	  queries always start at 0 so we don't need to do any additional stuff
 	 */
 
-	// determine match start and ends in N in the query EDS
+	// Determine match start and ends in N in the query EDS
 	int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
 	std::size_t qlen = qry_offsets[candiate_match.query_str_index].length;
 
 	if (!candiate_match.is_beyond_txt() || !(candiate_match.get_match_length() < qlen)) {
 	  query_stop_exp = true;
 	}
-
 
 	// update matrices
 	// ==================
@@ -274,7 +267,6 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
 		[txt_letter_idx]
 		[q_start_in_N + candiate_match.get_match_length() - 1] = 1;
 	}
-
   }
 }
 
@@ -473,19 +465,17 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 				  << " exp_imp_val: " << exp_imp_val
 				  << " res: " << (exp_exp_val || imp_exp_val || exp_imp_val)
 				  << std::endl;
-	  */
-
+      */
 
 	  // at least one of these must be true
 	  if (!(exp_exp_val || imp_exp_val || exp_imp_val) ) { continue; }
-
 
 	  std::bitset<2>  imp_exp = imp_exp_val ? std::bitset<2>("01") : std::bitset<2>("00");
 	  std::bitset<2>  exp_imp = exp_imp_val ? std::bitset<2>("10") : std::bitset<2>("00");
 	  std::bitset<2>  exp_exp = exp_exp_val ? std::bitset<2>("11") : std::bitset<2>("00");
 
-	  std::bitset<2>  reachability = imp_exp | exp_imp | exp_exp;
-
+      std::tuple<std::bitset<2>, std::bitset<2>, std::bitset<2>> reachability =
+        std::make_tuple(imp_exp, exp_imp, exp_exp);
 
 	  /*
 		Perform matching and updating of matrices
@@ -522,7 +512,8 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 					  eds_t1,
 					  eds_t2.get_slice(j),
 					  &w_matrix, &q_matrix,
-					  j, i, reachability);
+					  j, i,
+                      reachability);
 
 	  candidate_matches.clear();
 
@@ -554,7 +545,8 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 					  eds_t2,
 					  eds_t1.get_slice(i),
 					  &q_matrix, &w_matrix,
-					  i, j, reachability);
+					  i, j,
+                      reachability);
 
 	  candidate_matches.clear();
 	}
@@ -576,7 +568,9 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 
 
 #ifdef DEBUG
-  // print the w_matrix
+  std::cout << std::endl;
+
+  // print the T1 matrix
   for (int n = 0; n < len_q; n++) {
 	for (int j = 0; j < (size_w + eds_t1.get_eps_count()); j++) {
 	  std::cout << w_matrix[n][j] << " ";
@@ -584,9 +578,9 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 	std::cout << std::endl;
   }
 
-  std::cout << "----" << std::endl;
+  std::cout << "-------" << std::endl;
 
-  // print the q_matrix / t2 matrix
+  // print the T2 matrix
   for (int n = 0; n < len_w; n++) {
 	for (int j = 0; j < (size_q + eds_t2.get_eps_count()); j++) {
 	  std::cout << q_matrix[n][j] << " ";
