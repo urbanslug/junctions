@@ -368,34 +368,32 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
                                                     STvertex *current_vertex,
                                                     const char *x,
                                                     bool end_in_imp_imp) {
-
   std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(x)); // is there a better value related to number of possible matches
 
   // TODO : rename i to q_idx or q_pos
-  int i{}; // the query position of the match
-  int query_len = strlen(query);
-  int match_length{};
-  int d{-1}; // TODO: give a better name
+  int i {}, // the query position of the match
+    query_len { static_cast<int>(strlen(query)) },
+    match_length {},
+    d { -1 }; // last underscore match length TODO: give a better name
 
   std::vector<match_st::LeafData> l_data;
   STvertex *last_with_underscore{nullptr};
   STedge current_edge;
-  bool has_dollar{false}, has_underscore{false},
-    has_qry_char{false}, matched_a_char{false};
+  bool has_dollar{false}, has_underscore{false}, has_qry_char{false}, matched_a_char{false};
 
   // TODO: read the value of l_data from scope
-  auto looper = [&](std::vector<match_st::LeafData> l_data, bool b = false, bool a = false) {
+  auto looper = [&](std::vector<match_st::LeafData> l_data, bool q_bynd_txt = false, bool a = false) {
     for (match_st::LeafData l : l_data) {
-	  //d::cout << l.get_char_idx() << std::endl;
-      matches.push_back(match_st::STQueryResult(b, (a ? d : match_length), l));
+      //d::cout << l.get_char_idx() << std::endl;
+      matches.push_back(match_st::STQueryResult(q_bynd_txt, (a ? d : match_length),l));
     }
   };
 
   // make sure this call is made after initializing the value of current edge
-  auto append_matches = [&](bool b = false, bool a = false) {
+  auto append_matches = [&](bool q_bynd_txt = false, bool a = false) {
     l_data = Get_Leaf_Data(current_edge.v);
-    looper(l_data, b, a);
+    looper(l_data, q_bynd_txt, a);
   };
 
   auto append_underscore_matches = [&]() {
@@ -413,33 +411,30 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
 
     // TODO: make these if statements not be order dependent?
 
-	// both has a $ and _ going out of it
-	if (has_underscore && has_dollar && matched_a_char) {
+    // both has a $ and _ going out of it
+    if (has_underscore && has_dollar && matched_a_char) {
 
-	  //std::cout << "both\n";
-
-	  current_edge = current_vertex->g[core::string_separator];
+      //current_edge = current_vertex->g[core::string_separator];
       append_underscore_matches(); // TODO: remove useless
 
       append_matches(true);
 
 
 
-	  d = match_length;
+      d = match_length;
       last_with_underscore = current_vertex;
 
-	  current_edge = current_vertex->g[core::terminator_char];
+      current_edge = current_vertex->g[core::terminator_char];
       append_underscore_matches();
       //append_matches(true);
-	  
+
       if (!has_qry_char) { return matches; }
-	  
     }
-	
+
     // We matched at least one query to the end a text string
     // because we saw a $ sign and i > 0
     if (has_dollar && matched_a_char) {
-      current_edge = current_vertex->g[core::string_separator];
+      //current_edge = current_vertex->g[core::string_separator];
       append_underscore_matches(); // TODO: remove useless
 
       append_matches(true);
@@ -452,10 +447,10 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
       d = match_length;
       last_with_underscore = current_vertex;
     }
-	
+
     // we can no longer match the query and we found a _
     if (!has_qry_char && has_underscore && matched_a_char) {
-      current_edge = current_vertex->g[core::terminator_char];
+      //current_edge = current_vertex->g[core::terminator_char];
       append_underscore_matches();
       append_matches(true);
       return matches;
@@ -468,7 +463,6 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
       // There's no need to check if i> 0 because it was checked when
       // last_with_underscore got set
       append_underscore_matches();
-
       return matches;
     }
 
@@ -524,7 +518,7 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
         // There's no need to check if i> 0 because it was checked when
         // last_with_underscore got set
         append_underscore_matches();
-		if (end_in_imp_imp) { append_matches(false); }
+        if (end_in_imp_imp) { append_matches(false); }
         return matches;
       }
 
