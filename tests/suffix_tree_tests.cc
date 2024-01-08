@@ -135,6 +135,8 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   std::vector<eds::slice_eds> text_slices;
   match_st::STvertex *root;
 
+  std::vector<match_st::STQueryResult> expected;
+
   auto setup = [&]() {
     text.clear();
     core::join(txt_strs, '$', text);
@@ -142,6 +144,93 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
     root = match_st::Create_suffix_tree(text.c_str(), text.length());
     update_leaves(root, text_slices);
   };
+
+  txt_strs = {"CCC"};
+  text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3), eds::slice_eds(3, 3) };
+  setup();
+  qry = "CCA";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), false);
+
+  for (auto x : match_positions){
+    std::cout << "byd: " << x.is_beyond_txt() << " str idx " << x.get_txt_str_idx() << " char idx " << x.get_char_idx() << " m_len " << x.get_match_length() << "\n";
+  }
+
+  expected = {
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 1),
+    match_st::STQueryResult(true, 1, 0, 0)
+  };
+
+  EXPECT_EQ(match_positions, expected);
+
+  // ----
+
+
+  txt_strs = {"CCA", "AAA"};
+  text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3), eds::slice_eds(3, 3) };
+  setup();
+  qry = "CCC";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), false);
+
+  std::cout << "Match positions: " << "query: " << qry << "txt strs:";
+  for (auto &s : txt_strs) {
+    std::cout << s << " ";
+  }
+
+  for (auto x : match_positions){
+    std::cout << "byd: " << x.is_beyond_txt() << " str idx " << x.get_txt_str_idx() << " char idx " << x.get_char_idx() << " m_len " << x.get_match_length() << "\n";
+  }
+
+  expected = {
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 1),
+    match_st::STQueryResult(true, 1, 0, 0)
+  };
+
+  EXPECT_EQ(match_positions, expected);
+
+  txt_strs = {"CCC", "CGC", "CC"};
+  text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3), eds::slice_eds(3, 3), eds::slice_eds(6, 2) };
+  setup();
+  qry = "CA";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), false);
+
+  for (auto x : match_positions){
+    std::cout << "byd: " << x.is_beyond_txt() << " str idx " << x.get_txt_str_idx() << " char idx " << x.get_char_idx() << " m_len " << x.get_match_length() << "\n";
+  }
+
+   expected = {
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 1),
+    match_st::STQueryResult(true, 1, 0, 0)
+  };
+
+  EXPECT_EQ(match_positions, expected);
+
+
+
+  txt_strs = {"CCC", "CCG"};
+  text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3), eds::slice_eds(3, 3) };
+  setup();
+  qry = "CA";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), false);
+
+  for (auto x : match_positions){
+    std::cout << "byd: " << x.is_beyond_txt() << " str idx " << x.get_txt_str_idx() << " char idx " << x.get_char_idx() << " m_len " << x.get_match_length() << "\n";
+  }
+
+  expected = {
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 1),
+    match_st::STQueryResult(true, 1, 0, 0)
+  };
+
+  EXPECT_EQ(match_positions, expected);
+
 
   // ----
   txt_strs = {"AAAA"};
@@ -151,7 +240,7 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   qry = "AAAA";
   match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), true);
 
-  std::vector<match_st::STQueryResult> expected = {
+  expected = {
     match_st::STQueryResult(true, 1, 0, 3),
     match_st::STQueryResult(true, 2, 0, 2),
     match_st::STQueryResult(true, 3, 0, 1),
@@ -160,4 +249,27 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   };
 
   EXPECT_EQ(match_positions, expected);
+
+  txt_strs = {"CCC"};
+  text_slices =
+      std::vector<eds::slice_eds>{eds::slice_eds(0, 3)};
+  setup();
+  qry = "CA";
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root, text.c_str(), false);
+
+  for (auto x : match_positions){
+    std::cout << "byd: " << x.is_beyond_txt() << " str idx " << x.get_txt_str_idx() << " char idx " << x.get_char_idx() << " m_len " << x.get_match_length() << "\n";
+  }
+
+  expected = {
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 2),
+    match_st::STQueryResult(true, 1, 0, 1),
+    match_st::STQueryResult(true, 1, 0, 0)
+  };
+
+  EXPECT_EQ(match_positions, expected);
+
+  // ----
+
 }

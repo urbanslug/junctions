@@ -54,12 +54,12 @@ bool graph::compare_by_weight::operator()(const graph::Edge &l,
 
 // impl == for MatchTypePairUnion
 bool graph::operator==(const graph::MatchTypePairUnion &lhs,
-					   const graph::MatchTypePairUnion &rhs) {
+                       const graph::MatchTypePairUnion &rhs) {
   return
-	lhs.left1() == rhs.left1() &&
-	lhs.left2() == rhs.left2() &&
-	lhs.right1() == rhs.right1() &&
-	lhs.right2() == rhs.right2();
+    lhs.left1() == rhs.left1() &&
+    lhs.left2() == rhs.left2() &&
+    lhs.right1() == rhs.right1() &&
+    lhs.right2() == rhs.right2();
 }
 
 // initialize a struct with default values
@@ -82,19 +82,19 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
   try {
     adj.resize(V);
   } catch (const std::bad_alloc & e) {
-	 std::double_t space_in_gb = static_cast<double>(this->V) / std::pow(1024.0, 3);;
-	 space_in_gb *= sizeof(Vertex);
+     std::double_t space_in_gb = static_cast<double>(this->V) / std::pow(1024.0, 3);;
+     space_in_gb *= sizeof(Vertex);
 
-	 std::cerr << "Not enough memory. This graph needs over "
-			   << ceil(space_in_gb)
-			   << " GB of memory.\n";
-	
+     std::cerr << "Not enough memory. This graph needs over "
+               << ceil(space_in_gb)
+               << " GB of memory.\n";
+
     exit(-1);
   } catch (const std::length_error &) {
     std::cerr << "graph would be too large" << std::endl;
     exit(-1);
   }*/
-  
+
 }
 
 // x in [1 - n1 -1], also l
@@ -106,14 +106,14 @@ std::size_t graph::Graph::compute_index(std::size_t x, std::size_t y) {
 }
 
 graph::Vertex & graph::Graph::get_node(std::size_t node_idx) {
-	std::map<size_t,graph::Vertex>::iterator it=sparse_adj.find(node_idx);
-	if(it!=sparse_adj.end()){
-		return it->second;
-	}else{
-		graph::Vertex v;
-		sparse_adj.insert(std::make_pair(node_idx,v));		
-		return sparse_adj[node_idx];
-	}
+    std::map<size_t,graph::Vertex>::iterator it=sparse_adj.find(node_idx);
+    if(it!=sparse_adj.end()){
+        return it->second;
+    }else{
+        graph::Vertex v;
+        sparse_adj.insert(std::make_pair(node_idx,v));
+        return sparse_adj[node_idx];
+    }
   //return this->adj[node_idx];
 }
 
@@ -170,12 +170,12 @@ void graph::Graph::add_edge(std::size_t N_1,
   graph::Edge e_rev = graph::Edge(start, weight, str, is_eps);
   graph::Edge e = graph::Edge(stop, weight, str, is_eps);
 
-	//graph::Vertex start_ver=this->get_node(start);
-	//graph::Vertex stop_ver=this->get_node(stop);
+    //graph::Vertex start_ver=this->get_node(start);
+    //graph::Vertex stop_ver=this->get_node(stop);
 
   this->get_node(start).meta = std::to_string(l) + "," + std::to_string(k);
   this->get_node(stop).meta = std::to_string(l_prime) + "," + std::to_string(k_prime);
-  
+
   this->get_node(start).outgoing.insert(e);
   this->get_node(stop).incoming.insert(e_rev);
 
@@ -186,8 +186,8 @@ void graph::Graph::add_edge(std::size_t N_1,
 
 std::size_t graph::Graph::multiset_size() {
  //std::vector<std::size_t> dp_table(this->V, 0);
-	std::map<size_t,size_t> dp_map;
- 
+    std::map<size_t,size_t> dp_map;
+
   std::size_t start_node, stop_node;
   start_node = 0;
   stop_node = this->V - 1;
@@ -198,7 +198,7 @@ std::size_t graph::Graph::multiset_size() {
 
   std::size_t current_node = start_node;
   std::queue<std::size_t> to_visit;
-  std::set<std::size_t> queued; 
+  std::set<std::size_t> queued;
 
   to_visit.push(current_node);
 
@@ -209,12 +209,12 @@ std::size_t graph::Graph::multiset_size() {
 
 
     out = this->get_node(current_node).outgoing;
-    for (auto e : out) {	  
+    for (auto e : out) {
       dp_map[e.dest] += dp_map[current_node];
-	  if (!queued.count(e.dest)) {
-		to_visit.push(e.dest);
-		queued.insert(e.dest);
-	  }
+      if (!queued.count(e.dest)) {
+        to_visit.push(e.dest);
+        queued.insert(e.dest);
+      }
     }
   }
 
@@ -239,13 +239,13 @@ void graph::Graph::compute_match_stats() {
         max_k = e.weight + dp_map[e.dest];
       }
     }
-	if(dp_map.find(riter->first)==dp_map.end()){
-		dp_map.insert(std::make_pair(riter->first,0));
-	}
+    if(dp_map.find(riter->first)==dp_map.end()){
+        dp_map.insert(std::make_pair(riter->first,0));
+    }
     dp_map[riter->first] += max_k;
     max_k = 0;
   }
-  
+
   this->match_stats = dp_map;
 }
 
@@ -327,7 +327,7 @@ int graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx
   //std::vector<bool> explored(this->V, false);
   std::map<size_t,int> dists_map;
   std::map<size_t,bool> explored_map;
-  
+
   bool end_reached{false};
 
   std::priority_queue<std::pair<std::size_t, std::size_t>, std::vector<std::pair<std::size_t, std::size_t>>,
@@ -409,7 +409,7 @@ void graph::Graph::print_dot() {
       color = "green";
     }
     std::cout << "\t" << print_idx(idx)
-			  << " [color=\"" << color << "\" label=\"" << print_node_label(idx) << "\"];"
+              << " [color=\"" << color << "\" label=\"" << print_node_label(idx) << "\"];"
               << std::endl;
   };
 
@@ -429,7 +429,7 @@ void graph::Graph::print_dot() {
   // print nodes
   //for (std::size_t i{}; i < this->V; i++) {
   for(std::map<size_t,Vertex>::iterator iter=sparse_adj.begin();iter!=sparse_adj.end();++iter){
-	//std::cout<< iter->second.vertex_type<<std::endl;
+    //std::cout<< iter->second.vertex_type<<std::endl;
     switch (iter->second.vertex_type) {
     case 0:
       print_node(iter->first, "blue");
@@ -450,7 +450,7 @@ void graph::Graph::print_dot() {
   std::string s, label;
   //Vertex v;
 
-	for(std::map<size_t,Vertex>::iterator iter=sparse_adj.begin();iter!=sparse_adj.end();++iter){
+    for(std::map<size_t,Vertex>::iterator iter=sparse_adj.begin();iter!=sparse_adj.end();++iter){
   //for (std::size_t i{}; i < this->V; i++) {
     //v = this->get_node(i);
 
@@ -478,8 +478,8 @@ void graph::Graph::print_dot() {
  * active suffixes exist in N
  *
  * a match is valid if:
- *   - 
- *   - 
+ *   -
+ *   -
  *
  *
  * txt_slices exist in l start and length
@@ -496,7 +496,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
                     int qry_letter_idx,
                     int txt_letter_idx,
                     std::vector<graph::GraphSlice>* valid_matches,
-					core::AppConfig const &app_config) {
+                    core::AppConfig const &app_config) {
   for (auto candiate_match : candidate_matches) {
 
     eds::slice_eds local_txt_slice =
@@ -513,46 +513,45 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
 
     // TODO: rename t_start in N to something like match_start_in_N
     int t_start_in_N =
-        txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) +
-        local_txt_slice.start;
+        txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) + local_txt_slice.start;
 
-	if (app_config.constraint) {
-	  // is the active suffix valid?
-	  bool valid_as{false};
+    if (app_config.constraint) {
+  // is the active suffix valid?
+  bool valid_as{false};
 
-	  // the match starts within a string in the text
-	  // second condition because actv suff can only be extended ...
-	  if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
-		// is valid active suffix
-		valid_as = ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N] == 1);
-		bool shorter_match{false};
-		int pos;
-		for (std::size_t idx{1}; idx < candiate_match.get_match_length(); idx++) {
-		  if ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N + idx] == 1) {
-			pos = idx;
-			shorter_match = true;
-			break;
-		  }
-		}
+  // the match starts within a string in the text
+  // second condition because actv suff can only be extended ...
+  if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
+// is valid active suffix
+valid_as = ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N] == 1);
+bool shorter_match{false};
+int pos;
+for (std::size_t idx{1}; idx < candiate_match.get_match_length(); idx++) {
+  if ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N + idx] == 1) {
+pos = idx;
+shorter_match = true;
+break;
+  }
+}
 
-		if (!valid_as && shorter_match) {
-		  t_start_in_N += pos;
-		  candiate_match.get_txt_char_idx_mut() += pos;
-		  candiate_match.get_match_length_mut() -= pos;
-		  candiate_match.get_str_mut() = candiate_match.str.substr(pos);
-		  valid_as = true;
-		}
-	  }
+if (!valid_as && shorter_match) {
+  t_start_in_N += pos;
+  candiate_match.get_txt_char_idx_mut() += pos;
+  candiate_match.get_match_length_mut() -= pos;
+  candiate_match.get_str_mut() = candiate_match.str.substr(pos);
+  valid_as = true;
+}
+  }
 
-	  // is an exp - exp match
-	  // or valid active suffix
-	  // txt start is not valid so skip
-	  if (candiate_match.get_char_idx() > 0 && !valid_as) { continue; }
-	}
+  // is an exp - exp match
+  // or valid active suffix
+  // txt start is not valid so skip
+  if (candiate_match.get_char_idx() > 0 && !valid_as) { continue; }
+}
 
 
-	g_t_m_start = candiate_match.get_char_idx() == 0 ? graph::match_type::exp : graph::match_type::imp;
-	
+    g_t_m_start = candiate_match.get_char_idx() == 0 ? graph::match_type::exp : graph::match_type::imp;
+
     //if (candiate_match.get_char_idx() == 0) {
       //t_m_start = n_junctions::match_type::exp;
       //g_t_m_start = graph::match_type::exp;
@@ -574,9 +573,9 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
     // where the match ends
     // TODO: can it be zero? should we use a smaller value?
     // size_t is long unsigned int
-	// actual idx is -1
+    // actual idx is -1
     std::size_t candidate_match_end =
-	  local_txt_slice.start + candiate_match.get_char_idx() + candiate_match.get_match_length();
+      local_txt_slice.start + candiate_match.get_char_idx() + candiate_match.get_match_length();
 
     // where the matched string actually ends
     std::size_t txt_slice_end = local_txt_slice.start + local_txt_slice.length;
@@ -618,19 +617,19 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
 
     // determine match start and ends in N in the query EDS
     int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
-	std::size_t qlen = qry_offsets[candiate_match.query_str_index].length;
+    std::size_t qlen = qry_offsets[candiate_match.query_str_index].length;
 
     g_q_m_start = graph::match_type::exp;
-	g_q_m_stop = candiate_match.is_beyond_txt() || (candiate_match.get_match_length() < qlen)
-	  ? graph::match_type::imp : graph::match_type::exp;
-		//g_q_m_stop = candiate_match.is_beyond_txt() ? graph::match_type::imp
-		//                                      : graph::match_type::exp;
+    g_q_m_stop = candiate_match.is_beyond_txt() || (candiate_match.get_match_length() < qlen)
+      ? graph::match_type::imp : graph::match_type::exp;
+        //g_q_m_stop = candiate_match.is_beyond_txt() ? graph::match_type::imp
+        //                                      : graph::match_type::exp;
 
 
-	if (app_config.constraint && g_q_m_stop == graph::match_type::imp && g_t_m_stop == graph::match_type::imp) {
-	  continue;
-	}
-	
+    if (app_config.constraint && g_q_m_stop == graph::match_type::imp && g_t_m_stop == graph::match_type::imp) {
+      continue;
+    }
+
     // create an active suffix in the query
     if (candiate_match.is_beyond_txt()) {
       (*qry_active_suffixes)[txt_letter_idx][q_start_in_N + candiate_match.get_match_length()] = 1;
@@ -698,6 +697,9 @@ void graph::Graph::create_edge(
   };
 }
 
+// a suffix tree and the string it was built from as well
+//struct meta_st {};
+
 /**
 *
 *
@@ -706,10 +708,7 @@ void graph::Graph::create_edge(
 * @param[in] app_config
 * return an intersection graph
 */
-graph::Graph graph::compute_intersection_graph(
-  eds::EDS &eds_t1,
-  eds::EDS &eds_t2,
-  core::AppConfig const &app_config) {
+graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1, eds::EDS &eds_t2, core::AppConfig const &app_config) {
 
   size_t size_t1 = eds_t1.get_size();
   size_t size_t2 = eds_t2.get_size();
@@ -722,13 +721,13 @@ graph::Graph graph::compute_intersection_graph(
     ---------------------
   */
 
-  std::vector<std::pair<match_st::STvertex, std::string>> w_suffix_trees;
+  std::vector<match_st::meta_st> w_suffix_trees;
   w_suffix_trees.reserve(len_t1);
-  std::vector<std::pair<match_st::STvertex, std::string>> q_suffix_trees;
+  std::vector<match_st::meta_st> q_suffix_trees;
   q_suffix_trees.reserve(len_t2);
 
-  gen_suffix_tree(eds_t1, &w_suffix_trees);
-  gen_suffix_tree(eds_t2, &q_suffix_trees);
+  match_st::gen_suffix_tree_(eds_t1, &w_suffix_trees);
+  match_st::gen_suffix_tree_(eds_t2, &q_suffix_trees);
 
   // active suffixes in N_1
   core::bool_matrix i_active_suffixes = core::gen_matrix(len_t2, size_t1 + eds_t1.get_eps_count() + 1);
@@ -768,11 +767,11 @@ graph::Graph graph::compute_intersection_graph(
       graph::BoundaryUnion bounds =
         graph::BoundaryUnion(i_boundary, j_boundary);
 
-	  /*
-		Handle epsilon (Ɛ)
-		-------------------
-	   */
-	  
+      /*
+        Handle epsilon (Ɛ)
+        -------------------
+       */
+
       // T_2[j] has epsilon
       // T_1[i] is the query
       if (eds_t2.is_letter_eps(j)) {
@@ -790,14 +789,14 @@ graph::Graph graph::compute_intersection_graph(
         // the last letter in T_1
         if (i == len_t1 - 1) {
           std::pair<int, int> last_i_boundary =
-			std::make_pair(i_boundary.right() + 1, i_boundary.right() + 1);
+            std::make_pair(i_boundary.right() + 1, i_boundary.right() + 1);
 
           g.create_edge(valid_matches,
                         1,
                         graph::BoundaryUnion(last_i_boundary.first,
-											 last_i_boundary.second,
+                                             last_i_boundary.second,
                                              j_boundary.left(),
-											 j_boundary.right()),
+                                             j_boundary.right()),
                         true);
         }
 
@@ -877,22 +876,32 @@ graph::Graph graph::compute_intersection_graph(
 
       clean_up();
 
-	  /*
-		Handle matching
-		---------------
-	   */
-	  
+
+      //std::cerr << "i: " << i << " j: " << j << std::endl;
+
+      /*
+        Handle matching
+        ---------------
+       */
+
       // Search for j_strs in T_1[i]
       // Query => T_2[j]
       // Text => T_1[i]
-	  // ---------------------------
+      // ---------------------------
 
-      core::perform_matching(eds_t1,
-							 i,
-							 &w_suffix_trees[i],
-							 eds_t2.get_strs(j),
-							 &candidate_matches,
-							 true);
+      core::perform_matching_(eds_t1,
+                              i,
+                              j,
+                              w_suffix_trees[i],
+                              eds_t2.get_strs(j),
+                              &candidate_matches,
+                              true);
+
+      core::mark_query_nodes(eds_t2,
+                             j,
+                             i,
+                             q_suffix_trees[j],
+                             candidate_matches);
 
       filter_matches(candidate_matches,
                      eds_t1,
@@ -903,7 +912,7 @@ graph::Graph graph::compute_intersection_graph(
                      j,
                      i,
                      &valid_matches,
-					 app_config);
+                     app_config);
 
       g.create_edge(valid_matches, 2, bounds);
 
@@ -913,13 +922,20 @@ graph::Graph graph::compute_intersection_graph(
        // Query => T_1[i]
        // Text => T_2[j]
        // ---------------------------
-	   
-       core::perform_matching(eds_t2,
-							  j,
-							  &q_suffix_trees[j],
-							  eds_t1.get_strs(i),
-							  &candidate_matches,
-							  true);
+
+       core::perform_matching_(eds_t2,
+                               j,
+                               i,
+                               q_suffix_trees[j],
+                               eds_t1.get_strs(i),
+                               &candidate_matches,
+                               true);
+
+       core::mark_query_nodes(eds_t1,
+                              i,
+                              j,
+                              w_suffix_trees[i],
+                              candidate_matches);
 
        filter_matches(candidate_matches,
                       eds_t2,
@@ -930,7 +946,7 @@ graph::Graph graph::compute_intersection_graph(
                       i,
                       j,
                       &valid_matches,
-					  app_config);
+                      app_config);
 
        g.create_edge(valid_matches, 1, bounds);
 
@@ -985,28 +1001,28 @@ std::double_t match_stats_self(eds::EDS& e) {
 
   std::size_t longest_str_len{}; // the length of longest string in the set
   for (std::size_t i{}; i < n; i++) {
-	longest_str_len = 0;
-	// loop through all slices in the i-th letter
-	for (eds::slice_eds sl : e.get_slice(i)) {
-	  if (sl.length > longest_str_len) { longest_str_len = sl.length; }
-	}
+    longest_str_len = 0;
+    // loop through all slices in the i-th letter
+    for (eds::slice_eds sl : e.get_slice(i)) {
+      if (sl.length > longest_str_len) { longest_str_len = sl.length; }
+    }
 
-	t1_letter_maxes.push_back(longest_str_len);
+    t1_letter_maxes.push_back(longest_str_len);
   }
 
   // sum up the elements of the vector from the back such that in the end
   // the element at i is set to the sum of the elements at  i and at i+1
   for (std::size_t i{n-2}; i < n-1 ; i--) {
-	t1_letter_maxes[i] += t1_letter_maxes[i+1];  
+    t1_letter_maxes[i] += t1_letter_maxes[i+1];
   }
-  
+
   std::size_t self_prefix_sum =
-	accumulate(t1_letter_maxes.begin(), t1_letter_maxes.end(), 0);
+    accumulate(t1_letter_maxes.begin(), t1_letter_maxes.end(), 0);
 
   //std::cout << "self prefix sum = " << self_prefix_sum << "\n";
-  
+
   std::double_t ms_t1_t1 =
-	static_cast<std::double_t>(self_prefix_sum) / static_cast<std::double_t>(n);
+    static_cast<std::double_t>(self_prefix_sum) / static_cast<std::double_t>(n);
 
   return ms_t1_t1;
 }
@@ -1017,60 +1033,60 @@ std::double_t graph::match_stats_avg_normalized(graph::Graph &g, eds::EDS& eds_t
   // the last letter in T_1 and T_2
   std::size_t len_t1 = eds_t1.get_length();
   std::size_t len_t2 = eds_t2.get_length();
-  
+
   // the last value in internal size of T1 and T2
   std::size_t last_w = eds_t1.get_size() + eds_t1.get_eps_count();
   std::size_t last_q = eds_t2.get_size() + eds_t2.get_eps_count();
 
   // MS_T1 and MS_T2
   std::valarray<std::size_t> ms_w(len_t1), ms_q(len_t2);
-  
+
   std::size_t max{}, i_start{}, j_start{};
 
   std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
-	
-  for (std::size_t i{}; i < len_t1; i++) {
-	i_start = eds_t1.get_letter_boundaries(i).left();
-	for (std::size_t l{}; l < last_q; l++) {
-	  node_idx = g.compute_index(i_start, l);
-	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
-	}
 
-	ms_w[i] = max;
-	max = 0;
+  for (std::size_t i{}; i < len_t1; i++) {
+    i_start = eds_t1.get_letter_boundaries(i).left();
+    for (std::size_t l{}; l < last_q; l++) {
+      node_idx = g.compute_index(i_start, l);
+
+      if (max < g.get_match_stats(node_idx)) {
+        max = g.get_match_stats(node_idx);
+      }
+    }
+
+    ms_w[i] = max;
+    max = 0;
   }
 
   for (std::size_t j{}; j < len_t2; j++) {
-	j_start = eds_t2.get_letter_boundaries(j).left();
-	for (std::size_t k{}; k < last_w; k++) {
-	  node_idx = g.compute_index(k, j_start);
-	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
-	}
+    j_start = eds_t2.get_letter_boundaries(j).left();
+    for (std::size_t k{}; k < last_w; k++) {
+      node_idx = g.compute_index(k, j_start);
 
-	ms_q[j] = max;
-	max = 0;
+      if (max < g.get_match_stats(node_idx)) {
+        max = g.get_match_stats(node_idx);
+      }
+    }
+
+    ms_q[j] = max;
+    max = 0;
   }
 
   // print ms_w
   /*
   std::cout << "ms_w = ";
   for (std::size_t i{}; i < len_t1; i++) {
-	std::cout << ms_w[i] << " ";
-	}
+    std::cout << ms_w[i] << " ";
+    }
   std::cout << "\n";
   // print ms_q
   std::cout << "ms_q = ";
   for (std::size_t i{}; i < len_t2; i++) {
-	std::cout << ms_q[i] << " ";
-	}
+    std::cout << ms_q[i] << " ";
+    }
   */
-  
+
   std::double_t N_1 = static_cast<std::double_t>(eds_t1.get_size());
   std::double_t N_2 = static_cast<std::double_t>(eds_t2.get_size());
 
@@ -1079,26 +1095,26 @@ std::double_t graph::match_stats_avg_normalized(graph::Graph &g, eds::EDS& eds_t
 
   std::double_t ms_t1_t1 = match_stats_self(eds_t1);
   std::double_t ms_t2_t2 = match_stats_self(eds_t2);
-  
+
   // MS_T1_T2
   std::double_t ms_t1_t2 =
-	static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_t1);
+    static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_t1);
   std::double_t ms_t2_t1 =
-	static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_t2);
+    static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_t2);
 
   /*
   std::cout << "ms_t1_sum " << ms_w.sum() << " ms_t2_sum " << ms_q.sum()
-			<< " ms_t1_t2 " << ms_t1_t2 << " ms_t2_t1 " << ms_t2_t1
-			<< " ms_t1_t1 " << ms_t1_t1 << " ms_t2_t2 " << ms_t2_t2
- 			<< " log_N_1 " << log_N_1 << " log_N_2: " << log_N_2
-			<< "\n";
+            << " ms_t1_t2 " << ms_t1_t2 << " ms_t2_t1 " << ms_t2_t1
+            << " ms_t1_t1 " << ms_t1_t1 << " ms_t2_t2 " << ms_t2_t2
+            << " log_N_1 " << log_N_1 << " log_N_2: " << log_N_2
+            << "\n";
   */
 
   std::double_t  d_t1_t2 = log_N_2 / ms_t1_t2 - log_N_1/ ms_t1_t1;
   std::double_t  d_t2_t1 = log_N_1 / ms_t2_t1 - log_N_2/ ms_t2_t2;
 
   //return ms_t1_t2 + ms_t2_t1;
-  
+
   return (d_t1_t2 + d_t2_t1) / 2.0;
 }
 
@@ -1108,53 +1124,53 @@ std::double_t graph::match_stats_avg(graph::Graph &g, eds::EDS& eds_t1, eds::EDS
   // the last letter in T_1 and T_2
   std::size_t len_t1 = eds_t1.get_length();
   std::size_t len_t2 = eds_t2.get_length();
-  
+
   // the last value in internal size of T1 and T2
   std::size_t last_w = eds_t1.get_size() + eds_t1.get_eps_count();
   std::size_t last_q = eds_t2.get_size() + eds_t2.get_eps_count();
 
   // MS_T1 and MS_T2
   std::valarray<std::size_t> ms_w(len_t1), ms_q(len_t2);
-  
+
   std::size_t max{}, i_start{}, j_start{};
 
   std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
-	
-  for (std::size_t i{}; i < len_t1; i++) {
-	i_start = eds_t1.get_letter_boundaries(i).left();
-	for (std::size_t l{}; l < last_q; l++) {
-	  node_idx = g.compute_index(i_start, l);
-	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
-	}
 
-	ms_w[i] = max;
-	max = 0;
+  for (std::size_t i{}; i < len_t1; i++) {
+    i_start = eds_t1.get_letter_boundaries(i).left();
+    for (std::size_t l{}; l < last_q; l++) {
+      node_idx = g.compute_index(i_start, l);
+
+      if (max < g.get_match_stats(node_idx)) {
+        max = g.get_match_stats(node_idx);
+      }
+    }
+
+    ms_w[i] = max;
+    max = 0;
   }
 
   for (std::size_t j{}; j < len_t2; j++) {
-	j_start = eds_t2.get_letter_boundaries(j).left();
-	for (std::size_t k{}; k < last_w; k++) {
-	  node_idx = g.compute_index(k, j_start);
-	 
-	  if (max < g.get_match_stats(node_idx)) {
-		max = g.get_match_stats(node_idx);
-	  }
-	}
+    j_start = eds_t2.get_letter_boundaries(j).left();
+    for (std::size_t k{}; k < last_w; k++) {
+      node_idx = g.compute_index(k, j_start);
 
-	ms_q[j] = max;
-	max = 0;
+      if (max < g.get_match_stats(node_idx)) {
+        max = g.get_match_stats(node_idx);
+      }
+    }
+
+    ms_q[j] = max;
+    max = 0;
   }
 
 
   //std::size_t sum_vals = ms_q.sum() + ms_w.sum();
   //std::size_t sum_size = len_t1 + len_t2;
 
-  
+
   //return static_cast<std::double_t>(sum_vals) / static_cast<std::double_t>(sum_size);
-  
+
   std::double_t t1_avg = static_cast<std::double_t>(ms_w.sum()) / static_cast<std::double_t>(len_t1);
   std::double_t t2_avg = static_cast<std::double_t>(ms_q.sum()) / static_cast<std::double_t>(len_t2);
 
@@ -1167,64 +1183,64 @@ std::double_t graph::distance(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds_t
   // the last letter in T_1 and T_2
   std::size_t len_t1 = eds_t1.get_length();
   std::size_t len_t2 = eds_t2.get_length();
-  
+
   // the last value in internal size of T1 and T2
   std::size_t last_w = eds_t1.get_size() + eds_t1.get_eps_count();
   std::size_t last_q = eds_t2.get_size() + eds_t2.get_eps_count();
 
   // MS_T1 and MS_T2
   std::valarray<std::size_t> ms_w(len_t1), ms_q(len_t2);
-  
+
   std::size_t max{}, i_start{}, j_start{};
 
   std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
-	
-  for (std::size_t i{}; i < len_t1; i++) {
-	i_start = eds_t1.get_letter_boundaries(i).left();
-	for (std::size_t l{}; l < last_q; l++) {
-	  node_idx = g.compute_index(i_start, l);
-	 
-	  if(g.check_match_stats(node_idx)){
-			if (max < g.get_match_stats(node_idx)) {
-				max = g.get_match_stats(node_idx);
-			}
-		}
-	}
 
-	ms_w[i] = max;
-	max = 0;
+  for (std::size_t i{}; i < len_t1; i++) {
+    i_start = eds_t1.get_letter_boundaries(i).left();
+    for (std::size_t l{}; l < last_q; l++) {
+      node_idx = g.compute_index(i_start, l);
+
+      if(g.check_match_stats(node_idx)){
+            if (max < g.get_match_stats(node_idx)) {
+                max = g.get_match_stats(node_idx);
+            }
+        }
+    }
+
+    ms_w[i] = max;
+    max = 0;
   }
 
   for (std::size_t j{}; j < len_t2; j++) {
-	j_start = eds_t2.get_letter_boundaries(j).left();
-	for (std::size_t k{}; k < last_w; k++) {
-	  node_idx = g.compute_index(k, j_start);
-	 
-	  if(g.check_match_stats(node_idx)){
-			if (max < g.get_match_stats(node_idx)) {
-				max = g.get_match_stats(node_idx);
-			}
-		}
-	}
+    j_start = eds_t2.get_letter_boundaries(j).left();
+    for (std::size_t k{}; k < last_w; k++) {
+      node_idx = g.compute_index(k, j_start);
 
-	ms_q[j] = max;
-	max = 0;
+      if(g.check_match_stats(node_idx)){
+            if (max < g.get_match_stats(node_idx)) {
+                max = g.get_match_stats(node_idx);
+            }
+        }
+    }
+
+    ms_q[j] = max;
+    max = 0;
   }
 
   // print ms_w
   /*
   std::cout << "ms_w = ";
   for (std::size_t i{}; i < len_t1; i++) {
-	std::cout << ms_w[i] << " ";
-	}
+    std::cout << ms_w[i] << " ";
+    }
   std::cout << "\n";
   // print ms_q
   std::cout << "ms_q = ";
   for (std::size_t i{}; i < len_t2; i++) {
-	std::cout << ms_q[i] << " ";
-	}
+    std::cout << ms_q[i] << " ";
+    }
   */
-  
+
   std::double_t N_1 = static_cast<std::double_t>(eds_t1.get_size());
   std::double_t N_2 = static_cast<std::double_t>(eds_t2.get_size());
 
@@ -1233,26 +1249,26 @@ std::double_t graph::distance(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds_t
 
   std::double_t ms_t1_t1 = match_stats_self(eds_t1);
   std::double_t ms_t2_t2 = match_stats_self(eds_t2);
-  
+
   // MS_T1_T2
   std::double_t ms_t1_t2 =
-	static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_t1);
+    static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_t1);
   std::double_t ms_t2_t1 =
-	static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_t2);
+    static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_t2);
 
   /*
   std::cout << "ms_t1_sum " << ms_w.sum() << " ms_t2_sum " << ms_q.sum()
-			<< " ms_t1_t2 " << ms_t1_t2 << " ms_t2_t1 " << ms_t2_t1
-			<< " ms_t1_t1 " << ms_t1_t1 << " ms_t2_t2 " << ms_t2_t2
- 			<< " log_N_1 " << log_N_1 << " log_N_2: " << log_N_2
-			<< "\n";
+            << " ms_t1_t2 " << ms_t1_t2 << " ms_t2_t1 " << ms_t2_t1
+            << " ms_t1_t1 " << ms_t1_t1 << " ms_t2_t2 " << ms_t2_t2
+            << " log_N_1 " << log_N_1 << " log_N_2: " << log_N_2
+            << "\n";
   */
 
   std::double_t  d_t1_t2 = log_N_2 / ms_t1_t2 - log_N_1/ ms_t1_t1;
   std::double_t  d_t2_t1 = log_N_1 / ms_t2_t1 - log_N_2/ ms_t2_t2;
 
   //return ms_t1_t2 + ms_t2_t1;
-  
+
   return (d_t1_t2 + d_t2_t1) / 2.0;
 }
 
@@ -1262,67 +1278,67 @@ std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds
   // the last letter in T_1 and T_2
   std::size_t len_t1 = eds_t1.get_length();
   std::size_t len_t2 = eds_t2.get_length();
-  
+
   // the last value in internal size of T1 and T2
   std::size_t last_w = eds_t1.get_size() + eds_t1.get_eps_count();
   std::size_t last_q = eds_t2.get_size() + eds_t2.get_eps_count();
 
   // MS_T1 and MS_T2
   std::valarray<std::size_t> ms_w(len_t1), ms_q(len_t2);
-  
+
   std::size_t max{}, i_start{}, j_start{};
 
   std::size_t node_idx{std::numeric_limits<std::size_t>::max()};
-	
-  for (std::size_t i{}; i < len_t1; i++) {
-	i_start = eds_t1.get_letter_boundaries(i).left();
-	for (std::size_t l{}; l < last_q; l++) {
-	  node_idx = g.compute_index(i_start, l);
-	  if(g.check_match_stats(node_idx)){
-			if (max < g.get_match_stats(node_idx)) {
-				max = g.get_match_stats(node_idx);
-			}
-		}
-	}
 
-	ms_w[i] = max;
-	max = 0;
+  for (std::size_t i{}; i < len_t1; i++) {
+    i_start = eds_t1.get_letter_boundaries(i).left();
+    for (std::size_t l{}; l < last_q; l++) {
+      node_idx = g.compute_index(i_start, l);
+      if(g.check_match_stats(node_idx)){
+            if (max < g.get_match_stats(node_idx)) {
+                max = g.get_match_stats(node_idx);
+            }
+        }
+    }
+
+    ms_w[i] = max;
+    max = 0;
   }
 
   for (std::size_t j{}; j < len_t2; j++) {
-	j_start = eds_t2.get_letter_boundaries(j).left();
-	for (std::size_t k{}; k < last_w; k++) {
-	  node_idx = g.compute_index(k, j_start);
-	 
-	  if(g.check_match_stats(node_idx)){
-			if (max < g.get_match_stats(node_idx)) {
-				max = g.get_match_stats(node_idx);
-			}
-		}
-	}
+    j_start = eds_t2.get_letter_boundaries(j).left();
+    for (std::size_t k{}; k < last_w; k++) {
+      node_idx = g.compute_index(k, j_start);
 
-	ms_q[j] = max;
-	max = 0;
+      if(g.check_match_stats(node_idx)){
+            if (max < g.get_match_stats(node_idx)) {
+                max = g.get_match_stats(node_idx);
+            }
+        }
+    }
+
+    ms_q[j] = max;
+    max = 0;
   }
 
 
   //std::size_t sum_vals = ms_q.sum() + ms_w.sum();
   //std::size_t sum_size = len_t1 + len_t2;
 #ifdef DEBUG
-	std::cout<< "MS[S_1,S_2]: ";
-	for(int i=0;i<len_t1;++i){
-		std::cout << ms_w[i]<<" ";
-	}
-	std::cout<<std::endl;
-	std::cout<< "MS[S_2,S_1]: ";
-	for(int i=0;i<len_t2;++i){
-		std::cout << ms_q[i]<<" ";
-	}
-	std::cout<<std::endl;
+    std::cout<< "MS[S_1,S_2]: ";
+    for(int i=0;i<len_t1;++i){
+        std::cout << ms_w[i]<<" ";
+    }
+    std::cout<<std::endl;
+    std::cout<< "MS[S_2,S_1]: ";
+    for(int i=0;i<len_t2;++i){
+        std::cout << ms_q[i]<<" ";
+    }
+    std::cout<<std::endl;
 #endif
 
   //return static_cast<std::double_t>(sum_vals) / static_cast<std::double_t>(sum_size);
-  
+
   std::double_t t1_avg = static_cast<std::double_t>(ms_w.sum()) / static_cast<std::double_t>(len_t1);
   std::double_t t2_avg = static_cast<std::double_t>(ms_q.sum()) / static_cast<std::double_t>(len_t2);
 

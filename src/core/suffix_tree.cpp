@@ -18,6 +18,38 @@ STvertex *root;
 const char *txt;
 int leaves; /* number of created leaves */
 
+bool operator==(const STQueryResult& lhs, const STQueryResult& rhs) {
+  std::size_t w = lhs.is_beyond_txt();
+  std::size_t x = lhs.get_match_length();
+  std::size_t y = lhs.get_char_idx();
+  std::size_t z = lhs.get_txt_str_idx();
+
+  std::size_t a = rhs.is_beyond_txt();
+  std::size_t b = rhs.get_match_length();
+  std::size_t c = rhs.get_char_idx();
+  std::size_t d = rhs.get_txt_str_idx();
+
+  return std::tie(w, x, y, z) == std::tie(a, b, c, d);
+}
+
+bool operator<(const STQueryResult& lhs, const STQueryResult& rhs) {
+  std::size_t w = lhs.is_beyond_txt();
+  std::size_t x = lhs.get_match_length();
+  std::size_t y = lhs.get_char_idx();
+  std::size_t z = lhs.get_txt_str_idx();
+
+  std::size_t a = rhs.is_beyond_txt();
+  std::size_t b = rhs.get_match_length();
+  std::size_t c = rhs.get_char_idx();
+  std::size_t d = rhs.get_txt_str_idx();
+
+  return std::tie(w, x, y, z) < std::tie(a, b, c, d);
+}
+
+bool operator<(const internal_st_vertex& lhs, const internal_st_vertex& rhs) {
+  return std::tie(lhs.vertex, lhs.depth) < std::tie(rhs.vertex, rhs.depth);
+}
+
 /**
  *
  *
@@ -363,7 +395,6 @@ void update_leaves(STvertex *current_vertex,
   // return leaves;
 }
 
-
 std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
                                                     STvertex *current_vertex,
                                                     const char *x,
@@ -416,10 +447,7 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
 
       //current_edge = current_vertex->g[core::string_separator];
       append_underscore_matches(); // TODO: remove useless
-
       append_matches(true);
-
-
 
       d = match_length;
       last_with_underscore = current_vertex;
@@ -535,6 +563,183 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
   return matches;
 }
 
+
+std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
+                                                     const internal_st_vertex &root,
+                                                     const char *text,
+                                                     std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
+                                                     std::size_t qry_letter_idx,
+                                                     bool end_in_imp_imp) {
+
+  std::set<match_st::STQueryResult> seen{};
+
+  STvertex *current_vertex = root.vertex;
+  std::vector<match_st::STQueryResult> matches{};
+  matches.reserve(strlen(text));
+
+  // TODO : rename i to q_idx or q_pos
+  int i {}, // the query position of the match
+    match_length {},
+    query_len { static_cast<int>(strlen(query)) },
+    d { -1 }; // last underscore match length TODO: give a better name
+
+  std::vector<match_st::LeafData> l_data;
+  STvertex *last_with_underscore{nullptr};
+  STedge current_edge;
+  bool has_dollar{false}, has_underscore{false}, has_qry_char{false}, matched_a_char{false};
+
+  // TODO: read the value of l_data from scope
+  auto looper = [&](std::vector<match_st::LeafData> l_data, bool q_bynd_txt = false, bool a = false) {
+    for (match_st::LeafData l : l_data) {
+      // d::cout << l.get_char_idx() << std::endl;
+      l.get_txt_char_idx_mut() += static_cast<int>(root.depth);
+      match_st::STQueryResult match {match_st::STQueryResult(q_bynd_txt, (a ? d : match_length),l)};
+      if (!seen.count(match)) {
+        matches.push_back(match);
+        seen.insert(match);
+      }
+    }
+  };
+
+  // make sure this call is made after initializing the value of current edge
+  auto append_matches = [&](bool q_bynd_txt = false, bool a = false) {
+    l_data = Get_Leaf_Data(current_edge.v);
+    looper(l_data, q_bynd_txt, a);
+  };
+
+  auto append_underscore_matches = [&]() {
+    if (last_with_underscore == nullptr) { return; }
+    l_data = Get_Leaf_Data(last_with_underscore->g[core::terminator_char].v);
+    looper(l_data, true, true);
+  };
+
+  while (i < query_len) {
+    has_dollar = current_vertex->g.find(core::string_separator) != current_vertex->g.end();
+    has_underscore = current_vertex->g.find(core::terminator_char) != current_vertex->g.end();
+    has_qry_char = current_vertex->g.find(query[i]) != current_vertex->g.end();
+
+    // TODO: make these if statements not be order dependent?
+
+    // both has a $ and _ going out of it
+    if (has_underscore && has_dollar && matched_a_char) {
+      //current_edge = current_vertex->g[core::string_separator];
+      append_underscore_matches(); // TODO: remove useless
+      append_matches(true);
+
+      d = match_length;
+      last_with_underscore = current_vertex;
+
+      current_edge = current_vertex->g[core::terminator_char];
+      append_underscore_matches();
+      //append_matches(true);
+
+      if (!has_qry_char) { return matches; }
+    }
+
+    // We matched at least one query to the end a text string
+    // because we saw a $ sign and i > 0
+    if (has_dollar && matched_a_char) {
+      //current_edge = current_vertex->g[core::string_separator];
+      append_underscore_matches(); // TODO: remove useless
+
+      append_matches(true);
+      if (!has_qry_char) { return matches; }
+    }
+
+    // save the last vertex we found with an _ going out of it
+    // and is not the root
+    if (has_underscore && matched_a_char) {
+      d = match_length;
+      last_with_underscore = current_vertex;
+    }
+
+    // we can no longer match the query and we found a _
+    if (!has_qry_char && has_underscore && matched_a_char) {
+      //current_edge = current_vertex->g[core::terminator_char];
+      append_underscore_matches();
+      append_matches(true);
+      return matches;
+    }
+
+    // matching failed
+    if (!has_qry_char) {
+      // we cannot match anymore but maybe we can go back up to the last vertex
+      // with an underscore.
+      // There's no need to check if i> 0 because it was checked when
+      // last_with_underscore got set
+      append_underscore_matches();
+      return matches;
+    }
+
+    current_edge = current_vertex->g[query[i]];
+
+    // matched at least one character
+    matched_a_char = true;
+
+    FOR(j, current_edge.l, current_edge.r) {
+      // we have finished matching the query along a branch
+      if (i == query_len) {
+        append_matches();
+        append_underscore_matches();
+        return matches;
+      }
+
+      // In the process of matching we find a $ or _
+      // and we just finished processing the query as well
+      if ((text[j] == core::terminator_char || text[j] == core::string_separator) && (i == query_len || current_edge.l == j)) {
+        append_matches();
+        append_underscore_matches();
+        return matches;
+      }
+
+      // In the process of matching we find a _
+      // and have not finished processing the query
+      if (text[j] == core::terminator_char) {
+        append_matches(true);
+        append_underscore_matches();
+        return matches;
+      }
+
+      if (has_underscore) {
+        append_underscore_matches();
+      }
+
+      // In the process of matching we find a $
+      // and have not finished processing the query
+      if (text[j] == core::string_separator) {
+        append_matches(true);
+        append_underscore_matches();
+        return matches;
+      }
+
+      // Find a mismatch
+      if (query[i++] != text[j]) {
+        // we cannot match anymore but maybe we can go back up to the last
+        // vertex with an underscore.
+        // There's no need to check if i> 0 because it was checked when
+        // last_with_underscore got set
+        append_underscore_matches();
+        if (end_in_imp_imp) { append_matches(false); }
+        return matches;
+      }
+
+      match_length += 1;
+    }
+
+    current_vertex = current_edge.v;
+  }
+
+  if (!is_leaf(current_vertex) && i == query_len) {
+    marked_nodes[qry_letter_idx].insert( internal_st_vertex { current_vertex, static_cast<size_t>(match_length) } );
+  }
+
+  // We have finished matching the query along a branch
+  append_matches();
+  append_underscore_matches();
+
+  return matches;
+}
+
 // TODO remove deprecated
 /**
  *
@@ -565,5 +770,31 @@ void gen_suffix_tree(
 
     suffix_trees->push_back(std::make_pair(*root, text));
   }
-};
+}
+
+void gen_suffix_tree_(eds::EDS& eds, std::vector<meta_st> *suffix_trees) {
+  std::string text;
+  STvertex* root;
+
+  for (size_t i = 0; i < eds.get_length(); i++) {
+    text.clear();
+
+    std::vector<std::string>& i_letter = eds.get_d_letter(i).get_strs();
+    std::vector<eds::slice_eds>& str_slices = eds.get_slice(i);
+
+    // concat the strings with seperator & add add a terminator char
+    core::join(i_letter, core::string_separator, text);
+    text += core::terminator_char;
+
+    // Create the suffix tree
+    root = Create_suffix_tree(text.c_str(), text.length());
+
+    // add string ids
+    update_leaves(root, str_slices, eds, i);
+
+    suffix_trees->push_back(meta_st{text, root, std::map<std::size_t, std::set<internal_st_vertex>>{} });
+  }
+}
+
+
 } // namespace match_st

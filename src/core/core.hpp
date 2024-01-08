@@ -116,19 +116,19 @@ class STQueryResult : private LeafData {
 public:
   // constructor(s)
   STQueryResult(bool beyond_text, std::size_t match_length, LeafData&& l_data)
-	: LeafData(std::move(l_data)),
-	  beyond_text(beyond_text),
-	  match_length(match_length) {}
+    : LeafData(std::move(l_data)),
+      beyond_text(beyond_text),
+      match_length(match_length) {}
 
   STQueryResult(bool beyond_text, std::size_t match_length, LeafData& l_data)
-	: LeafData(std::move(l_data)),
-	  beyond_text(beyond_text),
-	  match_length(match_length) {}
+    : LeafData(std::move(l_data)),
+      beyond_text(beyond_text),
+      match_length(match_length) {}
 
   STQueryResult(bool beyond_text, std::size_t match_length, std::size_t str_idx, std::size_t char_idx)
-	: LeafData(str_idx, char_idx),
-	  beyond_text(beyond_text),
-	  match_length(match_length) {}
+    : LeafData(str_idx, char_idx),
+      beyond_text(beyond_text),
+      match_length(match_length) {}
 
   // getters
   bool is_beyond_txt() const { return this->beyond_text; }
@@ -144,7 +144,22 @@ public:
 };
 
 bool operator==(const STQueryResult& lhs, const STQueryResult& rhs);
+// operator < for STQueryResult
+bool operator<(const STQueryResult& lhs, const STQueryResult& rhs);
 
+struct internal_st_vertex {
+  STvertex *vertex;
+  std::size_t depth;
+};
+
+// operator  < for internal_st_vertex
+bool operator<(const internal_st_vertex& lhs, const internal_st_vertex& rhs);
+
+struct meta_st {
+  std::string text;
+  match_st::STvertex* root;
+  std::map<std::size_t, std::set<internal_st_vertex>> marked_nodes;
+};
 
 /**
  * @brief Find all occurrences of the query in the suffix tree
@@ -157,20 +172,32 @@ bool operator==(const STQueryResult& lhs, const STQueryResult& rhs);
  * @param end_in_imp_imp if true, the query must end in an implicit node
  * @return a vector of STQueryResult
  */
-std::vector<match_st::STQueryResult>
-FindEndIndexes(const char *query, STvertex *current_vertex, const char *x, bool end_in_imp_imp = false);
+std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
+                                                    STvertex *current_vertex,
+                                                    const char *x,
+                                                    bool end_in_imp_imp = false);
+
+std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
+                                                     const internal_st_vertex &root,
+                                                     const char *text,
+                                                     std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
+                                                     std::size_t qry_letter_idx,
+                                                     bool end_in_imp_imp = false);
 
 STvertex *Create_suffix_tree(const char *x, int n);
 
-void gen_suffix_tree(
-eds::EDS &eds, std::vector<std::pair<STvertex, std::string>> *suffix_trees);
+void gen_suffix_tree(eds::EDS &eds, std::vector<std::pair<STvertex, std::string>> *suffix_trees);
+
+// a suffix tree real root the text string and internally marked nodes from
+// previous searches
+
+void gen_suffix_tree_(eds::EDS &eds, std::vector<meta_st> *suffix_trees);
 
 void update_leaves(STvertex *current_vertex,
-std::vector<eds::slice_eds> const &text_offsets,
-eds::EDS& eds,
-std::size_t letter_idx);
-
-} // namespace match
+                   std::vector<eds::slice_eds> const &text_offsets,
+                   eds::EDS& eds,
+                   std::size_t letter_idx);
+} // namespace match_st
 
 namespace core {
 typedef std::vector<std::vector<bool>> bool_matrix;
@@ -205,7 +232,7 @@ enum task {
   check_intersection, // do EDSI TODO: rename?
   compute_graph,      // compute the intersection graph
   info,               // print info about the eds file
-  unset				  // default value
+  unset               // default value
 };
 
 /**
@@ -282,24 +309,24 @@ struct EDSMatch {
 public:
   // constructor(s)
   EDSMatch(std::size_t query_str_index, std::string str, match_st::STQueryResult &&q_res)
-	: query_str_index(query_str_index),
-	  str(str),
-	  q_res(std::move(q_res)) {}
+    : query_str_index(query_str_index),
+      str(str),
+      q_res(std::move(q_res)) {}
 
   EDSMatch(std::size_t query_str_index, std::string str, match_st::STQueryResult& q_res)
-	: query_str_index(query_str_index),
-	  str(str),
-	  q_res(std::move(q_res)) {}
+    : query_str_index(query_str_index),
+      str(str),
+      q_res(std::move(q_res)) {}
 
   EDSMatch(std::size_t qry_str_index, std::size_t txt_str_idx,
-		   std::size_t txt_char_idx, std::string str, bool beyond_txt,
-		   std::size_t m_len)
-	: query_str_index(qry_str_index),
-	  str(str),
-	  q_res(match_st::STQueryResult(beyond_txt,
-									m_len,
-									txt_str_idx,
-									txt_char_idx)) {}
+           std::size_t txt_char_idx, std::string str, bool beyond_txt,
+           std::size_t m_len)
+    : query_str_index(qry_str_index),
+      str(str),
+      q_res(match_st::STQueryResult(beyond_txt,
+                                    m_len,
+                                    txt_str_idx,
+                                    txt_char_idx)) {}
 
   //
   std::size_t get_qry_str_idx() const { return this->query_str_index; }
@@ -332,10 +359,27 @@ public:
   std::size_t& get_match_length_mut() { return this->q_res.get_match_length_mut(); }
 };
 
+
+
+
 void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
-					  std::pair<match_st::STvertex, std::string> *text, // TODO: rename param
-					  std::vector<std::string> const &queries,
-					  std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
+                      std::pair<match_st::STvertex, std::string> *text, // TODO: rename param
+                      std::vector<std::string> const &queries,
+                      std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
+
+
+void perform_matching_(eds::EDS &txt_eds,
+                       std::size_t txt_letter_idx,
+                       std::size_t qry_letter_idx,
+                       match_st::meta_st& meta_st_,
+                      std::vector<std::string> const &queries,
+                      std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
+
+void mark_query_nodes(eds::EDS &qry_eds,
+                      std::size_t qry_letter_idx,
+                      std::size_t txt_letter_idx,
+                      match_st::meta_st& meta_st_,
+                      std::vector<EDSMatch>& candidate_matches );
 
 // TODO: move to utils
 void join(const std::vector<std::string> &v, char c, std::string &s);

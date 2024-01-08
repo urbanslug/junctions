@@ -3,7 +3,6 @@
 *.png
 *.svg
 *.txt
-x*
 out
 notes.org
 data/ignore/

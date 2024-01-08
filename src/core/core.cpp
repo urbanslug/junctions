@@ -1,27 +1,11 @@
+#include <algorithm>
 #include <iostream>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "./core.hpp"
 #include "constants.hpp"
-
-namespace match_st {
-  bool operator==(const STQueryResult& lhs, const STQueryResult& rhs) {
-
-	std::size_t w = lhs.is_beyond_txt();
-	std::size_t x = lhs.get_match_length();
-	std::size_t y = lhs.get_char_idx();
-	std::size_t z = lhs.get_txt_str_idx();
-
-
-	std::size_t a = rhs.is_beyond_txt();
-	std::size_t b = rhs.get_match_length();
-	std::size_t c = rhs.get_char_idx();
-	std::size_t d = rhs.get_txt_str_idx();
-	
-	return std::tie(w, x, y, z) == std::tie(a, b, c, d);
-  }
-}
 
 namespace core {
 AppConfig::AppConfig() {
@@ -93,33 +77,30 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
                       std::pair<match_st::STvertex, std::string> *text,
                       std::vector<std::string> const &queries,
                       std::vector<EDSMatch>* candidate_matches,
-					  bool end_in_imp_imp) {
+                      bool end_in_imp_imp) {
 
   std::vector<match_st::STQueryResult> match_positions;
 
   for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
     std::string qry_str = queries[qry_str_idx];
 
-	//std::cout << "qry: " << qry_str << " txt: " << text->second << std::endl;
-	
+    //std::cout << "qry: " << qry_str << " txt: " << text->second << std::endl;
+
     match_positions =
-	  match_st::FindEndIndexes(qry_str.c_str(),
-							   &text->first,
-							   text->second.c_str(),
-							   end_in_imp_imp);
+      match_st::FindEndIndexes(qry_str.c_str(),
+                               &text->first,
+                               text->second.c_str(),
+                               end_in_imp_imp);
 
-
-	
-	
     for (match_st::STQueryResult match_pos : match_positions) {
 
-	  /*
-	  std::cout << "char idx: " << match_pos.get_char_idx()
-				<< " txt idx: " << match_pos.get_txt_str_idx() 
-				<< " match len: " << match_pos.get_match_length()
-				<< std::endl;
-	  */
-	  
+      /*
+      std::cout << "char idx: " << match_pos.get_char_idx()
+                << " txt idx: " << match_pos.get_txt_str_idx()
+                << " match len: " << match_pos.get_match_length()
+                << std::endl;
+      */
+
       eds::slice_eds local_txt_slice =
         txt_eds.get_str_slice_local(txt_letter_idx, match_pos.get_txt_str_idx());
 
@@ -128,8 +109,6 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
       match_pos.get_txt_char_idx_mut() -=
         (match_pos.get_txt_str_idx() + local_txt_slice.start);
 
-
-	  
       candidate_matches->push_back(
         EDSMatch(qry_str_idx,
                  qry_str.substr(0, match_pos.get_match_length()),
@@ -137,6 +116,107 @@ void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
     }
   }
 }
+
+
+/**
+ *
+ * slices exist in l
+ * @param[in]  queries           queries
+ * @param[in]  text              text
+ * @param[out] candidate_matches matches_found in the context of the degenerate
+ * letter and not N
+ */
+void perform_matching_(eds::EDS &txt_eds,
+                       std::size_t txt_letter_idx,
+                       std::size_t qry_letter_idx,
+                       match_st::meta_st& meta_st_,
+                       std::vector<std::string> const &queries,
+                       std::vector<EDSMatch>* candidate_matches,
+                       bool end_in_imp_imp) {
+
+  std::vector<match_st::STQueryResult> match_positions;
+
+  std::set<match_st::internal_st_vertex> st_vertices;
+  st_vertices.insert({meta_st_.root, 0});
+
+  if (qry_letter_idx > 0 && meta_st_.marked_nodes.find(qry_letter_idx-1) != meta_st_.marked_nodes.end() ) {
+    auto s = meta_st_.marked_nodes[qry_letter_idx-1].begin();
+    auto e = meta_st_.marked_nodes[qry_letter_idx-1].end();
+
+    copy(s, e,
+         inserter(st_vertices, st_vertices.begin()));
+  }
+
+  // r_ for root
+  for (const match_st::internal_st_vertex& r_ : st_vertices) {
+    for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
+      std::string qry_str = queries[qry_str_idx];
+
+      //std::cout << "qry: " << qry_str << " txt: " << text->second << std::endl;
+
+      match_positions =
+          match_st::FindEndIndexes_(qry_str.c_str(),
+                                    r_,
+                                    meta_st_.text.c_str(),
+                                    meta_st_.marked_nodes,
+                                    qry_letter_idx,
+                                    end_in_imp_imp);
+
+      for (match_st::STQueryResult match_pos : match_positions) {
+
+        /*
+          std::cout << "char idx: " << match_pos.get_char_idx()
+          << " txt idx: " << match_pos.get_txt_str_idx()
+          << " match len: " << match_pos.get_match_length()
+          << std::endl;
+        */
+
+        eds::slice_eds local_txt_slice =
+          txt_eds.get_str_slice_local(txt_letter_idx, match_pos.get_txt_str_idx());
+
+        // subtruct number of dollar signs which correspond to str idx
+        // subtruct local slice start position
+        match_pos.get_txt_char_idx_mut() -= (match_pos.get_txt_str_idx() + local_txt_slice.start);
+
+        candidate_matches->push_back(EDSMatch(qry_str_idx,
+                                              qry_str.substr(0, match_pos.get_match_length()),
+                                              match_pos));
+      }
+    }
+  }
+}
+
+
+void mark_query_nodes(eds::EDS &qry_eds,
+                      std::size_t qry_letter_idx,
+                      std::size_t txt_letter_idx,
+                      match_st::meta_st& meta_st_,
+                      std::vector<EDSMatch>& candidate_matches) {
+  std::set<std::string> seen {};
+
+  for (EDSMatch const &m : candidate_matches) {
+    if (seen.find(m.str) != seen.end()) {
+      continue;
+    }
+
+    eds::slice_eds local_qry_slice = qry_eds.get_str_slice_local(qry_letter_idx, m.get_qry_str_idx());
+
+    if (m.get_match_length() < local_qry_slice.length) {
+      match_st::internal_st_vertex r{meta_st_.root, 0};
+      match_st::FindEndIndexes_(m.str.c_str(),
+                                r,
+                                meta_st_.text.c_str(),
+                                meta_st_.marked_nodes,
+                                txt_letter_idx,
+                                true);
+
+    }
+
+    seen.insert(m.str);
+  }
+}
+
+
 /**
  * concatenate a vector of strings with a given characters interspersing them
  *
@@ -165,4 +245,3 @@ void join(const std::vector<std::string> &v, char c, std::string &s) {
 
 
 } // namespace core
-
