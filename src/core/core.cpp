@@ -133,7 +133,6 @@ void perform_matching_(eds::EDS &txt_eds,
                        std::vector<std::string> const &queries,
                        std::vector<EDSMatch>* candidate_matches,
                        bool end_in_imp_imp) {
-
   std::vector<match_st::STQueryResult> match_positions;
 
   std::set<match_st::internal_st_vertex> st_vertices;
@@ -142,9 +141,7 @@ void perform_matching_(eds::EDS &txt_eds,
   if (qry_letter_idx > 0 && meta_st_.marked_nodes.find(qry_letter_idx-1) != meta_st_.marked_nodes.end() ) {
     auto s = meta_st_.marked_nodes[qry_letter_idx-1].begin();
     auto e = meta_st_.marked_nodes[qry_letter_idx-1].end();
-
-    copy(s, e,
-         inserter(st_vertices, st_vertices.begin()));
+    copy(s, e,  inserter(st_vertices, st_vertices.begin()));
   }
 
   // r_ for root
@@ -152,7 +149,6 @@ void perform_matching_(eds::EDS &txt_eds,
     for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
       std::string qry_str = queries[qry_str_idx];
 
-      //std::cout << "qry: " << qry_str << " txt: " << text->second << std::endl;
 
       match_positions =
           match_st::FindEndIndexes_(qry_str.c_str(),
@@ -163,13 +159,6 @@ void perform_matching_(eds::EDS &txt_eds,
                                     end_in_imp_imp);
 
       for (match_st::STQueryResult match_pos : match_positions) {
-
-        /*
-          std::cout << "char idx: " << match_pos.get_char_idx()
-          << " txt idx: " << match_pos.get_txt_str_idx()
-          << " match len: " << match_pos.get_match_length()
-          << std::endl;
-        */
 
         eds::slice_eds local_txt_slice =
           txt_eds.get_str_slice_local(txt_letter_idx, match_pos.get_txt_str_idx());

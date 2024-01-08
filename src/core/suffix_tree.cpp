@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -47,7 +48,8 @@ bool operator<(const STQueryResult& lhs, const STQueryResult& rhs) {
 }
 
 bool operator<(const internal_st_vertex& lhs, const internal_st_vertex& rhs) {
-  return std::tie(lhs.vertex, lhs.depth) < std::tie(rhs.vertex, rhs.depth);
+  return std::tie(lhs.vertex, lhs.depth, lhs.start_char, lhs.in_node_offset) <
+    std::tie(rhs.vertex, rhs.depth, rhs.start_char, rhs.in_node_offset);
 }
 
 /**
@@ -564,18 +566,16 @@ std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
 }
 
 
-std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
-                                                     const internal_st_vertex &root,
-                                                     const char *text,
-                                                     std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
-                                                     std::size_t qry_letter_idx,
-                                                     bool end_in_imp_imp) {
-
-  std::set<match_st::STQueryResult> seen{};
-
-  STvertex *current_vertex = root.vertex;
+std::vector<match_st::STQueryResult>
+FindEndIndexes_(const char *query,
+                const internal_st_vertex &root,
+                const char *text,
+                std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
+                std::size_t qry_letter_idx,
+                bool end_in_imp_imp) {
   std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(text));
+  if (strlen(query) == 0) { return matches; }
 
   // TODO : rename i to q_idx or q_pos
   int i {}, // the query position of the match
@@ -583,18 +583,22 @@ std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
     query_len { static_cast<int>(strlen(query)) },
     d { -1 }; // last underscore match length TODO: give a better name
 
+  std::set<STQueryResult> seen; // TODO: use better duplicate catcher
+
+  char last_branching_char {};
+  std::size_t last_branching_q_idx {};
   std::vector<match_st::LeafData> l_data;
-  STvertex *last_with_underscore{nullptr};
-  STedge current_edge;
+  STedge current_edge {}; // an int
+  STvertex *current_vertex { root.vertex }, *last_with_underscore{nullptr};
   bool has_dollar{false}, has_underscore{false}, has_qry_char{false}, matched_a_char{false};
 
   // TODO: read the value of l_data from scope
-  auto looper = [&](std::vector<match_st::LeafData> l_data, bool q_bynd_txt = false, bool a = false) {
+  auto looper = [&](std::vector<match_st::LeafData> l_data, bool q_bynd_txt = false, bool a = false) -> void {
     for (match_st::LeafData l : l_data) {
-      // d::cout << l.get_char_idx() << std::endl;
       l.get_txt_char_idx_mut() += static_cast<int>(root.depth);
-      match_st::STQueryResult match {match_st::STQueryResult(q_bynd_txt, (a ? d : match_length),l)};
-      if (!seen.count(match)) {
+      if ((a ? d : match_length) == 0) { continue; }
+      match_st::STQueryResult match { match_st::STQueryResult(q_bynd_txt, (a ? d : match_length),l)};
+      if (seen.find(match) == seen.end()) {
         matches.push_back(match);
         seen.insert(match);
       }
@@ -602,21 +606,35 @@ std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
   };
 
   // make sure this call is made after initializing the value of current edge
-  auto append_matches = [&](bool q_bynd_txt = false, bool a = false) {
+  auto append_matches = [&](bool q_bynd_txt = false, bool a = false) -> void {
     l_data = Get_Leaf_Data(current_edge.v);
     looper(l_data, q_bynd_txt, a);
   };
 
-  auto append_underscore_matches = [&]() {
+  auto append_underscore_matches = [&]() -> void {
     if (last_with_underscore == nullptr) { return; }
     l_data = Get_Leaf_Data(last_with_underscore->g[core::terminator_char].v);
     looper(l_data, true, true);
   };
 
+  auto mark_st = [&](char b_char, std::size_t in_node_offset) -> void {
+    if (match_length > 0 && !is_leaf(current_vertex) && i == query_len) {
+      marked_nodes[qry_letter_idx].insert(
+        internal_st_vertex {current_vertex,
+                            static_cast<size_t>(match_length),
+                            b_char,
+                            in_node_offset});
+    }
+  };
+
   while (i < query_len) {
     has_dollar = current_vertex->g.find(core::string_separator) != current_vertex->g.end();
     has_underscore = current_vertex->g.find(core::terminator_char) != current_vertex->g.end();
-    has_qry_char = current_vertex->g.find(query[i]) != current_vertex->g.end();
+
+    char c { matched_a_char || (!matched_a_char && root.in_node_offset == 0 )
+             ? query[i]
+             : root.start_char };
+    has_qry_char = current_vertex->g.find(c) != current_vertex->g.end();
 
     // TODO: make these if statements not be order dependent?
 
@@ -641,7 +659,6 @@ std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
     if (has_dollar && matched_a_char) {
       //current_edge = current_vertex->g[core::string_separator];
       append_underscore_matches(); // TODO: remove useless
-
       append_matches(true);
       if (!has_qry_char) { return matches; }
     }
@@ -655,8 +672,6 @@ std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
 
     // we can no longer match the query and we found a _
     if (!has_qry_char && has_underscore && matched_a_char) {
-      //current_edge = current_vertex->g[core::terminator_char];
-      append_underscore_matches();
       append_matches(true);
       return matches;
     }
@@ -671,22 +686,34 @@ std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
       return matches;
     }
 
-    current_edge = current_vertex->g[query[i]];
+    current_edge = current_vertex->g[c];
+    last_branching_char = c;
+    last_branching_q_idx = match_length; // TODO: i could also work ?
 
-    // matched at least one character
+    std::size_t l { !matched_a_char
+                    ? static_cast<size_t>(current_edge.l) + root.in_node_offset
+                    : static_cast<size_t>(current_edge.l) };
+
     matched_a_char = true;
 
-    FOR(j, current_edge.l, current_edge.r) {
+    FOR(j, l, current_edge.r) {
       // we have finished matching the query along a branch
       if (i == query_len) {
         append_matches();
         append_underscore_matches();
+
+        // ended match in branch and not at the end of a string
+        if (text[j] != core::terminator_char && text[j] != core::string_separator) {
+          mark_st(last_branching_char, match_length - last_branching_q_idx);
+        }
+
         return matches;
       }
 
       // In the process of matching we find a $ or _
       // and we just finished processing the query as well
-      if ((text[j] == core::terminator_char || text[j] == core::string_separator) && (i == query_len || current_edge.l == j)) {
+      if ((text[j] == core::terminator_char || text[j] == core::string_separator) &&
+          (i == query_len || current_edge.l == j)) {
         append_matches();
         append_underscore_matches();
         return matches;
@@ -729,10 +756,7 @@ std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
     current_vertex = current_edge.v;
   }
 
-  if (!is_leaf(current_vertex) && i == query_len) {
-    marked_nodes[qry_letter_idx].insert( internal_st_vertex { current_vertex, static_cast<size_t>(match_length) } );
-  }
-
+  mark_st('\0', 0);
   // We have finished matching the query along a branch
   append_matches();
   append_underscore_matches();

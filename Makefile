@@ -3,7 +3,7 @@ CMAKE_BUILD_DIR=build
 CPP_STANDARD=c++17
 COMMON_COMPILER_FLAGS=-pipe -Wall -Wextra -Wpedantic -march=native
 RELEASE_COMPILER_FLAGS=${COMMON_COMPILER_FLAGS} -O3 -std=${CPP_STANDARD}
-DEBUG_COMPILER_FLAGS=-g ${COMMON_COMPILER_FLAGS} -DDEBUG -std=${CPP_STANDARD}
+DEBUG_COMPILER_FLAGS=-g ${COMMON_COMPILER_FLAGS} -O0 -DDEBUG -std=${CPP_STANDARD}
 STATIC_BUILD_FLAGS=-static -static-libgcc -static-libstdc++
 AVX_COMPILER_FLAGS=-mavx2
 AVX_MACRO=-DAVX2_SUPPORTED
@@ -31,7 +31,7 @@ test: debug_build
 clean:
 	rm -rf $(BUILD_DIR) ${CMAKE_BUILD_DIR}
 
-build: 
+build:
 	@mkdir -p $(BUILD_DIR) ${CMAKE_BUILD_DIR}
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/core/core.cpp -o bin/core.o
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/core/utils.cpp -o bin/utils.o
@@ -70,4 +70,3 @@ endif
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/graph/graph.cpp -o bin/graph.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/intersect/improved.cpp -o bin/improved.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/intersect/naive.cpp -o bin/naive.o
-

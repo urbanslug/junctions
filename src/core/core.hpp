@@ -147,9 +147,12 @@ bool operator==(const STQueryResult& lhs, const STQueryResult& rhs);
 // operator < for STQueryResult
 bool operator<(const STQueryResult& lhs, const STQueryResult& rhs);
 
+// TODO: rename to st_vertex_wrapper
 struct internal_st_vertex {
   STvertex *vertex;
   std::size_t depth;
+  char start_char;
+  std::size_t in_node_offset;
 };
 
 // operator  < for internal_st_vertex
@@ -360,8 +363,6 @@ public:
 };
 
 
-
-
 void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
                       std::pair<match_st::STvertex, std::string> *text, // TODO: rename param
                       std::vector<std::string> const &queries,
@@ -372,8 +373,8 @@ void perform_matching_(eds::EDS &txt_eds,
                        std::size_t txt_letter_idx,
                        std::size_t qry_letter_idx,
                        match_st::meta_st& meta_st_,
-                      std::vector<std::string> const &queries,
-                      std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
+                       std::vector<std::string> const &queries,
+                       std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
 
 void mark_query_nodes(eds::EDS &qry_eds,
                       std::size_t qry_letter_idx,

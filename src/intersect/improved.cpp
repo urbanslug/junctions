@@ -167,89 +167,83 @@ void update_matrices(std::vector<core::EDSMatch> const &candidate_matches,
                      int txt_letter_idx,
                      std::tuple<std::bitset<2>, std::bitset<2>, std::bitset<2>> reachability) {
   for (core::EDSMatch candiate_match : candidate_matches) {
-// matches always start at the beginning of a query so no need to check for that
-if (candiate_match.get_char_idx() == 0 && std::get<2>(reachability).to_ulong() < 3) {
-  continue;
-}
+    // matches always start at the beginning of a query so no need to check for that
+    if (candiate_match.get_char_idx() == 0 && std::get<2>(reachability).to_ulong() < 3) {
+      continue;
+    }
 
     eds::slice_eds local_txt_slice =
       txt_eds.get_str_slice_local(txt_letter_idx, candiate_match.get_txt_str_idx());
 
-/*
-  evaluate the start of the match
-  ===============================
- */
+    /*
+      evaluate the start of the match
+      ===============================
+    */
 
-// is the active suffix valid?
-bool valid_as = false;
+    bool valid_as{false}, // is the active suffix valid?
+      text_stop_exp{false}, // is the end of the text reached?
+      query_stop_exp{false}; // is the end of the query reached?
 
-bool text_stop_exp{false};  // is the end of the text reached?
-bool query_stop_exp{false}; // is the end of the query reached?
+    // TODO: rename t_start in N to something like match_start_in_N
+    int t_start_in_N =
+      txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) +
+      local_txt_slice.start;
 
-// TODO: rename t_start in N to something like match_start_in_N
-int t_start_in_N =
-  txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) +
-  local_txt_slice.start;
+    // the match starts within a string in the text
+    // second condition because actv suff can only be extended ...
+    if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
+      // is valid active suffix
+      // do we need to confirm t_start_in_N - 1
+      valid_as = ((*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1] == 1);
+    }
 
-// the match starts within a string in the text
-// second condition because actv suff can only be extended ...
-if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
-  // is valid active suffix
-  // do we need to confirm t_start_in_N - 1
-  valid_as = ((*t_matrix)[qry_letter_idx - 1][t_start_in_N - 1] == 1);
+    // is an exp - exp match
+    // or valid active suffix
+    // txt start is not valid so skip
+    if (candiate_match.get_char_idx() > 0 && !valid_as) { continue; }
 
 
-}
+    /*
+      evaluate the END of the match
+      ===============================
+    */
 
-// is an exp - exp match
-// or valid active suffix
-// txt start is not valid so skip
-if (candiate_match.get_char_idx() > 0 && !valid_as) { continue; }
+    // mark the end of the match as reachable in N_1 and N_2
+    // match end in N
 
-/*
-  evaluate the END of the match
-  ===============================
-*/
-
-// mark the end of the match as reachable in N_1 and N_2
-// match end in N
-
-// where the match ends locally
-std::size_t candidate_match_end =
+    // where the match ends locally
+    std::size_t candidate_match_end =
       local_txt_slice.start + candiate_match.get_char_idx() + candiate_match.get_match_length();
 
-// where the matched string actually ends in l/k (locally)
-std::size_t txt_slice_end = local_txt_slice.start + local_txt_slice.length;
-if (candidate_match_end >= txt_slice_end) { text_stop_exp = true; }
+    // where the matched string actually ends in l/k (locally)
+    std::size_t txt_slice_end = local_txt_slice.start + local_txt_slice.length;
+    if (candidate_match_end >= txt_slice_end) { text_stop_exp = true; }
 
-std::size_t t_end_in_N = t_start_in_N + candiate_match.get_match_length();
+    std::size_t t_end_in_N = t_start_in_N + candiate_match.get_match_length();
 
-/*
-  Handle query
-  ============
+    /*
+      Handle query
+      ============
 
-  queries always start at 0 so we don't need to do any additional stuff
- */
+      queries always start at 0 so we don't need to do any additional stuff
+    */
 
-// Determine match start and ends in N in the query EDS
-int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
-std::size_t qlen = qry_offsets[candiate_match.query_str_index].length;
+    // Determine match start and ends in N in the query EDS
+    int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
+    std::size_t qlen = qry_offsets[candiate_match.query_str_index].length;
 
-if (!candiate_match.is_beyond_txt() || !(candiate_match.get_match_length() < qlen)) {
-  query_stop_exp = true;
-}
+    if (!candiate_match.is_beyond_txt() || !(candiate_match.get_match_length() < qlen)) {
+      query_stop_exp = true;
+    }
 
-// update matrices
-// ==================
+    // update matrices
+    // ==================
 
-if (query_stop_exp) { (*t_matrix)[qry_letter_idx][t_end_in_N-1] = 1; }
+    if (query_stop_exp) { (*t_matrix)[qry_letter_idx][t_end_in_N-1] = 1; }
 
-if (text_stop_exp) {
-  // mark the qry as reachable
-  (*q_matrix)
-[txt_letter_idx]
-[q_start_in_N + candiate_match.get_match_length() - 1] = 1;
-}
+    if (text_stop_exp) { // mark the qry as reachable
+      (*q_matrix)[txt_letter_idx][q_start_in_N + candiate_match.get_match_length() - 1] = 1;
+    }
   }
 }
 

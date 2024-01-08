@@ -16,8 +16,6 @@
 #include <cmath>
 #include <numeric>
 
-
-
 #include "./graph.hpp"
 
 
@@ -498,9 +496,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
                     std::vector<graph::GraphSlice>* valid_matches,
                     core::AppConfig const &app_config) {
   for (auto candiate_match : candidate_matches) {
-
-    eds::slice_eds local_txt_slice =
-      txt_eds.get_str_slice_local(txt_letter_idx, candiate_match.get_txt_str_idx());
+    eds::slice_eds local_txt_slice = txt_eds.get_str_slice_local(txt_letter_idx, candiate_match.get_txt_str_idx());
 
     /*
       evaluate the start of the match
@@ -510,101 +506,48 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
     // explicit or implicit match
     graph::match_type g_t_m_start, g_t_m_stop, g_q_m_start, g_q_m_stop;
 
-
-    // TODO: rename t_start in N to something like match_start_in_N
-    int t_start_in_N =
-        txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) + local_txt_slice.start;
+    int t_start_in_N = txt_eds.to_global_idx(txt_letter_idx, candiate_match.get_char_idx()) + local_txt_slice.start;
 
     if (app_config.constraint) {
-  // is the active suffix valid?
-  bool valid_as{false};
+      // is the active suffix valid?
+      bool valid_as{false};
 
-  // the match starts within a string in the text
-  // second condition because actv suff can only be extended ...
-  if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
-// is valid active suffix
-valid_as = ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N] == 1);
-bool shorter_match{false};
-int pos;
-for (std::size_t idx{1}; idx < candiate_match.get_match_length(); idx++) {
-  if ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N + idx] == 1) {
-pos = idx;
-shorter_match = true;
-break;
-  }
-}
+      // the match starts within a string in the text
+      // second condition because actv suff can only be extended ...
+      if (candiate_match.get_char_idx() > 0 && qry_letter_idx > 0) {
+        valid_as = ((*txt_active_suffixes)[qry_letter_idx - 1][t_start_in_N - 1] == 1);
+      }
 
-if (!valid_as && shorter_match) {
-  t_start_in_N += pos;
-  candiate_match.get_txt_char_idx_mut() += pos;
-  candiate_match.get_match_length_mut() -= pos;
-  candiate_match.get_str_mut() = candiate_match.str.substr(pos);
-  valid_as = true;
-}
-  }
-
-  // is an exp - exp match
-  // or valid active suffix
-  // txt start is not valid so skip
-  if (candiate_match.get_char_idx() > 0 && !valid_as) { continue; }
-}
-
+      // is an exp - exp match
+      // or valid active suffix
+      // txt start is not valid so skip
+      if (candiate_match.get_char_idx() > 0 && !valid_as) { continue; }
+    }
 
     g_t_m_start = candiate_match.get_char_idx() == 0 ? graph::match_type::exp : graph::match_type::imp;
-
-    //if (candiate_match.get_char_idx() == 0) {
-      //t_m_start = n_junctions::match_type::exp;
-      //g_t_m_start = graph::match_type::exp;
-    //} else {
-      //t_m_start = n_junctions::match_type::imp;
-      //g_t_m_start = graph::match_type::imp;
-    //}
 
     /*
       evaluate the END of the match
       ===============================
     */
 
-    //int match_end = -1; // TODO: declare earlier
-
-    // TODO we don't need this anymore, right? we get this from the ST correctly
-    //int m_len= -1; // the actual length of the match
-
     // where the match ends
-    // TODO: can it be zero? should we use a smaller value?
-    // size_t is long unsigned int
-    // actual idx is -1
     std::size_t candidate_match_end =
       local_txt_slice.start + candiate_match.get_char_idx() + candiate_match.get_match_length();
 
-    // where the matched string actually ends
+    // where the matched/text string actually ends
     std::size_t txt_slice_end = local_txt_slice.start + local_txt_slice.length;
 
-    // find where the match ends within the txt string
     if (candidate_match_end >= txt_slice_end) {
       // the match went beyond the txt so we limit it to the end
       // a match that is beyond the text also lies here
-
-      //match_end = txt_slice_end; // actual idx is -1
-
-      //m_len = match_end - (txt_slice.start + match_start_in_txt);
-      //t_m_stop = n_junctions::match_type::exp;
       g_t_m_stop = graph::match_type::exp;
     } else {
-      // within the text
-      //match_end = candidate_match_end; // actual idx is -1
-      //m_len = candiate_match.match_length;
-
-      //t_m_stop = n_junctions::match_type::imp;
+      // the match ends within the text
       g_t_m_stop = graph::match_type::imp;
 
-      // handle active suffix
-      // this creates and active suffix
-      // set match end as an active suffix
+      // set the match end as an active suffix
       std::size_t t_end_in_N = txt_eds.to_global_idx(txt_letter_idx, candidate_match_end);
-      //int in_N = in_txt_N_2(candiate_match.get_txt_str_idx(), match_end);
-
-      // std::cerr << utils::indent(2) << "save as: " << qry_letter_idx << in_N;
       (*txt_active_suffixes)[qry_letter_idx][t_end_in_N] = 1;
     }
 
@@ -619,22 +562,19 @@ if (!valid_as && shorter_match) {
     int q_start_in_N = qry_offsets[candiate_match.query_str_index].start;
     std::size_t qlen = qry_offsets[candiate_match.query_str_index].length;
 
-    g_q_m_start = graph::match_type::exp;
-    g_q_m_stop = candiate_match.is_beyond_txt() || (candiate_match.get_match_length() < qlen)
-      ? graph::match_type::imp : graph::match_type::exp;
-        //g_q_m_stop = candiate_match.is_beyond_txt() ? graph::match_type::imp
-        //                                      : graph::match_type::exp;
+    bool is_beyond_txt {candidate_match_end > txt_slice_end};
 
+    g_q_m_start = graph::match_type::exp;
+    g_q_m_stop = is_beyond_txt || (candiate_match.get_match_length() < qlen) ? graph::match_type::imp : graph::match_type::exp;
 
     if (app_config.constraint && g_q_m_stop == graph::match_type::imp && g_t_m_stop == graph::match_type::imp) {
       continue;
     }
 
     // create an active suffix in the query
-    if (candiate_match.is_beyond_txt()) {
-      (*qry_active_suffixes)[txt_letter_idx][q_start_in_N + candiate_match.get_match_length()] = 1;
+    if (q_start_in_N + candiate_match.get_match_length() < q_start_in_N + qlen) {
+      (*qry_active_suffixes)[txt_letter_idx][q_start_in_N + candiate_match.get_match_length() - 1 ] = 1;
     }
-
 
     graph::MatchTypePairUnion u = txt == core::ed_string_e::t1
       ? graph::MatchTypePairUnion(g_t_m_start, g_t_m_stop, g_q_m_start, g_q_m_stop)
@@ -708,8 +648,9 @@ void graph::Graph::create_edge(
 * @param[in] app_config
 * return an intersection graph
 */
-graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1, eds::EDS &eds_t2, core::AppConfig const &app_config) {
-
+graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
+                                               eds::EDS &eds_t2,
+                                               core::AppConfig const &app_config) {
   size_t size_t1 = eds_t1.get_size();
   size_t size_t2 = eds_t2.get_size();
 
@@ -764,8 +705,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1, eds::EDS &eds_t
       j_boundary = eds_t2.get_letter_boundaries(j);
       i_boundary = eds_t1.get_letter_boundaries(i);
 
-      graph::BoundaryUnion bounds =
-        graph::BoundaryUnion(i_boundary, j_boundary);
+      graph::BoundaryUnion bounds = graph::BoundaryUnion(i_boundary, j_boundary);
 
       /*
         Handle epsilon (Ɛ)
@@ -875,9 +815,6 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1, eds::EDS &eds_t
       }
 
       clean_up();
-
-
-      //std::cerr << "i: " << i << " j: " << j << std::endl;
 
       /*
         Handle matching
@@ -1321,23 +1258,14 @@ std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds
     max = 0;
   }
 
-
-  //std::size_t sum_vals = ms_q.sum() + ms_w.sum();
-  //std::size_t sum_size = len_t1 + len_t2;
 #ifdef DEBUG
     std::cout<< "MS[S_1,S_2]: ";
-    for(int i=0;i<len_t1;++i){
-        std::cout << ms_w[i]<<" ";
-    }
+    for(int i=0;i<len_t1;++i){ std::cout << ms_w[i]<<" "; }
     std::cout<<std::endl;
     std::cout<< "MS[S_2,S_1]: ";
-    for(int i=0;i<len_t2;++i){
-        std::cout << ms_q[i]<<" ";
-    }
+    for(int i=0;i<len_t2;++i){ std::cout << ms_q[i]<<" "; }
     std::cout<<std::endl;
 #endif
-
-  //return static_cast<std::double_t>(sum_vals) / static_cast<std::double_t>(sum_size);
 
   std::double_t t1_avg = static_cast<std::double_t>(ms_w.sum()) / static_cast<std::double_t>(len_t1);
   std::double_t t2_avg = static_cast<std::double_t>(ms_q.sum()) / static_cast<std::double_t>(len_t2);

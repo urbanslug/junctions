@@ -7,3 +7,4 @@
 #include "./graph_tests.cc"
 #include "./suffix_tree_tests.cc"
 #include "./intersect_tests.cc"
+#include "./matching_stats_tests.cc"
