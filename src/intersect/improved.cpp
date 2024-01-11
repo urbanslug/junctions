@@ -280,16 +280,16 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
     -----------------------
   */
 
-  std::vector<std::pair<match_st::STvertex, std::string>> w_suffix_trees;
+  std::vector<match_st::meta_st> w_suffix_trees;
   w_suffix_trees.reserve(len_w);
-  std::vector<std::pair<match_st::STvertex, std::string>> q_suffix_trees;
+  std::vector<match_st::meta_st> q_suffix_trees;
   q_suffix_trees.reserve(len_q);
 
   auto t0 = core::Time::now();
   std::chrono::duration<double> timeRefRead;
 
-  gen_suffix_tree(eds_t1, &w_suffix_trees);
-  gen_suffix_tree(eds_t2, &q_suffix_trees);
+  gen_suffix_tree_(eds_t1, &w_suffix_trees);
+  gen_suffix_tree_(eds_t2, &q_suffix_trees);
 
   // std::thread t1(gen_suffix_tree, std::ref(eds_t1), len_w, &w_suffix_trees);
   // std::thread t2(gen_suffix_tree, std::ref(eds_t2), len_q, &q_suffix_trees);
@@ -473,12 +473,12 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
       //std::cout << "Match positions:  \n";
       //std::cout << "text T1: " << i << " query T2: " << j << "\n";
 
-      core::perform_matching(
-        eds_t1,
-        i,
-        &w_suffix_trees[i],
-        eds_t2.get_strs(j),
-        &candidate_matches);
+      core::perform_matching_(eds_t1,
+                              i,
+                              j,
+                              w_suffix_trees[i],
+                              eds_t2.get_strs(j),
+                              &candidate_matches);
 
       // print candidate matches
       // -----------------------
@@ -507,13 +507,12 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
       //std::cout << "Match positions: \n";
       //std::cout << "text T2: " << j << " query T1: " << i << "\n";
 
-      core::perform_matching(
-        eds_t2,
-        j,
-        &q_suffix_trees[j],
-        eds_t1.get_strs(i),
-        &candidate_matches);
-
+      core::perform_matching_(eds_t2,
+                              j,
+                              i,
+                              q_suffix_trees[j],
+                              eds_t1.get_strs(i),
+                              &candidate_matches);
 
       /*
       for (auto &m : candidate_matches) {
@@ -533,10 +532,8 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
     }
   }
 
-  std::vector<std::size_t> q_cols =
-    eds_t2.get_letter_ends_global(eds_t2.get_length() - 1);
-  std::vector<std::size_t> w_cols =
-    eds_t1.get_letter_ends_global(eds_t1.get_length() - 1);
+  std::vector<std::size_t> q_cols = eds_t2.get_letter_ends_global(eds_t2.get_length() - 1);
+  std::vector<std::size_t> w_cols = eds_t1.get_letter_ends_global(eds_t1.get_length() - 1);
 
   bool accept_w{false}, accept_q{false};
   for (size_t col : q_cols) {
