@@ -176,20 +176,13 @@ struct meta_st {
  * @return a vector of STQueryResult
  */
 std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
-                                                    STvertex *current_vertex,
-                                                    const char *x,
+                                                    const internal_st_vertex &root,
+                                                    const char *text,
+                                                    std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
+                                                    std::size_t qry_letter_idx,
                                                     bool end_in_imp_imp = false);
 
-std::vector<match_st::STQueryResult> FindEndIndexes_(const char *query,
-                                                     const internal_st_vertex &root,
-                                                     const char *text,
-                                                     std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
-                                                     std::size_t qry_letter_idx,
-                                                     bool end_in_imp_imp = false);
-
 STvertex *Create_suffix_tree(const char *x, int n);
-
-void gen_suffix_tree(eds::EDS &eds, std::vector<std::pair<STvertex, std::string>> *suffix_trees);
 
 // a suffix tree real root the text string and internally marked nodes from
 // previous searches
@@ -362,19 +355,12 @@ public:
   std::size_t& get_match_length_mut() { return this->q_res.get_match_length_mut(); }
 };
 
-
-void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
-                      std::pair<match_st::STvertex, std::string> *text, // TODO: rename param
+void perform_matching(eds::EDS &txt_eds,
+                      std::size_t txt_letter_idx,
+                      std::size_t qry_letter_idx,
+                      match_st::meta_st& meta_st_,
                       std::vector<std::string> const &queries,
                       std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
-
-
-void perform_matching_(eds::EDS &txt_eds,
-                       std::size_t txt_letter_idx,
-                       std::size_t qry_letter_idx,
-                       match_st::meta_st& meta_st_,
-                       std::vector<std::string> const &queries,
-                       std::vector<EDSMatch> *candidate_matches, bool end_in_imp_imp = false);
 
 void mark_query_nodes(eds::EDS &qry_eds,
                       std::size_t qry_letter_idx,

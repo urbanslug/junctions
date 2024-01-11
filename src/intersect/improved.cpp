@@ -64,7 +64,6 @@ bool exp_exp(int i, int j,
              core::bool_matrix const &t1, core::bool_matrix const &t2) {
   if (i == 0 && j == 0) { return true; }
 
-
   if (i > 0 && j > 0) {
 
     bool exp_1{false}, exp_2{false};
@@ -73,7 +72,6 @@ bool exp_exp(int i, int j,
       std::size_t l = x.length > 0 ? x.length - 1 : 0;
       if (t2[i-1][x.start + l]) { exp_1 = true; break; }
     }
-
 
     for (auto x : eds_t1.get_slice(i-1)) {
       std::size_t l = x.length > 0 ? x.length - 1 : 0;
@@ -85,11 +83,9 @@ bool exp_exp(int i, int j,
   else if (i == 0 && j > 0) {
     if (!eds_t2.is_letter_eps(j-1) ) { return false; }
 
-
     for (auto x : eds_t1.get_slice(0)) {
       if (t1[j-1][x.start + x.length -1]) { return true; }
     }
-
   }
   else if (i > 0 && j == 0) {
     if (!eds_t1.is_letter_eps(i-1)) { return false; }
@@ -106,44 +102,42 @@ bool imp_exp(int i, int j,
              eds::EDS& eds_t1, eds::EDS& eds_t2,
              core::bool_matrix const &t1, core::bool_matrix const &t2) {
 
-  if (j> 0) {
+  if (j == 0) { return false;}
 
-std::set<std::size_t> str_ends;
-for (auto x : eds_t1.get_slice(i)) {
- if (!x.eps_slice){ str_ends.insert(x.start +x.length -1 ); }
-}
-
-std::size_t col = eds_t1.get_letter_boundaries(i).left();
-std::size_t end = eds_t1.get_letter_boundaries(i).right();
-for (; col <= end; col++) {
-  if (!str_ends.count(col) && t1[j - 1][col]) {return true; }
-}
+  std::set<std::size_t> str_ends;
+  for (auto x : eds_t1.get_slice(i)) {
+    if (!x.eps_slice){ str_ends.insert(x.start +x.length -1 ); }
   }
-return false;
+
+  std::size_t col = eds_t1.get_letter_boundaries(i).left();
+  std::size_t end = eds_t1.get_letter_boundaries(i).right();
+  for (; col <= end; col++) {
+    if (!str_ends.count(col) && t1[j - 1][col]) {return true; }
+  }
+
+  return false;
 }
 
 bool exp_imp(int i, int j,
              eds::EDS& eds_t1, eds::EDS& eds_t2,
              core::bool_matrix const &t1, core::bool_matrix const &t2) {
 
-  if (i> 0) {
+  if (i == 0) { return false; }
 
-// to be implicit you must match only internally
-std::set<std::size_t> str_ends;
-for (auto x : eds_t2.get_slice(j)) {
-  if (!x.eps_slice){ str_ends.insert(x.start +x.length -1 ); }
-}
+  // to be implicit you must match only internally
+  std::set<std::size_t> str_ends;
+  for (auto x : eds_t2.get_slice(j)) {
+    if (!x.eps_slice){ str_ends.insert(x.start +x.length -1 ); }
+  }
 
-std::size_t col = eds_t2.get_letter_boundaries(j).left();
-std::size_t end = eds_t2.get_letter_boundaries(j).right();
-for (; col <= end; col++) {
-  if (!str_ends.count(col) && t2[i - 1][col]) {return true; }
-}
+  std::size_t col = eds_t2.get_letter_boundaries(j).left();
+  std::size_t end = eds_t2.get_letter_boundaries(j).right();
+  for (; col <= end; col++) {
+    if (!str_ends.count(col) && t2[i - 1][col]) {return true; }
   }
 
   return false;
 }
-
 
 
 /**
@@ -466,12 +460,12 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
       //std::cout << "Match positions:  \n";
       //std::cout << "text T1: " << i << " query T2: " << j << "\n";
 
-      core::perform_matching_(eds_t1,
-                              i,
-                              j,
-                              w_suffix_trees[i],
-                              eds_t2.get_strs(j),
-                              &candidate_matches);
+      core::perform_matching(eds_t1,
+                             i,
+                             j,
+                             w_suffix_trees[i],
+                             eds_t2.get_strs(j),
+                             &candidate_matches);
 
       // print candidate matches
       // -----------------------
@@ -500,12 +494,12 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
       //std::cout << "Match positions: \n";
       //std::cout << "text T2: " << j << " query T1: " << i << "\n";
 
-      core::perform_matching_(eds_t2,
-                              j,
-                              i,
-                              q_suffix_trees[j],
-                              eds_t1.get_strs(i),
-                              &candidate_matches);
+      core::perform_matching(eds_t2,
+                             j,
+                             i,
+                             q_suffix_trees[j],
+                             eds_t1.get_strs(i),
+                             &candidate_matches);
 
       /*
       for (auto &m : candidate_matches) {

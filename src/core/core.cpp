@@ -65,6 +65,7 @@ std::ostream &operator<<(std::ostream &os, const ed_string_e &value) {
   return os;
 }
 
+
 /**
  *
  * slices exist in l
@@ -73,66 +74,13 @@ std::ostream &operator<<(std::ostream &os, const ed_string_e &value) {
  * @param[out] candidate_matches matches_found in the context of the degenerate
  * letter and not N
  */
-void perform_matching(eds::EDS &txt_eds, std::size_t txt_letter_idx,
-                      std::pair<match_st::STvertex, std::string> *text,
+void perform_matching(eds::EDS &txt_eds,
+                      std::size_t txt_letter_idx,
+                      std::size_t qry_letter_idx,
+                      match_st::meta_st& meta_st_,
                       std::vector<std::string> const &queries,
                       std::vector<EDSMatch>* candidate_matches,
                       bool end_in_imp_imp) {
-
-  std::vector<match_st::STQueryResult> match_positions;
-
-  for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
-    std::string qry_str = queries[qry_str_idx];
-
-    //std::cout << "qry: " << qry_str << " txt: " << text->second << std::endl;
-
-    match_positions =
-      match_st::FindEndIndexes(qry_str.c_str(),
-                               &text->first,
-                               text->second.c_str(),
-                               end_in_imp_imp);
-
-    for (match_st::STQueryResult match_pos : match_positions) {
-
-      /*
-      std::cout << "char idx: " << match_pos.get_char_idx()
-                << " txt idx: " << match_pos.get_txt_str_idx()
-                << " match len: " << match_pos.get_match_length()
-                << std::endl;
-      */
-
-      eds::slice_eds local_txt_slice =
-        txt_eds.get_str_slice_local(txt_letter_idx, match_pos.get_txt_str_idx());
-
-      // subtruct number of dollar signs which correspond to str idx
-      // subtruct local slice start position
-      match_pos.get_txt_char_idx_mut() -=
-        (match_pos.get_txt_str_idx() + local_txt_slice.start);
-
-      candidate_matches->push_back(
-        EDSMatch(qry_str_idx,
-                 qry_str.substr(0, match_pos.get_match_length()),
-                 match_pos));
-    }
-  }
-}
-
-
-/**
- *
- * slices exist in l
- * @param[in]  queries           queries
- * @param[in]  text              text
- * @param[out] candidate_matches matches_found in the context of the degenerate
- * letter and not N
- */
-void perform_matching_(eds::EDS &txt_eds,
-                       std::size_t txt_letter_idx,
-                       std::size_t qry_letter_idx,
-                       match_st::meta_st& meta_st_,
-                       std::vector<std::string> const &queries,
-                       std::vector<EDSMatch>* candidate_matches,
-                       bool end_in_imp_imp) {
   std::vector<match_st::STQueryResult> match_positions;
 
   std::set<match_st::internal_st_vertex> st_vertices;
@@ -151,12 +99,12 @@ void perform_matching_(eds::EDS &txt_eds,
 
 
       match_positions =
-          match_st::FindEndIndexes_(qry_str.c_str(),
-                                    r_,
-                                    meta_st_.text.c_str(),
-                                    meta_st_.marked_nodes,
-                                    qry_letter_idx,
-                                    end_in_imp_imp);
+          match_st::FindEndIndexes(qry_str.c_str(),
+                                   r_,
+                                   meta_st_.text.c_str(),
+                                   meta_st_.marked_nodes,
+                                   qry_letter_idx,
+                                   end_in_imp_imp);
 
       for (match_st::STQueryResult match_pos : match_positions) {
 
@@ -192,13 +140,12 @@ void mark_query_nodes(eds::EDS &qry_eds,
 
     if (m.get_match_length() < local_qry_slice.length) {
       match_st::internal_st_vertex r{meta_st_.root, 0};
-      match_st::FindEndIndexes_(m.str.c_str(),
-                                r,
-                                meta_st_.text.c_str(),
-                                meta_st_.marked_nodes,
-                                txt_letter_idx,
-                                true);
-
+      match_st::FindEndIndexes(m.str.c_str(),
+                               r,
+                               meta_st_.text.c_str(),
+                               meta_st_.marked_nodes,
+                               txt_letter_idx,
+                               true);
     }
 
     seen.insert(m.str);

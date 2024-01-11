@@ -826,13 +826,13 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
       // Text => T_1[i]
       // ---------------------------
 
-      core::perform_matching_(eds_t1,
-                              i,
-                              j,
-                              w_suffix_trees[i],
-                              eds_t2.get_strs(j),
-                              &candidate_matches,
-                              true);
+      core::perform_matching(eds_t1,
+                             i,
+                             j,
+                             w_suffix_trees[i],
+                             eds_t2.get_strs(j),
+                             &candidate_matches,
+                             true);
 
       core::mark_query_nodes(eds_t2,
                              j,
@@ -860,13 +860,13 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
        // Text => T_2[j]
        // ---------------------------
 
-       core::perform_matching_(eds_t2,
-                               j,
-                               i,
-                               q_suffix_trees[j],
-                               eds_t1.get_strs(i),
-                               &candidate_matches,
-                               true);
+       core::perform_matching(eds_t2,
+                              j,
+                              i,
+                              q_suffix_trees[j],
+                              eds_t1.get_strs(i),
+                              &candidate_matches,
+                              true);
 
        core::mark_query_nodes(eds_t1,
                               i,
