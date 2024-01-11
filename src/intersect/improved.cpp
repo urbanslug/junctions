@@ -291,11 +291,6 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
   gen_suffix_tree_(eds_t1, &w_suffix_trees);
   gen_suffix_tree_(eds_t2, &q_suffix_trees);
 
-  // std::thread t1(gen_suffix_tree, std::ref(eds_t1), len_w, &w_suffix_trees);
-  // std::thread t2(gen_suffix_tree, std::ref(eds_t2), len_q, &q_suffix_trees);
-  // t1.join();
-  // t2.join();
-
   timeRefRead = core::Time::now() - t0;
 
   /*
@@ -307,8 +302,6 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
   std::vector<int> match_positions;
 
   std::vector<core::EDSMatch> candidate_matches;
-
-  //bool j_can_match{false}, i_can_match{false};
 
   // TODO: make these ints size_t
   for (int i = 0; i < len_w; i++) {
