@@ -36,6 +36,7 @@ ADD_LIBRARY(LibsModule
   src/core/core.cpp
   src/core/utils.cpp
   src/graph/graph.cpp
+  src/graph/operations.cpp
   src/intersect/improved.cpp
   src/core/suffix_tree.cpp
   src/intersect/naive.cpp
@@ -60,8 +61,8 @@ file(MAKE_DIRECTORY ${BINARY_DIR}/)
 
 
 add_custom_command(TARGET junctions
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:junctions> ../${BINARY_DIR}/)
+		   POST_BUILD
+		   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:junctions> ../${BINARY_DIR}/)
 # ------
 # Tests
 # ------

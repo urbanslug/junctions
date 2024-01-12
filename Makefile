@@ -47,6 +47,7 @@ else
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/cli/app.cpp -o bin/app.o
 endif
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/graph/graph.cpp -o bin/graph.o
+	g++ ${RELEASE_COMPILER_FLAGS} -c src/graph/operations.cpp -o bin/operations.o
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/intersect/improved.cpp -o bin/improved.o
 	g++ ${RELEASE_COMPILER_FLAGS} -c src/intersect/naive.cpp -o bin/naive.o
 
@@ -68,5 +69,6 @@ else
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/cli/app.cpp -o bin/app.o
 endif
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/graph/graph.cpp -o bin/graph.o
+	g++ ${DEBUG_COMPILER_FLAGS} -c src/graph/operations.cpp -o bin/operations.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/intersect/improved.cpp -o bin/improved.o
 	g++ ${DEBUG_COMPILER_FLAGS} -c src/intersect/naive.cpp -o bin/naive.o

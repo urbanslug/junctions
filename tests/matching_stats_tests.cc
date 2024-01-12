@@ -47,13 +47,19 @@ TEST(GraphTest, MatchStatsUnconstrained) {
   ed_string_t2 = "{CAC,C}{AA,CA}";
   setup_and_run();
   EXPECT_EQ(similarity_measure, 5.5);
+
+
+  ed_string_t1 = "{ACA,AC,AA}{C,AC,CAA}";
+  ed_string_t2 = "{AC,AA}{CC,CA,CCC}{CC}{AC}";
+  setup_and_run();
+  EXPECT_EQ(similarity_measure, 6.0);
 }
 
 
 TEST(GraphTest, MatchStatsConstrained) {
   eds::EDS t1, t2;
   std::string input_string {};
-  std::double_t similarity_measure;
+  double_t similarity_measure;
   std::string ed_string_t1 {}, ed_string_t2 {};
 
   core::AppConfig config;
@@ -68,8 +74,15 @@ TEST(GraphTest, MatchStatsConstrained) {
     similarity_measure = graph::similarity(g, t1, t2);
   };
 
+
   ed_string_t1 = "{AC}{CC}";
   ed_string_t2 = "{A,AC}";
+  setup_and_run();
+  EXPECT_EQ(similarity_measure, 3);
+
+
+  ed_string_t1 = "{CCC}{CAA,ACC}{CAC,CC}";
+  ed_string_t2 = "{AAC,AA,CA}{C}{CA,ACA}";
   setup_and_run();
   EXPECT_EQ(similarity_measure, 3);
 }

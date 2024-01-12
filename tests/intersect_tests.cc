@@ -7,7 +7,7 @@
 TEST(IntersectionTest, LacksIntersection) {
   eds::EDS w, q;
   std::string ed_string_w, ed_string_q;
-  bool res; // result
+  bool res_imp { false }, res_naive { false }; // result
   core::AppConfig params;
   params.set_verbosity(0); // TODO: remove
 
@@ -16,7 +16,8 @@ TEST(IntersectionTest, LacksIntersection) {
     w = eds::Parser::from_string(ed_string_w);
     q = eds::Parser::from_string(ed_string_q);
 
-    res = intersect::improved::has_intersection(w, q);
+    res_imp = intersect::improved::has_intersection(w, q);
+    res_naive = intersect::naive::has_intersection(w, q);
     // TODO: call naive
     //res = intersect::improved(w, q, params);
   };
@@ -24,7 +25,15 @@ TEST(IntersectionTest, LacksIntersection) {
   ed_string_w = "{AT,TC}{ATC,T}";
   ed_string_q = "{TC,G}{CG,G}";
   setup_and_run();
-  EXPECT_EQ(res, false);
+  EXPECT_EQ(res_naive, false);
+  EXPECT_EQ(res_imp, false);
+
+
+  ed_string_w = "{C,AA,AAA}";
+  ed_string_q = "{AA,ACA}{A,}{AAA}";
+  setup_and_run();
+  EXPECT_EQ(res_naive, false);
+  EXPECT_EQ(res_imp, false);
 }
 
 

@@ -27,19 +27,19 @@ void handle_info(core::AppConfig const &params);
 void dispatch(core::AppConfig const& params) {
   switch (params.get_task()) {
   case core::task::compute_graph:
-	handle_graph(params);
-	break;
+    handle_graph(params);
+    break;
   case core::task::check_intersection:
-	handle_intersection(params);
-	break;
+    handle_intersection(params);
+    break;
   case core::task::info:
-	handle_info(params);
-	break;
+    handle_info(params);
+    break;
   case core::task::unset:
-	break;
+    break;
   default:
-	std::string e = "Unhandled task: report a bug\n";
-	throw std::invalid_argument(e);
+    std::string e = "Unhandled task: report a bug\n";
+    throw std::invalid_argument(e);
   }
 }
 
@@ -59,31 +59,31 @@ void handle_info(core::AppConfig const &params) {
   std::size_t tw{20}; // title width
 
   std::cout << std::left << std::setw(tw) << "Size (N)"
-			<< std::left << std::setw(tw) << "Length (n)"
-			<< std::left << std::setw(tw) << "String Count (m)"
-			<< std::left << std::setw(tw) << "Epsilon Count"
-			<< std::left << std::setw(tw) << "File"
-			<< "\n";
+            << std::left << std::setw(tw) << "Length (n)"
+            << std::left << std::setw(tw) << "String Count (m)"
+            << std::left << std::setw(tw) << "Epsilon Count"
+            << std::left << std::setw(tw) << "File"
+            << "\n";
   for (auto fp: params.input_files) {
-	core::file_format format = utils::extract_extension(fp.second);
+    core::file_format format = utils::extract_extension(fp.second);
 #ifdef AVX2_SUPPORTED
-	e = format == core::file_format::msa ?
-	  eds::Parser::from_msa(fp.second):
-	  eds::Parser::from_eds(fp.second);
+    e = format == core::file_format::msa ?
+      eds::Parser::from_msa(fp.second):
+      eds::Parser::from_eds(fp.second);
 #else
-	if (format == core::file_format::msa) {
-	  std::cerr << "[junctions::app::handle_info] ERROR: junctions was not compiled with MSA support\n";
-	  exit(1);
-	}
-	e = eds::Parser::from_eds(fp.second);
+    if (format == core::file_format::msa) {
+      std::cerr << "[junctions::app::handle_info] ERROR: junctions was not compiled with MSA support\n";
+      exit(1);
+    }
+    e = eds::Parser::from_eds(fp.second);
 #endif
 
-	std::cout << std::left << std::setw(w) << e.get_size()
-			  << std::left << std::setw(w) << e.get_length()
-			  << std::left << std::setw(w) << e.get_str_count()
-			  << std::left << std::setw(w) << e.get_eps_count()
-			  << std::left << std::setw(w) << fp.second
-			  << "\n";
+    std::cout << std::left << std::setw(w) << e.get_size()
+              << std::left << std::setw(w) << e.get_length()
+              << std::left << std::setw(w) << e.get_str_count()
+              << std::left << std::setw(w) << e.get_eps_count()
+              << std::left << std::setw(w) << fp.second
+              << "\n";
   }
 }
 
@@ -99,22 +99,22 @@ void handle_intersection(core::AppConfig const &params) {
 
 #ifdef AVX2_SUPPORTED
   t1 = params.t1_format == core::file_format::msa ?
-	eds::Parser::from_msa(params.get_w_fp().second) :
-	eds::Parser::from_eds(params.get_w_fp().second);
+    eds::Parser::from_msa(params.get_w_fp().second) :
+    eds::Parser::from_eds(params.get_w_fp().second);
 
   t2 = params.t2_format == core::file_format::msa ?
-	eds::Parser::from_msa(params.get_q_fp().second) :
-	eds::Parser::from_eds(params.get_q_fp().second);
+    eds::Parser::from_msa(params.get_q_fp().second) :
+    eds::Parser::from_eds(params.get_q_fp().second);
 #else
-  	if (params.t1_format == core::file_format::msa || params.t2_format == core::file_format::msa) {
-	  std::cerr << "[junctions::app::handle_intersection] ERROR: junctions was not compiled with MSA support\n";
-	  exit(1);
-	}
+    if (params.t1_format == core::file_format::msa || params.t2_format == core::file_format::msa) {
+      std::cerr << "[junctions::app::handle_intersection] ERROR: junctions was not compiled with MSA support\n";
+      exit(1);
+    }
 
-	t1 =  eds::Parser::from_eds(params.get_w_fp().second);
-	t2 = eds::Parser::from_eds(params.get_q_fp().second);
+    t1 =  eds::Parser::from_eds(params.get_w_fp().second);
+    t2 = eds::Parser::from_eds(params.get_q_fp().second);
 #endif
-  
+
   // w = eds::Parser::from_eds(params.get_w_fp().second);
   // q = eds::Parser::from_eds(params.get_q_fp().second);
 
@@ -122,66 +122,66 @@ void handle_intersection(core::AppConfig const &params) {
   std::chrono::duration<double> timeRefRead;
 
   auto report_res = [](bool res) {
-	std::cout << "INFO "
-			  << (res ? "intersection exists" : "no intersection")
-			  << "\n";
+    std::cout << "INFO "
+              << (res ? "intersection exists" : "no intersection")
+              << "\n";
   };
 
   auto err = [&]() {
-	std::cerr << "INFO incompatible results "
-			  << "(naive " << res_n << " improved " << res_i
-			  << "). Please report as a bug.\n";
-	exit(1);
+    std::cerr << "INFO incompatible results "
+              << "(naive " << res_n << " improved " << res_i
+              << "). Please report as a bug.\n";
+    exit(1);
   };
 
   auto report_time = [&](std::string const& n) {
-	if (params.verbosity() > 0) {
-	  std::cerr << "INFO Time spent by " + n + " algorithm: "
-				<< timeRefRead.count() << " sec\n";
-	}
+    if (params.verbosity() > 0) {
+      std::cerr << "INFO Time spent by " + n + " algorithm: "
+                << timeRefRead.count() << " sec\n";
+    }
   };
 
   auto t0 = core::Time::now();
 
   switch (params.get_algo()) {
   case core::algorithm::improved: {
-	res_i = intersect::improved::has_intersection(t1, t2);
-	timeRefRead = core::Time::now() - t0;
-	report_res(res_i);
-	report_time("improved");
+    res_i = intersect::improved::has_intersection(t1, t2);
+    timeRefRead = core::Time::now() - t0;
+    report_res(res_i);
+    report_time("improved");
   }
-	break;
+    break;
   case core::algorithm::naive: {
-	res_n = intersect::naive::has_intersection(t1, t2);
-	timeRefRead = core::Time::now() - t0;
-	report_res(res_n);
-	report_time("naive");
+    res_n = intersect::naive::has_intersection(t1, t2);
+    timeRefRead = core::Time::now() - t0;
+    report_res(res_n);
+    report_time("naive");
   }
-	break;
+    break;
   case core::algorithm::both: {
-	// Both (for tests & benchmarks)
-	// -----------------------------
-	res_i = intersect::improved::has_intersection(t1, t2);
-	timeRefRead = core::Time::now() - t0;
-	report_res(res_i);
-	report_time("improved");
+    // Both (for tests & benchmarks)
+    // -----------------------------
+    res_i = intersect::improved::has_intersection(t1, t2);
+    timeRefRead = core::Time::now() - t0;
+    report_res(res_i);
+    report_time("improved");
 
-	t0 = core::Time::now();
-	res_n = intersect::naive::has_intersection(t1, t2);
-	timeRefRead = core::Time::now() - t0;
+    t0 = core::Time::now();
+    res_n = intersect::naive::has_intersection(t1, t2);
+    timeRefRead = core::Time::now() - t0;
 
-	if (res_i != res_n) { err(); }
+    if (res_i != res_n) { err(); }
 
-	report_time("naive");
+    report_time("naive");
   }
-	break;
+    break;
   default:
-	std::string e =
-	  "could not determine algorithm to use: " +
-	  std::string(__FILE__) + ":" + std::to_string(__LINE__) +
-	  " report a bug\n";
-	throw std::invalid_argument(e);
-	;
+    std::string e =
+      "could not determine algorithm to use: " +
+      std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+      " report a bug\n";
+    throw std::invalid_argument(e);
+    ;
   }
 }
 
@@ -189,7 +189,7 @@ void handle_intersection(core::AppConfig const &params) {
 // graph
 // -----
 
-  
+
 /**
  * Compute Intersection Graph and...
  *
@@ -200,159 +200,119 @@ void handle_graph(core::AppConfig const &app_config) {
   // q = eds::Parser::from_eds(params.get_q_fp().second);
   /*
 #ifndef AVX2_SUPPORTED
-	if (params.w_format == core::file_format::msa || params.q_format == core::file_format::msa) {
-	  std::cerr << "[junctions::app::handle_graph] ERROR: junctions was not compiled with MSA support\n";
-	  exit(1);
-	}
+    if (params.w_format == core::file_format::msa || params.q_format == core::file_format::msa) {
+      std::cerr << "[junctions::app::handle_graph] ERROR: junctions was not compiled with MSA support\n";
+      exit(1);
+    }
 #endif
 */
-  
+
 #ifdef AVX2_SUPPORTED
   t1 = app_config.t1_format == core::file_format::msa ?
-	eds::Parser::from_msa(app_config.get_w_fp().second) :
-	eds::Parser::from_eds(app_config.get_w_fp().second);
+    eds::Parser::from_msa(app_config.get_w_fp().second) :
+    eds::Parser::from_eds(app_config.get_w_fp().second);
 
   t2 = app_config.t2_format == core::file_format::msa ?
-	eds::Parser::from_msa(app_config.get_q_fp().second) :
-	eds::Parser::from_eds(app_config.get_q_fp().second);
+    eds::Parser::from_msa(app_config.get_q_fp().second) :
+    eds::Parser::from_eds(app_config.get_q_fp().second);
 #else
-	if (app_config.t1_format == core::file_format::msa || app_config.t2_format == core::file_format::msa) {
-	  std::cerr << "[junctions::app::handle_graph] ERROR: junctions was not compiled with MSA support\n";
-	  exit(1);
-	}
+    if (app_config.t1_format == core::file_format::msa || app_config.t2_format == core::file_format::msa) {
+      std::cerr << "[junctions::app::handle_graph] ERROR: junctions was not compiled with MSA support\n";
+      exit(1);
+    }
 
-	t1 = eds::Parser::from_eds(app_config.get_w_fp().second);
-	t2 = eds::Parser::from_eds(app_config.get_q_fp().second);
+    t1 = eds::Parser::from_eds(app_config.get_w_fp().second);
+    t2 = eds::Parser::from_eds(app_config.get_q_fp().second);
 #endif
-  
+
   std::chrono::duration<double> timeRefRead;
   auto t0 = core::Time::now();
 
   if (app_config.verbosity() > 0) {
-	std::cerr << "INFO computing intersection graph\n";
+    std::cerr << "INFO computing intersection graph\n";
   }
 
   graph::Graph g = graph::compute_intersection_graph(t1, t2, app_config);
   timeRefRead = core::Time::now() - t0;
 
   if (app_config.verbosity() > 0) {
-	std::cerr << "INFO Time spent computing intersection graph: "
-			  << timeRefRead.count() << " sec\n";
+    std::cerr << "INFO Time spent computing intersection graph: "
+              << timeRefRead.count() << " sec\n";
   }
 
   // generate the graph in dot format
   if (app_config.gen_dot()) {
-	if (app_config.verbosity() > 0) {
-	  std::cerr << "INFO generating graph in dot format\n";
-	}
-	  g.print_dot();
+    if (app_config.verbosity() > 0) {
+      std::cerr << "INFO generating graph in dot format\n";
+    }
+      g.print_dot();
   }
 
   // compute the size of the multiset
   if (app_config.multiset()) {
-	if (app_config.verbosity() > 0) {
-	  std::cerr << "INFO computing the size of the multiset\n";
-	  }
-	std::cout << "Size of the mutlitset: " << graph::multiset(g) << "\n";
+    if (app_config.verbosity() > 0) {
+      std::cerr << "INFO computing the size of the multiset\n";
+      }
+    std::cout << "Size of the mutlitset: " << graph::multiset(g) << "\n";
   }
 
-  
+
   // compute the length of the longest witness
   if (app_config.compute_witness()) {
-	int witness_len;
-	switch (app_config.get_witness_choice()) {
-	case core::witness::longest:
-	  if (app_config.verbosity() > 0) {
-		std::cerr << "INFO computing the longest witness\n";
-	  }
+    int witness_len;
+    switch (app_config.get_witness_choice()) {
+    case core::witness::longest:
+      if (app_config.verbosity() > 0) {
+        std::cerr << "INFO computing the longest witness\n";
+      }
 
-	  t0 = core::Time::now();
-	  witness_len = graph::longest_witness(g);
-	  timeRefRead = core::Time::now() - t0;
+      t0 = core::Time::now();
+      witness_len = graph::longest_witness(g);
+      timeRefRead = core::Time::now() - t0;
 
-	  std::cout << "longest witness is: " << witness_len << " chars long.\n";
+      std::cout << "longest witness is: " << witness_len << " chars long.\n";
 
-	  if (app_config.verbosity() > 0) {
-		std::cerr << "INFO Time spent computing the longest witness: "
-				  << timeRefRead.count() << " sec\n";
-	  }
+      if (app_config.verbosity() > 0) {
+        std::cerr << "INFO Time spent computing the longest witness: "
+                  << timeRefRead.count() << " sec\n";
+      }
 
-	  break;
+      break;
 
-	case core::witness::shortest:
-	  if (app_config.verbosity() > 0) {
-		std::cerr << "INFO computing the shortest witness\n";
-	  }
+    case core::witness::shortest:
+      if (app_config.verbosity() > 0) {
+        std::cerr << "INFO computing the shortest witness\n";
+      }
 
-	  t0 = core::Time::now();
-	  witness_len =  graph::shortest_witness(g);
-	  timeRefRead = core::Time::now() - t0;
+      t0 = core::Time::now();
+      witness_len =  graph::shortest_witness(g);
+      timeRefRead = core::Time::now() - t0;
 
-	  std::cout << "shortests witness is: " << witness_len << " chars long.\n";
+      std::cout << "shortests witness is: " << witness_len << " chars long.\n";
 
-	  if (app_config.verbosity() > 0) {
-		std::cerr << "INFO Time spent computing the shortest witness: "
-				  << timeRefRead.count() << " sec\n";
-	  }
-	  break;
+      if (app_config.verbosity() > 0) {
+        std::cerr << "INFO Time spent computing the shortest witness: "
+                  << timeRefRead.count() << " sec\n";
+      }
+      break;
 
-	default:
-	  break;
-	}
+    default:
+      break;
+    }
   }
 
   if (app_config.compute_dist) {
-	std::double_t distance{};
-	distance = graph::distance(g, t1, t2);
-	std::cout << "Distance measure is: " << distance << "\n";
+    std::double_t distance{};
+    distance = graph::distance(g, t1, t2);
+    std::cout << "Distance measure is: " << distance << "\n";
   }
-  
+
   if (app_config.compute_similarity) {
-	std::double_t distance{};
-	distance = graph::similarity(g, t1, t2);
-	std::cout << "Similarity measure is: " << distance << "\n";
+    std::double_t similarity{};
+    similarity = graph::similarity(g, t1, t2);
+    std::cout << "Similarity measure is: " << similarity << "\n";
   }
-  
-  // TODO replace with method call
-  if (app_config.compute_match_stats) {
 
-	std::size_t res{std::numeric_limits<std::size_t>::max()};
-	std::double_t avg{};
-
-	if (app_config.verbosity() > 0) {
-	  std::cerr << "INFO computing matching statistics\n";
-	}
-
-	if (app_config.compute_match_stats_avg) {
-	  avg = graph::match_stats_avg(g, t1, t2);
-	}
-	else {
-	  switch (app_config.match_stats_str) {
-	  case 1:
-		res = graph::match_stats(g,
-								 t1.get_letter_boundaries(app_config.match_stats_letter_idx).left(),
-								 t2.get_size() + t2.get_eps_count(),
-								 core::ed_string_e::t1);
-		break;
-	  case 2:
-		res = graph::match_stats(g,
-								 t2.get_letter_boundaries(app_config.match_stats_letter_idx).left(),
-								 t1.get_size() + t1.get_eps_count(),
-								 core::ed_string_e::t2);
-		break;
-	  default:
-		throw std::invalid_argument("invalid match stats string");
-	  }
-	}
-
-	if (app_config.compute_match_stats_avg) {
-	  //std::cout << "MS average is: " << std::fixed << std::setprecision(2) << avg << "\n";
-	  std::cout << "MS average is: " << avg << "\n";
-	}
-	else {
-	  std::cout << "MS[" << app_config.match_stats_letter_idx << "]: " << res << "\n";
-	}
-  }
 }
 
 } // namespace app
