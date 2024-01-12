@@ -378,9 +378,9 @@ int graph::Graph::dijkstra(std::size_t start_node_idx, std::size_t stop_node_idx
 void graph::Graph::dbg_print(int indent_level) {
   std::cerr << core::indent(indent_level)
             << "Graph info {" << std::endl
-            << core::indent(indent_level + 1) << "nodes in " << core::T_1
+            << core::indent(indent_level + 1) << "nodes in " << core::constants::T_1
             << ": " << this->N_1 << std::endl
-            << core::indent(indent_level + 1) << "nodes in " << core::T_2
+            << core::indent(indent_level + 1) << "nodes in " << core::constants::T_2
             << ": " << this->N_2 << std::endl
             << core::indent(indent_level + 1)
             << "size of uncompacted intersection graph: " << this->V << std::endl
@@ -389,15 +389,15 @@ void graph::Graph::dbg_print(int indent_level) {
 
 void graph::Graph::print_dot() {
   auto print_idx = [&](std::size_t idx) -> std::string {
-    if (idx == 0) { return core::q_0; }
-    if (idx == this->V - 1) { return core::q_a; }
+    if (idx == 0) { return core::constants::q_0; }
+    if (idx == this->V - 1) { return core::constants::q_a; }
     return std::to_string(idx);
   };
 
 
   auto print_node_label = [&](std::size_t idx) -> std::string {
-    if (idx == 0) { return core::q_0; }
-    if (idx == this->V - 1) { return core::q_a; }
+    if (idx == 0) { return core::constants::q_0; }
+    if (idx == this->V - 1) { return core::constants::q_a; }
     //Vertex ver=this->get_node(idx);
     return std::to_string(idx) + "\\n" + "(" + this->get_node(idx).meta + ")";
   };
@@ -413,7 +413,7 @@ void graph::Graph::print_dot() {
 
   auto print_label = [](Edge e) -> std::string {
     if (e.is_eps) {
-      return " \"(" + core::unicode_eps + ", " + std::to_string(e.weight) +
+      return " \"(" + core::constants::unicode_eps + ", " + std::to_string(e.weight) +
              ")\"";
     } else {
       return " \"(" + e.str + ", " + std::to_string(e.weight) + ")\"";

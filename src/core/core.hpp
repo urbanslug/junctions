@@ -151,11 +151,10 @@ bool operator<(const STQueryResult& lhs, const STQueryResult& rhs);
 struct internal_st_vertex {
   STvertex *vertex;
   std::size_t depth;
-  char start_char;
+  char start_char {core::constants::null_char};
   std::size_t in_node_offset;
 };
 
-// operator  < for internal_st_vertex
 bool operator<(const internal_st_vertex& lhs, const internal_st_vertex& rhs);
 
 struct meta_st {
@@ -324,7 +323,6 @@ public:
                                     txt_str_idx,
                                     txt_char_idx)) {}
 
-  //
   std::size_t get_qry_str_idx() const { return this->query_str_index; }
   std::string const& get_str() const { return this->str; }
 
@@ -371,20 +369,5 @@ void mark_query_nodes(eds::EDS &qry_eds,
 // TODO: move to utils
 void join(const std::vector<std::string> &v, char c, std::string &s);
 std::string indent(int level);
-
-// TODO [c] move to core::constants
-const std::string unicode_eps = "\u03B5";
-const std::string unicode_sub_1 = "\u2081";
-const std::string unicode_sub_2 = "\u2082";
-
-const std::string T_1 = "T\u2081";
-const std::string T_2 = "T\u2082";
-const std::string N_1 = "N\u2081";
-const std::string N_2 = "N\u2082";
-const std::string q_0 = "q\u2080";
-const std::string q_a = "q\u2090";
-
-const char string_separator = '$';
-const char terminator_char = '_';
 } // namespace core
 #endif

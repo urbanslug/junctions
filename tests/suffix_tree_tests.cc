@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../src/core/core.hpp"
+#include "../src/core/constants.hpp"
 #include "../src/core/suffix_tree.cpp"
 
 
@@ -15,13 +16,13 @@ TEST(SuffixTreeTest, Matching) {
   std::vector<std::string> txt_strs;
   std::vector<eds::slice_eds> text_slices;
   match_st::STvertex *root;
-  match_st::internal_st_vertex root_wrapper { root, 0, '\0', 0};
+  match_st::internal_st_vertex root_wrapper { root, 0, core::constants::null_char, 0};
   std::map<std::size_t, std::set<match_st::internal_st_vertex>> marked_vertices {};
 
   auto setup = [&]() {
     text.clear();
-    core::join(txt_strs, '$', text);
-    text += '_'; // add a terminator char
+    core::join(txt_strs, core::constants::string_separator, text);
+    text += core::constants::terminator_char; // add a terminator char
     root = match_st::Create_suffix_tree(text.c_str(), text.length());
     root_wrapper.vertex = root;
     update_leaves(root, text_slices);
@@ -70,8 +71,8 @@ TEST(SuffixTreeTest, CommonPrefix) {
 
   auto setup = [&]() {
     text.clear();
-    core::join(txt_strs, '$', text);
-    text += '_'; // add a terminator char
+    core::join(txt_strs, core::constants::string_separator, text);
+    text += core::constants::terminator_char; // add a terminator char
     root = match_st::Create_suffix_tree(text.c_str(), text.length());
     root_wrapper.vertex = root;
     update_leaves(root, text_slices);
@@ -107,8 +108,8 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
 
   auto setup = [&]() {
     text.clear();
-    core::join(txt_strs, '$', text);
-    text += '_'; // add a terminator char
+    core::join(txt_strs, core::constants::string_separator, text);
+    text += core::constants::terminator_char; // add a terminator char
     root = match_st::Create_suffix_tree(text.c_str(), text.length());
     root_wrapper.vertex = root;
     update_leaves(root, text_slices);

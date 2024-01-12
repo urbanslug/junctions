@@ -19,6 +19,7 @@
 
 #include "../eds/eds.hpp"
 #include "../core/core.hpp"
+#include "../core/constants.hpp"
 
 
 namespace graph {

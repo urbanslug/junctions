@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "./core.hpp"
+#include "./constants.hpp"
 #include "../eds/eds.hpp"
 
 namespace match_st {
@@ -108,7 +109,7 @@ void Update(STedge &edge,int n) {
 }
 
 /**
- * x should have a core::terminar_char at the end
+ * x should have a core::constants::terminar_char at the end
  *
  */
 STvertex* Create_suffix_tree(const char* x, int n) {
@@ -444,7 +445,7 @@ FindEndIndexes(const char *query,
 
   auto append_underscore_matches = [&]() -> void {
     if (last_with_underscore == nullptr) { return; }
-    l_data = Get_Leaf_Data(last_with_underscore->g[core::terminator_char].v);
+    l_data = Get_Leaf_Data(last_with_underscore->g[core::constants::terminator_char].v);
     looper(l_data, true, true);
   };
 
@@ -459,8 +460,8 @@ FindEndIndexes(const char *query,
   };
 
   while (i < query_len) {
-    has_dollar = current_vertex->g.find(core::string_separator) != current_vertex->g.end();
-    has_underscore = current_vertex->g.find(core::terminator_char) != current_vertex->g.end();
+    has_dollar = current_vertex->g.find(core::constants::string_separator) != current_vertex->g.end();
+    has_underscore = current_vertex->g.find(core::constants::terminator_char) != current_vertex->g.end();
 
     char c { matched_a_char || (!matched_a_char && root.in_node_offset == 0 )
              ? query[i]
@@ -478,7 +479,7 @@ FindEndIndexes(const char *query,
       d = match_length;
       last_with_underscore = current_vertex;
 
-      current_edge = current_vertex->g[core::terminator_char];
+      current_edge = current_vertex->g[core::constants::terminator_char];
       append_underscore_matches();
       //append_matches(true);
 
@@ -534,7 +535,7 @@ FindEndIndexes(const char *query,
         append_underscore_matches();
 
         // ended match in branch and not at the end of a string
-        if (text[j] != core::terminator_char && text[j] != core::string_separator) {
+        if (text[j] != core::constants::terminator_char && text[j] != core::constants::string_separator) {
           mark_st(last_branching_char, match_length - last_branching_q_idx);
         }
 
@@ -543,7 +544,7 @@ FindEndIndexes(const char *query,
 
       // In the process of matching we find a $ or _
       // and we just finished processing the query as well
-      if ((text[j] == core::terminator_char || text[j] == core::string_separator) &&
+      if ((text[j] == core::constants::terminator_char || text[j] == core::constants::string_separator) &&
           (i == query_len || current_edge.l == j)) {
         append_matches();
         append_underscore_matches();
@@ -552,7 +553,7 @@ FindEndIndexes(const char *query,
 
       // In the process of matching we find a _
       // and have not finished processing the query
-      if (text[j] == core::terminator_char) {
+      if (text[j] == core::constants::terminator_char) {
         append_matches(true);
         append_underscore_matches();
         return matches;
@@ -564,7 +565,7 @@ FindEndIndexes(const char *query,
 
       // In the process of matching we find a $
       // and have not finished processing the query
-      if (text[j] == core::string_separator) {
+      if (text[j] == core::constants::string_separator) {
         append_matches(true);
         append_underscore_matches();
         return matches;
@@ -607,8 +608,8 @@ void gen_suffix_tree_(eds::EDS& eds, std::vector<meta_st> *suffix_trees) {
     std::vector<eds::slice_eds>& str_slices = eds.get_slice(i);
 
     // concat the strings with seperator & add add a terminator char
-    core::join(i_letter, core::string_separator, text);
-    text += core::terminator_char;
+    core::join(i_letter, core::constants::string_separator, text);
+    text += core::constants::terminator_char;
 
     // Create the suffix tree
     root = Create_suffix_tree(text.c_str(), text.length());
