@@ -182,8 +182,8 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
   eds::LetterBoundary j_boundary;
   eds::LetterBoundary i_boundary;
 
-  for (std::size_t i = 0; i < len_t1; i++) {
-    for (std::size_t j = 0; j < len_t2; j++) {
+  for (std::size_t i{}; i < len_t1; i++) {
+    for (std::size_t j{}; j < len_t2; j++) {
 
       j_boundary = eds_t2.get_letter_boundaries(j);
       i_boundary = eds_t1.get_letter_boundaries(i);
@@ -558,10 +558,10 @@ std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds
 
 #ifdef DEBUG
     std::cerr << "MS [S_1,S_2]: ";
-    for(int i=0; i<len_t1; ++i){ std::cerr << ms_w[i]<<" "; }
+    for(std::size_t i{}; i<len_t1; ++i){ std::cerr << ms_w[i]<<" "; }
     std::cerr <<std::endl;
     std::cerr << "MS [S_2,S_1]: ";
-    for(int i=0; i<len_t2; ++i){ std::cerr << ms_q[i]<<" "; }
+    for(std::size_t i{}; i<len_t2; ++i){ std::cerr << ms_q[i]<<" "; }
     std::cerr<<std::endl;
 #endif
 

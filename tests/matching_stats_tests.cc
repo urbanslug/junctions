@@ -43,6 +43,12 @@ TEST(GraphTest, MatchStatsUnconstrained) {
   EXPECT_EQ(similarity_measure, 5);
 
 
+  ed_string_t1 = "{A,AC,TGCT}{CA,}";
+  ed_string_t2 = "{,T}{GCA,AC}";
+  setup_and_run();
+  EXPECT_EQ(similarity_measure, 5);
+
+
   ed_string_t1 = "{CCC}{ACC,CA,CAA}";
   ed_string_t2 = "{CAC,C}{AA,CA}";
   setup_and_run();
