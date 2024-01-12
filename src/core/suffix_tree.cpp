@@ -443,9 +443,15 @@ FindEndIndexes(const char *query,
     looper(l_data, q_bynd_txt, a);
   };
 
-  auto append_underscore_matches = [&]() -> void {
+  // when only_term_branch is:
+  //   true, we check the branch with the terminator char only
+  //   false, we check all branches leading out
+  auto append_underscore_matches = [&](bool only_term_branch = true ) -> void {
     if (last_with_underscore == nullptr) { return; }
-    l_data = Get_Leaf_Data(last_with_underscore->g[core::constants::terminator_char].v);
+    STvertex *search_v = only_term_branch
+      ? last_with_underscore->g[core::constants::terminator_char].v
+      : last_with_underscore;
+    l_data = Get_Leaf_Data(search_v);
     looper(l_data, true, true);
   };
 
@@ -560,7 +566,7 @@ FindEndIndexes(const char *query,
       }
 
       if (has_underscore) {
-        append_underscore_matches();
+        append_underscore_matches(false);
       }
 
       // In the process of matching we find a $
