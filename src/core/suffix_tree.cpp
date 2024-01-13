@@ -474,44 +474,34 @@ FindEndIndexes(const char *query,
              : root.start_char };
     has_qry_char = current_vertex->g.find(c) != current_vertex->g.end();
 
-    // TODO: make these if statements not be order dependent?
+    // These if statements are order dependent
 
     // both has a $ and _ going out of it
     if (has_underscore && has_dollar && matched_a_char) {
-      //current_edge = current_vertex->g[core::string_separator];
-      append_underscore_matches(); // TODO: remove useless
       append_matches(true);
-
-      d = match_length;
-      last_with_underscore = current_vertex;
-
-      current_edge = current_vertex->g[core::constants::terminator_char];
-      append_underscore_matches();
-      //append_matches(true);
-
       if (!has_qry_char) { return matches; }
     }
 
     // We matched at least one query to the end a text string
-    // because we saw a $ sign and i > 0
-    if (has_dollar && matched_a_char) {
-      //current_edge = current_vertex->g[core::string_separator];
-      append_underscore_matches(); // TODO: remove useless
-      append_matches(true);
-      if (!has_qry_char) { return matches; }
-    }
-
-    // save the last vertex we found with an _ going out of it
-    // and is not the root
-    if (has_underscore && matched_a_char) {
-      d = match_length;
-      last_with_underscore = current_vertex;
-    }
-
-    // we can no longer match the query and we found a _
-    if (!has_qry_char && has_underscore && matched_a_char) {
+    // because we saw a $ sign
+    // we can no longer match the query
+    // i > 0
+    if (has_dollar && !has_qry_char && matched_a_char) {
       append_matches(true);
       return matches;
+    }
+
+    if (has_underscore && matched_a_char) {
+      // save the last vertex we found with an _ going out of it
+      // and is not the root
+      d = match_length;
+      last_with_underscore = current_vertex;
+
+      // we can no longer match the query and we found a _
+      if (!has_qry_char) {
+        append_matches(true);
+        return matches;
+      }
     }
 
     // matching failed
@@ -526,7 +516,8 @@ FindEndIndexes(const char *query,
 
     current_edge = current_vertex->g[c];
     last_branching_char = c;
-    last_branching_q_idx = match_length; // TODO: i could also work ?
+    // query char idx at which we last branched in the ST (i could work as well)
+    last_branching_q_idx = match_length;
 
     std::size_t l { !matched_a_char
                     ? static_cast<size_t>(current_edge.l) + root.in_node_offset
@@ -594,10 +585,14 @@ FindEndIndexes(const char *query,
     current_vertex = current_edge.v;
   }
 
-  mark_st('\0', 0);
-  // We have finished matching the query along a branch
+  /*
+    We have finished matching the query along a branch
+   */
+
+  // zero is the offset from the start of the branch we are marking
+  mark_st(core::constants::null_char, 0);
   append_matches();
-  append_underscore_matches();
+  append_underscore_matches(); // TODO: is this useful?
 
   return matches;
 }
