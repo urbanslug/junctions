@@ -1,4 +1,5 @@
 #include "./graph.hpp"
+#include <cstddef>
 
 /**
  *
@@ -70,6 +71,7 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
     // where the matched/text string actually ends
     std::size_t txt_slice_end = local_txt_slice.start + local_txt_slice.length;
 
+    std::size_t t_end_in_N = txt_eds.to_global_idx(txt_letter_idx, candidate_match_end);
     if (candidate_match_end >= txt_slice_end) {
       // the match went beyond the txt so we limit it to the end
       // a match that is beyond the text also lies here
@@ -77,10 +79,6 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
     } else {
       // the match ends within the text
       g_t_m_stop = graph::match_type::imp;
-
-      // set the match end as an active suffix
-      std::size_t t_end_in_N = txt_eds.to_global_idx(txt_letter_idx, candidate_match_end);
-      (*txt_active_suffixes)[qry_letter_idx][t_end_in_N] = 1;
     }
 
     /*
@@ -103,9 +101,15 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
       continue;
     }
 
+    // if imp imp and constraint is true then we don't set active suffixes
+
     // create an active suffix in the query
     if (q_start_in_N + candiate_match.get_match_length() < q_start_in_N + qlen) {
       (*qry_active_suffixes)[txt_letter_idx][q_start_in_N + candiate_match.get_match_length() - 1 ] = 1;
+    }
+
+    if (g_t_m_stop == graph::match_type::imp) {
+      (*txt_active_suffixes)[qry_letter_idx][t_end_in_N - 1] = 1;
     }
 
     graph::MatchTypePairUnion u = txt == core::ed_string_e::t1
@@ -177,7 +181,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
   graph::Graph g = graph::Graph(eds_t1.get_size() + eds_t1.get_eps_count(),
                                 eds_t2.get_size() + eds_t2.get_eps_count());
 
-  if (app_config.verbosity() > 0) { g.dbg_print(); }
+  if (app_config.verbosity()) { g.dbg_print(); }
 
   eds::LetterBoundary j_boundary;
   eds::LetterBoundary i_boundary;
@@ -225,7 +229,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
 
         // handle active suffixes
         if (j > 0) {
-          for (std::size_t col=0; col <= i_boundary.right(); col++) {
+          for (std::size_t col{}; col <= i_boundary.right(); col++) {
             if (i_active_suffixes[j-1][col]) {
               // update active suffixes
               i_active_suffixes[j][col] = 1;
@@ -237,7 +241,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
                                           graph::match_type::exp);
 
               // update active suffixes
-              valid_matches.push_back(graph::GraphSlice(eps_idx, col, u));
+              valid_matches.push_back(graph::GraphSlice(eps_idx, col+1, u));
             }
           }
         }
@@ -277,7 +281,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
 
         // update active suffixes
         if (i > 0) {
-          for (std::size_t col = 0; col <= j_boundary.right(); col++) {
+          for (std::size_t col{}; col <= j_boundary.right(); col++) {
             if (j_active_suffixes[i - 1][col]) {
               // update active suffixes
               j_active_suffixes[i][col] = 1;
@@ -289,7 +293,7 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
                                           graph::match_type::imp);
 
               // update active suffixes
-              valid_matches.push_back(graph::GraphSlice(eps_idx, col, u));
+              valid_matches.push_back(graph::GraphSlice(eps_idx, col+1, u));
             }
           }
         }

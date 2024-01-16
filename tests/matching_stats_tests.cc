@@ -90,5 +90,6 @@ TEST(GraphTest, MatchStatsConstrained) {
   ed_string_t1 = "{CCC}{CAA,ACC}{CAC,CC}";
   ed_string_t2 = "{AAC,AA,CA}{C}{CA,ACA}";
   setup_and_run();
-  EXPECT_EQ(similarity_measure, 3);
+  // maybe use expect near eq ? https://stackoverflow.com/a/15128658
+  EXPECT_DOUBLE_EQ(similarity_measure,  4.6666666666666661);
 }
