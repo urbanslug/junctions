@@ -75,44 +75,25 @@ graph::Graph::Graph(std::size_t N_1, std::size_t N_2) {
   this->N_1 = N_1;
   this->N_2 = N_2;
   this->V = (N_1 + 1) * (N_2 + 1);
-
-/*
-  try {
-    adj.resize(V);
-  } catch (const std::bad_alloc & e) {
-     std::double_t space_in_gb = static_cast<double>(this->V) / std::pow(1024.0, 3);;
-     space_in_gb *= sizeof(Vertex);
-
-     std::cerr << "Not enough memory. This graph needs over "
-               << ceil(space_in_gb)
-               << " GB of memory.\n";
-
-    exit(-1);
-  } catch (const std::length_error &) {
-    std::cerr << "graph would be too large" << std::endl;
-    exit(-1);
-  }*/
-
 }
 
 // x in [1 - n1 -1], also l
 // y in [1 - n2 -1], also k
 // zero indexed
 std::size_t graph::Graph::compute_index(std::size_t x, std::size_t y) {
-  // return ((y+j)*N_1) + x+i;
   return (x * (this->N_2 + 1)) + y;
 }
 
 graph::Vertex & graph::Graph::get_node(std::size_t node_idx) {
-    std::map<size_t,graph::Vertex>::iterator it=sparse_adj.find(node_idx);
-    if(it!=sparse_adj.end()){
-        return it->second;
-    }else{
-        graph::Vertex v;
-        sparse_adj.insert(std::make_pair(node_idx,v));
-        return sparse_adj[node_idx];
-    }
-  //return this->adj[node_idx];
+  std::map<size_t, graph::Vertex>::iterator it = sparse_adj.find(node_idx);
+  if (it != sparse_adj.end()) {
+    return it->second;
+  }
+  else {
+    graph::Vertex v;
+    sparse_adj.insert(std::make_pair(node_idx,v));
+    return sparse_adj[node_idx];
+  }
 }
 
 bool graph::Graph::check_match_stats(std::size_t node_idx) {

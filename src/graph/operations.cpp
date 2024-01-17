@@ -213,6 +213,19 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
 
         valid_matches.push_back(graph::GraphSlice(eps_idx, i_boundary.left(), u));
 
+        if (!app_config.constraint) {
+          for (auto sl : eds_t1.get_slice(i)) {
+            if (sl.eps_slice) { continue; }
+            for (auto i_{sl.start+1} ; i_ < sl.start + sl.length; i_++) {
+              u = graph::MatchTypePairUnion(graph::match_type::imp,
+                                            graph::match_type::imp,
+                                            graph::match_type::exp,
+                                            graph::match_type::exp);
+              valid_matches.push_back(graph::GraphSlice(eps_idx, i_, u));
+            }
+          }
+        }
+
         // the last letter in T_1
         if (i == len_t1 - 1) {
           std::pair<int, int> last_i_boundary =
@@ -264,6 +277,19 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
                                       graph::match_type::exp);
 
         valid_matches.push_back(graph::GraphSlice(eps_idx, j_boundary.left(), u));
+
+        if (!app_config.constraint) {
+          for (auto sl : eds_t2.get_slice(j)) {
+            if (sl.eps_slice) { continue; }
+            for (auto j_{sl.start+1} ; j_ < sl.start + sl.length; j_++) {
+              u = graph::MatchTypePairUnion(graph::match_type::exp,
+                                            graph::match_type::exp,
+                                            graph::match_type::imp,
+                                            graph::match_type::imp);
+              valid_matches.push_back(graph::GraphSlice(eps_idx, j_, u));
+            }
+          }
+        }
 
         // the last letter in T_2
         if (j == len_t2 - 1) {

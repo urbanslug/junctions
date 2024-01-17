@@ -59,6 +59,17 @@ TEST(GraphTest, MatchStatsUnconstrained) {
   ed_string_t2 = "{AC,AA}{CC,CA,CCC}{CC}{AC}";
   setup_and_run();
   EXPECT_EQ(similarity_measure, 6.0);
+
+
+  ed_string_t1 = "{,C}{,CA}";
+  ed_string_t2 = "{AC}{AC}";
+  setup_and_run();
+  EXPECT_EQ(similarity_measure, 3.0);
+
+  ed_string_t1 = "{AC}{AC}";
+  ed_string_t2 = "{,C}{,CA}";
+  setup_and_run();
+  EXPECT_EQ(similarity_measure, 3.0);
 }
 
 
