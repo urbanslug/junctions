@@ -233,12 +233,18 @@ TEST(GraphTest, Witness) {
     ---------------
   */
 
+  ed_string_w = "{AC,}{ACTG}";
+  ed_string_q = "{AC}{T,}{TG}{A,}";
+  setup_and_run();
+  EXPECT_EQ(longest, 4);
+  EXPECT_EQ(shortest, 4);
+
+
   ed_string_w = "{TTC}{A,GC}{CATT}{AC,}{ACTGGCCC}";
   ed_string_q = "{TTCAC}{AT,C}{C,T}{AC}{T,}{TG}{A,}{GCCC}";
   setup_and_run();
   EXPECT_EQ(longest, 16);
   EXPECT_EQ(shortest, 16);
-  // EXPECT_EQ(shortest, longest);
 
 
   ed_string_w = "CT{G,C}CACC";
@@ -246,7 +252,6 @@ TEST(GraphTest, Witness) {
   setup_and_run();
   EXPECT_EQ(longest, 7);
   EXPECT_EQ(shortest, 7);
-  // EXPECT_EQ(shortest, longest);
 
   /*
     full matches
@@ -259,7 +264,6 @@ TEST(GraphTest, Witness) {
   setup_and_run();
   EXPECT_EQ(longest, 3);
   EXPECT_EQ(shortest, 3);
-  // EXPECT_EQ(shortest, longest);
 
   /*
   epsilons
