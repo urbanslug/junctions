@@ -459,7 +459,7 @@ FindEndIndexes(const char *query,
     if (match_length > 0 && !is_leaf(current_vertex) && i == query_len) {
       marked_nodes[qry_letter_idx].insert(
         internal_st_vertex {current_vertex,
-                            static_cast<size_t>(match_length),
+                            static_cast<size_t>(match_length) + root.depth,
                             b_char,
                             in_node_offset});
     }

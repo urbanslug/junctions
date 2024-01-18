@@ -58,6 +58,11 @@ TEST(IntersectionTest, ActiveSuffixes) {
   setup_and_run();
   EXPECT_EQ(res, true);
 
+  ed_string_w = "{C,ACA}{ACA}";
+  ed_string_q = "{A}{CAA,AC,CAC}{C,CA}";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
   ed_string_w = "CACCACGTACTTGACGTTACGAAAGAACAG";
   ed_string_q = "CACCACGTACTTGACGTTACGAAAGAA{CAG,AC}";
   setup_and_run();

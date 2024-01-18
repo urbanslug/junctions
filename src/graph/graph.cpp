@@ -201,18 +201,12 @@ std::size_t graph::Graph::multiset_size() {
 }
 
 void graph::Graph::compute_match_stats() {
-  //std::size_t last_node = this->last_node();
-
-  //std::vector<size_t> dp_tbl(this->get_size(), 0);
   std::map<size_t,size_t> dp_map;
   std::size_t max_k = 0;
 
   // Note that this expects that idx will overflow when we attempt to go below
   // zero therefore assumes the last node is not max size_t value
   for(std::map<size_t,Vertex>::reverse_iterator riter=sparse_adj.rbegin();riter!=sparse_adj.rend();++riter){
-  //for (std::size_t idx{this->last_node()}; idx <= this->last_node(); idx--) {
-    //Vertex const& v = this->get_node(idx);
-
     for (auto e: riter->second.outgoing) {
       if (max_k < (e.weight + dp_map[e.dest]) ) {
         max_k = e.weight + dp_map[e.dest];
