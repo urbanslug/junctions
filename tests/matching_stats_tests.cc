@@ -42,24 +42,20 @@ TEST(GraphTest, MatchStatsUnconstrained) {
   setup_and_run();
   EXPECT_EQ(similarity_measure, 5);
 
-
   ed_string_t1 = "{A,AC,TGCT}{CA,}";
   ed_string_t2 = "{,T}{GCA,AC}";
   setup_and_run();
   EXPECT_EQ(similarity_measure, 5);
-
 
   ed_string_t1 = "{CCC}{ACC,CA,CAA}";
   ed_string_t2 = "{CAC,C}{AA,CA}";
   setup_and_run();
   EXPECT_EQ(similarity_measure, 5.5);
 
-
   ed_string_t1 = "{ACA,AC,AA}{C,AC,CAA}";
   ed_string_t2 = "{AC,AA}{CC,CA,CCC}{CC}{AC}";
   setup_and_run();
   EXPECT_EQ(similarity_measure, 6.0);
-
 
   ed_string_t1 = "{,C}{,CA}";
   ed_string_t2 = "{AC}{AC}";
@@ -70,6 +66,11 @@ TEST(GraphTest, MatchStatsUnconstrained) {
   ed_string_t2 = "{,C}{,CA}";
   setup_and_run();
   EXPECT_EQ(similarity_measure, 3.0);
+
+  ed_string_t1 = "{CC}{AA,CC}{A}";
+  ed_string_t2 = "{CC,A}{CA,AC}{CA,AC}";
+  setup_and_run();
+  EXPECT_DOUBLE_EQ(similarity_measure, 5.6666666666666661);
 }
 
 

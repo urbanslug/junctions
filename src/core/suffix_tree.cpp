@@ -477,7 +477,7 @@ FindEndIndexes(const char *query,
     // These if statements are order dependent
 
     // both has a $ and _ going out of it
-    if (has_underscore && has_dollar && matched_a_char) {
+    if ((has_underscore || has_dollar) && matched_a_char) {
       append_matches(true);
       if (!has_qry_char) { return matches; }
     }

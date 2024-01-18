@@ -95,7 +95,9 @@ void filter_matches(std::vector<core::EDSMatch> const &candidate_matches,
     bool is_beyond_txt {candidate_match_end > txt_slice_end};
 
     g_q_m_start = graph::match_type::exp;
-    g_q_m_stop = is_beyond_txt || (candiate_match.get_match_length() < qlen) ? graph::match_type::imp : graph::match_type::exp;
+    g_q_m_stop = is_beyond_txt || (candiate_match.get_match_length() < qlen)
+      ? graph::match_type::imp
+      : graph::match_type::exp;
 
     if (app_config.constraint && g_q_m_stop == graph::match_type::imp && g_t_m_stop == graph::match_type::imp) {
       continue;
