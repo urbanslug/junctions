@@ -98,9 +98,12 @@ void perform_matching(eds::EDS &txt_eds,
       std::string qry_str = queries[qry_str_idx];
 
 
+
+
       match_positions =
           match_st::FindEndIndexes(qry_str.c_str(),
                                    r_,
+                                   (meta_st_.root == r_.vertex),
                                    meta_st_.text.c_str(),
                                    meta_st_.marked_nodes,
                                    qry_letter_idx,
@@ -142,6 +145,7 @@ void mark_query_nodes(eds::EDS &qry_eds,
       match_st::internal_st_vertex r{meta_st_.root, 0};
       match_st::FindEndIndexes(m.str.c_str(),
                                r,
+                               true,
                                meta_st_.text.c_str(),
                                meta_st_.marked_nodes,
                                txt_letter_idx,

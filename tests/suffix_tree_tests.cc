@@ -32,31 +32,28 @@ TEST(SuffixTreeTest, Matching) {
   text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0,4)};
   setup();
   qry = "CT";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
 
 
   txt_strs = {"A", "G"};
   text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0, 1), eds::slice_eds(1, 1)};
   setup();
   qry = "GA";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
 
 
   txt_strs = {"TCG", "CGC"};
   text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0, 3), eds::slice_eds(3, 3)};
   setup();
   qry = "GAACA";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
 
 
   txt_strs = {"AAGT","CT"};
   text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0, 4), eds::slice_eds(4, 2)};
   setup();
   qry = "TG";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
-
-
-  EXPECT_EQ(0,0);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
 }
 
 TEST(SuffixTreeTest, CommonPrefix) {
@@ -82,7 +79,7 @@ TEST(SuffixTreeTest, CommonPrefix) {
   text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0, 1), eds::slice_eds(1, 2)};
   setup();
   qry = "TT";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   std::vector<match_st::STQueryResult> expected = {
     match_st::STQueryResult(false, 1, 1, 2)
   };
@@ -90,7 +87,7 @@ TEST(SuffixTreeTest, CommonPrefix) {
 
 
   qry = "TG";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   expected = {
     match_st::STQueryResult(false, 2, 1, 2)
   };
@@ -119,7 +116,7 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3), eds::slice_eds(3, 3), eds::slice_eds(6, 2) };
   setup();
   qry = "CA";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   for (auto x : match_positions){
     std::cout << "byd: " << x.is_beyond_txt() << " str idx " << x.get_txt_str_idx() << " char idx " << x.get_char_idx() << " m_len " << x.get_match_length() << "\n";
   }
@@ -141,7 +138,7 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3), eds::slice_eds(3, 3) };
   setup();
   qry = "CCC";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   expected = { //match_st::STQueryResult(true, 1, 0, 1),
     match_st::STQueryResult(true, 2, 0, 0)
   };
@@ -152,7 +149,7 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3) };
   setup();
   qry = "CCA";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   expected = {
     match_st::STQueryResult(true, 1, 0, 2),
     match_st::STQueryResult(true, 2, 0, 1),
@@ -165,7 +162,7 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   text_slices = std::vector<eds::slice_eds>{ eds::slice_eds(0, 3), eds::slice_eds(3, 3) };
   setup();
   qry = "CA";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   expected = {
     match_st::STQueryResult(true, 1, 1, 5),
     match_st::STQueryResult(true, 1, 1, 4),
@@ -180,7 +177,7 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0, 3)};
   setup();
   qry = "CA";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   expected = {
     match_st::STQueryResult(true, 1, 0, 2),
     match_st::STQueryResult(true, 1, 0, 1),
@@ -193,7 +190,7 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   text_slices = std::vector<eds::slice_eds>{eds::slice_eds(0, 4)};
   setup();
   qry = "AAAA";
-  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, text.c_str(), marked_vertices, 0, true);
+  match_positions = match_st::FindEndIndexes(qry.c_str(), root_wrapper, true, text.c_str(), marked_vertices, 0, true);
   expected = {
     match_st::STQueryResult(true, 1, 0, 3),
     match_st::STQueryResult(true, 2, 0, 2),

@@ -176,6 +176,7 @@ struct meta_st {
  */
 std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
                                                     const internal_st_vertex &root,
+                                                    bool is_true_root,
                                                     const char *text,
                                                     std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
                                                     std::size_t qry_letter_idx,

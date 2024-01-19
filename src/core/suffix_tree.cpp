@@ -401,6 +401,7 @@ void update_leaves(STvertex *current_vertex,
 std::vector<match_st::STQueryResult>
 FindEndIndexes(const char *query,
                const internal_st_vertex &root,
+               bool is_true_root,
                const char *text,
                std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
                std::size_t qry_letter_idx,
@@ -522,6 +523,8 @@ FindEndIndexes(const char *query,
     std::size_t l { !matched_a_char
                     ? static_cast<size_t>(current_edge.l) + root.in_node_offset
                     : static_cast<size_t>(current_edge.l) };
+
+    if (is_true_root) { l += root.depth; }
 
     matched_a_char = true;
 
