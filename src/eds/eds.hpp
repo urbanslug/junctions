@@ -121,7 +121,7 @@ public:
 
   bool is_letter_eps(std::size_t letter_idx) const;
 
-  // the global start and end of the degenerate letter
+  // the global (N) start and end of the degenerate letter
   LetterBoundary get_letter_boundaries(std::size_t letter_idx);
 
   std::vector<std::size_t>& get_prev_char_idx(std::size_t char_idx);
@@ -139,7 +139,6 @@ public:
   void print_properties();
   void print_eds();
   friend std::ostream& operator<<(std::ostream &os, EDS& e);
-  
 
   // populates str and prev_chars
   void linearize();

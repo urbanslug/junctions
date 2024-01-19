@@ -65,8 +65,14 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
       // start has epsilon
       if (prev_t2.empty() && !prev_t1.empty()) {
         bool v {true};
-        for (std::size_t i{}; i < row ; i++) {
-          v = v && eds_t1.is_letter_eps(i);
+        for (std::size_t ltr_idx{}; ltr_idx < eds_t1.get_length(); ltr_idx++) {
+          auto [_, r] = eds_t1.get_letter_boundaries(ltr_idx);
+          if (r < row) {
+            v = v && eds_t1.is_letter_eps(ltr_idx);
+          }
+          else {
+            break;
+          }
         }
 
         if (v) { return true; }
@@ -74,8 +80,14 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
 
       if (!prev_t2.empty() && prev_t1.empty()) {
         bool v {true};
-        for (std::size_t j{}; j < col ; j++) {
-          v = v && eds_t2.is_letter_eps(j);
+        for (std::size_t ltr_idx{}; ltr_idx < eds_t2.get_length(); ltr_idx++) {
+          auto [_, r] = eds_t2.get_letter_boundaries(ltr_idx);
+          if (r < col) {
+            v = v && eds_t2.is_letter_eps(ltr_idx);
+          }
+          else {
+            break;
+          }
         }
 
         if (v) { return true; }

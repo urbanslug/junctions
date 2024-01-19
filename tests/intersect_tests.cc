@@ -73,7 +73,7 @@ TEST(IntersectionTest, ActiveSuffixes) {
 TEST(IntersectionTest, Epsilons) {
   eds::EDS w, q;
   std::string ed_string_w, ed_string_q;
-  bool res; // result
+  bool res, naive_result; // result
   core::AppConfig params;
   params.set_verbosity(0); // TODO: remove
 
@@ -83,7 +83,7 @@ TEST(IntersectionTest, Epsilons) {
 
     res = intersect::improved::has_intersection(w, q);
     // TODO: call naive
-    //res = intersect::improved(w, q, params);
+    naive_result = intersect::naive::has_intersection(w, q);
   };
 
   ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
@@ -100,6 +100,21 @@ TEST(IntersectionTest, Epsilons) {
   ed_string_q = "AGGG{C,}{G,}T";
   setup_and_run();
   EXPECT_EQ(res, false);
+
+  ed_string_w = "{CA,C,AAAC,ACAA}{CAAC,}{,ACAA,CAC,CCC}";
+  ed_string_q = "{AC,}{C,,A}";
+  setup_and_run();
+  EXPECT_EQ(res, true);
+
+  ed_string_w = "{AAA,AC,AACC}{C}{CA,C,AAAC,ACAA}{CAAC,}{,ACAA,CAC,CCC}";
+  ed_string_q = "{CA,ACCA,A,CCC}{C}{AC,}{C,,A}";
+  setup_and_run();
+  EXPECT_EQ(res, naive_result);
+
+  ed_string_w = "{AAA,CAA,C}{AA,A,CAA,ACA}{CCC,AAA}";
+  ed_string_q = "{CCAA,C,}{CAA,A,AAAC,}{CAAA,}";
+  setup_and_run();
+  EXPECT_EQ(res, naive_result);
 
   ed_string_w = "{AT,TC}{TC,T}";
   ed_string_q = "TC{,G}{CT,T}";
