@@ -76,6 +76,12 @@ TEST(GraphTest, MatchStatsUnconstrained) {
   ed_string_t2 = "{ACC}";
   setup_and_run();
   EXPECT_DOUBLE_EQ(similarity_measure, 5.6666666666666661);
+
+  ed_string_t1 ="{CAC,ACC,A}{CCC,CAC,A}{ACC,CCC}";
+  ed_string_t2 ="{AC,C}{A,CC}";
+  setup_and_run();
+  EXPECT_DOUBLE_EQ(similarity_measure, 6.6666666666666661);
+
 }
 
 
@@ -117,8 +123,12 @@ TEST(GraphTest, MatchStatsConstrained) {
   ed_string_t1 = "{CAC,AA,ACA}{AA,AAC}{ACA,CAA,AC}";
   ed_string_t2 = "{CAA,C}{AC,A}{CC,CA,C}";
   setup_and_run();
-  // maybe use expect near eq ? https://stackoverflow.com/a/15128658
   EXPECT_DOUBLE_EQ(similarity_measure,  5.6666666666666661);
+
+  ed_string_t1 ="{CAC,ACC,A}{CCC,CAC,A}{ACC,CCC}";
+  ed_string_t2 ="{AC,C}{A,CC}";
+  setup_and_run();
+  EXPECT_DOUBLE_EQ(similarity_measure, 6.6666666666666661);
 
 
 }

@@ -251,22 +251,21 @@ int graph::Graph::witness(std::size_t start_node_idx, std::size_t stop_node_idx)
   dists_map[current_node] = 0;
   to_visit.push(current_node);
 
-
   while (!to_visit.empty()) {
     current_node = to_visit.top();
     //Vertex current_ver=this->get_node(current_node);
     to_visit.pop();
     out = this->get_node(current_node).outgoing;
 
-    if (visited.count(current_node) > 0) { continue; }
+    if (visited.count(current_node)) { continue; }
 
     current_dist = dists_map[current_node];
 
     for (auto e : out) {
-
       if (dists_map[tbl_idx(e.dest)] < current_dist + static_cast<int>(e.weight)) {
         if (e.dest == stop_node_idx) { end_reached = true; }
         dists_map[tbl_idx(e.dest)] = current_dist + static_cast<int>(e.weight);
+        std::cout << current_node << " " << e.str << " " << e.dest << std::endl;
       }
 
       to_visit.push(e.dest);

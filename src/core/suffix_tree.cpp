@@ -48,9 +48,9 @@ bool operator<(const STQueryResult& lhs, const STQueryResult& rhs) {
   return std::tie(w, x, y, z) < std::tie(a, b, c, d);
 }
 
-bool operator<(const internal_st_vertex& lhs, const internal_st_vertex& rhs) {
-  return std::tie(lhs.vertex, lhs.depth, lhs.start_char, lhs.in_node_offset) <
-    std::tie(rhs.vertex, rhs.depth, rhs.start_char, rhs.in_node_offset);
+bool operator<(const st_vertex_wrapper& lhs, const st_vertex_wrapper& rhs) {
+  return std::tie(lhs.vertex, lhs.node_depth, lhs.start_char, lhs.in_node_offset) <
+    std::tie(rhs.vertex, rhs.node_depth, rhs.start_char, rhs.in_node_offset);
 }
 
 /**
@@ -400,15 +400,18 @@ void update_leaves(STvertex *current_vertex,
 
 std::vector<match_st::STQueryResult>
 FindEndIndexes(const char *query,
-               const internal_st_vertex &root,
+               const st_vertex_wrapper &root,
                bool is_true_root,
                const char *text,
-               std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
+               std::map<std::size_t, std::set<st_vertex_wrapper>> &marked_nodes,
                std::size_t qry_letter_idx,
                bool end_in_imp_imp) {
   std::vector<match_st::STQueryResult> matches{};
   matches.reserve(strlen(text));
   if (strlen(query) == 0) { return matches; }
+
+  std::size_t v_depth{root.node_depth}; // node depth in the suffix tree from the root
+    //prev_branch_length {};
 
   // TODO : rename i to q_idx or q_pos
   int i {}, // the query position of the match
@@ -426,9 +429,10 @@ FindEndIndexes(const char *query,
   bool has_dollar{false}, has_underscore{false}, has_qry_char{false}, matched_a_char{false};
 
   // TODO: read the value of l_data from scope
-  auto looper = [&](std::vector<match_st::LeafData> l_data, bool q_bynd_txt = false, bool a = false) -> void {
+  auto looper =
+    [&](std::vector<match_st::LeafData> l_data, bool q_bynd_txt = false, bool a = false) -> void {
     for (match_st::LeafData l : l_data) {
-      l.get_txt_char_idx_mut() += static_cast<int>(root.depth);
+      l.get_txt_char_idx_mut() += (static_cast<int>(root.node_depth) + root.in_node_offset);
       if ((a ? d : match_length) == 0) { continue; }
       match_st::STQueryResult match { match_st::STQueryResult(q_bynd_txt, (a ? d : match_length),l)};
       if (seen.find(match) == seen.end()) {
@@ -456,11 +460,12 @@ FindEndIndexes(const char *query,
     looper(l_data, true, true);
   };
 
+  // b_char is the branching char
   auto mark_st = [&](char b_char, std::size_t in_node_offset) -> void {
     if (match_length > 0 && !is_leaf(current_vertex) && i == query_len) {
       marked_nodes[qry_letter_idx].insert(
-        internal_st_vertex {current_vertex,
-                            static_cast<size_t>(match_length) + root.depth,
+        st_vertex_wrapper {current_vertex,
+                           v_depth,
                             b_char,
                             in_node_offset});
     }
@@ -515,8 +520,11 @@ FindEndIndexes(const char *query,
       return matches;
     }
 
+
+
     current_edge = current_vertex->g[c];
     last_branching_char = c;
+    // prev_branch_length = (current_edge.r - current_edge.l) + 1;
     // query char idx at which we last branched in the ST (i could work as well)
     last_branching_q_idx = match_length;
 
@@ -524,7 +532,7 @@ FindEndIndexes(const char *query,
                     ? static_cast<size_t>(current_edge.l) + root.in_node_offset
                     : static_cast<size_t>(current_edge.l) };
 
-    if (is_true_root) { l += root.depth; }
+    if (is_true_root) { l += root.node_depth; }
 
     matched_a_char = true;
 
@@ -536,7 +544,7 @@ FindEndIndexes(const char *query,
 
         // ended match in branch and not at the end of a string
         if (text[j] != core::constants::terminator_char && text[j] != core::constants::string_separator) {
-          mark_st(last_branching_char, match_length - last_branching_q_idx);
+          mark_st(last_branching_char, j - current_edge.l);
         }
 
         return matches;
@@ -585,6 +593,8 @@ FindEndIndexes(const char *query,
       match_length += 1;
     }
 
+    v_depth += current_edge.r - current_edge.l + 1;
+
     current_vertex = current_edge.v;
   }
 
@@ -621,7 +631,7 @@ void gen_suffix_tree_(eds::EDS& eds, std::vector<meta_st> *suffix_trees) {
     // add string ids
     update_leaves(root, str_slices, eds, i);
 
-    suffix_trees->push_back(meta_st{text, root, std::map<std::size_t, std::set<internal_st_vertex>>{} });
+    suffix_trees->push_back(meta_st{text, root, std::map<std::size_t, std::set<st_vertex_wrapper>>{} });
   }
 }
 

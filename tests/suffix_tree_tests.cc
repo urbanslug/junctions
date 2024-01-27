@@ -16,8 +16,8 @@ TEST(SuffixTreeTest, Matching) {
   std::vector<std::string> txt_strs;
   std::vector<eds::slice_eds> text_slices;
   match_st::STvertex *root;
-  match_st::internal_st_vertex root_wrapper { root, 0, core::constants::null_char, 0};
-  std::map<std::size_t, std::set<match_st::internal_st_vertex>> marked_vertices {};
+  match_st::st_vertex_wrapper root_wrapper { root, 0, core::constants::null_char, 0};
+  std::map<std::size_t, std::set<match_st::st_vertex_wrapper>> marked_vertices {};
 
   auto setup = [&]() {
     text.clear();
@@ -63,8 +63,8 @@ TEST(SuffixTreeTest, CommonPrefix) {
   std::vector<std::string> txt_strs;
   std::vector<eds::slice_eds> text_slices;
   match_st::STvertex *root;
-  match_st::internal_st_vertex root_wrapper { root, 0, '\0', 0};
-  std::map<std::size_t, std::set<match_st::internal_st_vertex>> marked_vertices {};
+  match_st::st_vertex_wrapper root_wrapper { root, 0, '\0', 0};
+  std::map<std::size_t, std::set<match_st::st_vertex_wrapper>> marked_vertices {};
 
   auto setup = [&]() {
     text.clear();
@@ -100,8 +100,8 @@ TEST(SuffixTreeTest, AllPrefixSuffixes) {
   std::vector<std::string> txt_strs;
   std::vector<eds::slice_eds> text_slices;
   match_st::STvertex *root;
-  match_st::internal_st_vertex root_wrapper { root, 0, '\0', 0};
-  std::map<std::size_t, std::set<match_st::internal_st_vertex>> marked_vertices {};
+  match_st::st_vertex_wrapper root_wrapper { root, 0, '\0', 0};
+  std::map<std::size_t, std::set<match_st::st_vertex_wrapper>> marked_vertices {};
 
   auto setup = [&]() {
     text.clear();

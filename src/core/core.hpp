@@ -147,20 +147,20 @@ bool operator==(const STQueryResult& lhs, const STQueryResult& rhs);
 // operator < for STQueryResult
 bool operator<(const STQueryResult& lhs, const STQueryResult& rhs);
 
-// TODO: rename to st_vertex_wrapper
-struct internal_st_vertex {
+struct st_vertex_wrapper {
   STvertex *vertex;
-  std::size_t depth;
+  // bool is_root; // true if the vertex is the root of the suffix tree
+  std::size_t node_depth; // how many chars the node is from the root
   char start_char {core::constants::null_char};
-  std::size_t in_node_offset;
+  std::size_t in_node_offset; // applies within a branch
 };
 
-bool operator<(const internal_st_vertex& lhs, const internal_st_vertex& rhs);
+bool operator<(const st_vertex_wrapper& lhs, const st_vertex_wrapper& rhs);
 
 struct meta_st {
   std::string text;
   match_st::STvertex* root;
-  std::map<std::size_t, std::set<internal_st_vertex>> marked_nodes;
+  std::map<std::size_t, std::set<st_vertex_wrapper>> marked_nodes;
 };
 
 /**
@@ -175,10 +175,10 @@ struct meta_st {
  * @return a vector of STQueryResult
  */
 std::vector<match_st::STQueryResult> FindEndIndexes(const char *query,
-                                                    const internal_st_vertex &root,
+                                                    const st_vertex_wrapper &root,
                                                     bool is_true_root,
                                                     const char *text,
-                                                    std::map<std::size_t, std::set<internal_st_vertex>> &marked_nodes,
+                                                    std::map<std::size_t, std::set<st_vertex_wrapper>> &marked_nodes,
                                                     std::size_t qry_letter_idx,
                                                     bool end_in_imp_imp = false);
 
@@ -292,7 +292,7 @@ struct AppConfig {
   unsigned char verbosity() const;
 };
 
-// TODO call this an eds match and move to core?
+
 struct EDSMatch {
   std::size_t query_str_index;
   std::string str;

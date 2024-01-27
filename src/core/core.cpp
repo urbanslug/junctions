@@ -83,7 +83,7 @@ void perform_matching(eds::EDS &txt_eds,
                       bool end_in_imp_imp) {
   std::vector<match_st::STQueryResult> match_positions;
 
-  std::set<match_st::internal_st_vertex> st_vertices;
+  std::set<match_st::st_vertex_wrapper> st_vertices;
   st_vertices.insert({meta_st_.root, 0});
 
   if (qry_letter_idx > 0 && meta_st_.marked_nodes.find(qry_letter_idx-1) != meta_st_.marked_nodes.end() ) {
@@ -93,7 +93,7 @@ void perform_matching(eds::EDS &txt_eds,
   }
 
   // r_ for root
-  for (const match_st::internal_st_vertex& r_ : st_vertices) {
+  for (const match_st::st_vertex_wrapper& r_ : st_vertices) {
     for (std::size_t qry_str_idx{0}; qry_str_idx < queries.size(); qry_str_idx++) {
       std::string qry_str = queries[qry_str_idx];
 
@@ -142,7 +142,7 @@ void mark_query_nodes(eds::EDS &qry_eds,
     eds::slice_eds local_qry_slice = qry_eds.get_str_slice_local(qry_letter_idx, m.get_qry_str_idx());
 
     if (m.get_match_length() < local_qry_slice.length) {
-      match_st::internal_st_vertex r{meta_st_.root, 0};
+      match_st::st_vertex_wrapper r{meta_st_.root, 0};
       match_st::FindEndIndexes(m.str.c_str(),
                                r,
                                true,

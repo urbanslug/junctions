@@ -48,8 +48,8 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
   auto prev_matched = [&dp_matrix, &linear_t1, &linear_t2, &eds_t1, &eds_t2]
     (std::size_t row, std::size_t col) -> bool {
     // std::cout << row << " " << col << "\n";
-    std::vector<std::size_t>& prev_t1 =  linear_t1.get_prev_char_idx(row);
-    std::vector<std::size_t>& prev_t2 =  linear_t2.get_prev_char_idx(col);
+    std::vector<std::size_t>& prev_t1 = linear_t1.get_prev_char_idx(row);
+    std::vector<std::size_t>& prev_t2 = linear_t2.get_prev_char_idx(col);
 
     // only happens at letter 0
     if (prev_t1.empty() || prev_t2.empty()) {
@@ -65,9 +65,11 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
       // start has epsilon
       if (prev_t2.empty() && !prev_t1.empty()) {
         bool v {true};
+        std::size_t l{};
         for (std::size_t ltr_idx{}; ltr_idx < eds_t1.get_length(); ltr_idx++) {
           auto [_, r] = eds_t1.get_letter_boundaries(ltr_idx);
           if (r < row) {
+            l = ltr_idx;
             v = v && eds_t1.is_letter_eps(ltr_idx);
           }
           else {
@@ -75,19 +77,29 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
           }
         }
 
+        if (l==0) {
+          return false;
+        }
+
         if (v) { return true; }
       }
 
       if (!prev_t2.empty() && prev_t1.empty()) {
         bool v {true};
+        std::size_t l{};
         for (std::size_t ltr_idx{}; ltr_idx < eds_t2.get_length(); ltr_idx++) {
           auto [_, r] = eds_t2.get_letter_boundaries(ltr_idx);
           if (r < col) {
+            l = ltr_idx;
             v = v && eds_t2.is_letter_eps(ltr_idx);
           }
           else {
             break;
           }
+        }
+
+        if (l==0) {
+          return false;
         }
 
         if (v) { return true; }
@@ -110,8 +122,8 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
     return linear_t1.get_char_at(row_idx) == linear_t2.get_char_at(col_idx);
   };
 
-  for (size_t row_idx = 0; row_idx < last_row; row_idx++) {
-    for (size_t col_idx = 0; col_idx < last_col; col_idx++) {
+  for (size_t row_idx{}; row_idx < last_row; row_idx++) {
+    for (size_t col_idx{}; col_idx < last_col; col_idx++) {
 
       if (chars_match(row_idx, col_idx) && prev_matched(row_idx, col_idx)) {
         dp_matrix[row_idx][col_idx] = true;
@@ -121,7 +133,7 @@ bool has_intersection(eds::EDS &eds_t1, eds::EDS &eds_t2) {
         std::vector<std::size_t> &prev_t1 = linear_t1.get_prev_char_idx(row_idx);
 
         for (std::size_t r : prev_t1) {
-          for (size_t c = 0; c < last_col; c++) {
+          for (size_t c{}; c < last_col; c++) {
             if (dp_matrix[r][c]) {
               dp_matrix[row_idx][c] = true;
             }

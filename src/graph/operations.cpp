@@ -603,12 +603,12 @@ std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds
   return t1_avg + t2_avg;
 }
 
-int graph::longest_witness(graph::Graph &g) {
-  return g.witness(0, g.get_size() - 1 );
-}
-
 std::size_t graph::multiset(graph::Graph &g) {
   return g.multiset_size();
+}
+
+int graph::longest_witness(graph::Graph &g) {
+  return g.witness(0, g.get_size() - 1 );
 }
 
 int graph::shortest_witness(graph::Graph& g) {

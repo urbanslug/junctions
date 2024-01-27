@@ -86,6 +86,32 @@ TEST(IntersectionTest, Epsilons) {
     naive_result = intersect::naive::has_intersection(w, q);
   };
 
+
+  ed_string_w = "{AAA,CAA,C}{AA,A,CAA,ACA}{CCC,AAA}";
+  ed_string_q = "{CCAA,C,}{CAA,A,AAAC,}{CAAA,}";
+  setup_and_run();
+  EXPECT_EQ(res, naive_result);
+
+  ed_string_w = "{AAA,AC,AACC}{C}{CA,C,AAAC,ACAA}";
+  ed_string_q = "{CA,ACCA,A,CCC}{C}{AC,}{C,,A}";
+  setup_and_run();
+  EXPECT_EQ(res, naive_result);
+
+  ed_string_w = "{AAA,AC,AACC}{C}{CA,C,AAAC,ACAA}";
+  ed_string_q = "{CA,ACCA,A,CCC}{C}{AC,}{C,A}";
+  setup_and_run();
+  EXPECT_EQ(res, naive_result);
+
+  ed_string_w = "{AAA,AC,AACC}{C}";
+  ed_string_q = "{CA,ACCA,A,CCC}{C}";
+  setup_and_run();
+  EXPECT_EQ(res, naive_result);
+
+  ed_string_w = "{AAA,AC,AACC}{C}{CA,C,AAAC,ACAA}{CAAC,}{,ACAA,CAC,CCC}";
+  ed_string_q = "{CA,ACCA,A,CCC}{C}{AC,}{C,,A}";
+  setup_and_run();
+  EXPECT_EQ(res, naive_result);
+
   ed_string_w = "{GT,}{A,C}{T}{A,G}{ATGCGCTT}{TG,}{TGTTG}{GC,}{GCGGTGGCTT}{AC,G}";
   ed_string_q = "{AT,}{GAT}{C,G}{C}{G,T}{C}{AGG,TT}{T}{G,T}{TGTTGGCGCGGTGGCTT}{AC,G}";
   setup_and_run();
@@ -105,16 +131,6 @@ TEST(IntersectionTest, Epsilons) {
   ed_string_q = "{AC,}{C,,A}";
   setup_and_run();
   EXPECT_EQ(res, true);
-
-  ed_string_w = "{AAA,AC,AACC}{C}{CA,C,AAAC,ACAA}{CAAC,}{,ACAA,CAC,CCC}";
-  ed_string_q = "{CA,ACCA,A,CCC}{C}{AC,}{C,,A}";
-  setup_and_run();
-  EXPECT_EQ(res, naive_result);
-
-  ed_string_w = "{AAA,CAA,C}{AA,A,CAA,ACA}{CCC,AAA}";
-  ed_string_q = "{CCAA,C,}{CAA,A,AAAC,}{CAAA,}";
-  setup_and_run();
-  EXPECT_EQ(res, naive_result);
 
   ed_string_w = "{AT,TC}{TC,T}";
   ed_string_q = "TC{,G}{CT,T}";
