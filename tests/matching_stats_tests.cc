@@ -82,6 +82,18 @@ TEST(GraphTest, MatchStatsUnconstrained) {
   setup_and_run();
   EXPECT_DOUBLE_EQ(similarity_measure, 6.6666666666666661);
 
+
+  ed_string_t1 ="{CCA,AC}{AC,C}{CCA,A,ACA}";
+  ed_string_t2 ="{A}{CA}{CC}";
+  setup_and_run();
+  EXPECT_DOUBLE_EQ(similarity_measure, 7.6666666666666661);
+
+  ed_string_t1 ="{CC}{CA,A}{C}{C}{,AAC}";
+  ed_string_t2 ="{CA,ACC}{C,}{A,CA}{C,}{CA,AA}";
+  setup_and_run();
+  EXPECT_DOUBLE_EQ(similarity_measure, 9.2);
+
+
 }
 
 

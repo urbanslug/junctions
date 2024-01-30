@@ -448,6 +448,15 @@ FindEndIndexes(const char *query,
     looper(l_data, q_bynd_txt, a);
   };
 
+  // match internal nodes with the query but ignore the matched char
+  auto append_internal_matches = [&](char c) -> void {
+    for (auto k = current_vertex->g.begin(); k != current_vertex->g.end(); k++) {
+      if (k->first == c) { continue; }
+      l_data = Get_Leaf_Data(k->second.v);
+      looper(l_data, true);
+    }
+  };
+
   // when only_term_branch is:
   //   true, we check the branch with the terminator char only
   //   false, we check all branches leading out
@@ -518,6 +527,11 @@ FindEndIndexes(const char *query,
       // last_with_underscore got set
       append_underscore_matches();
       return matches;
+    }
+
+    // consider internal nodes as matches when we can continue matching
+    if (matched_a_char && has_qry_char){
+        append_internal_matches(c);
     }
 
 
