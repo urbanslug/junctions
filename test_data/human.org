@@ -71,18 +71,14 @@ referring to the corresponding [[tbl:degenerate-letter-index][dataset descriptio
 
 
 
-| ID | Dataset 1     | Dataset 2    | N_1 | m_1 | N_2 | m_2 |   Naive |  Improved | Gene     |
-|----+---------------+--------------+-----+-----+-----+-----+---------+-----------+----------|
-|  0 | 1000G all (0) | SNP (3)      |     |     |     |     | 1.26589 | 0.0388119 | HLA-B    |
-|  1 | 1000G (6)     | TOPMed (7)   |     |     |     |     | 1.43796 |  0.270942 | HLA-DRB1 |
-|  2 | gNomad (8)    | TOPMed  (10) |     |     |     |     |    1.04 |      0.10 | HLA-DRB1 |
-|  3 | 1000G (12)    | gNomad (17)  |     |     |     |     | 11.3456 |  0.314023 | ACTB     |
-|  4 | 1000G (18)    | 1000G (21)   |     |     |     |     |   71.53 |      0.28 |          |
-|  5 | TOPMed (19)   | TOPMed (22)  |     |     |     |     |   97.20 |     41.67 |          |
-|  6 | gNomad (20)   | gNomad (23)  |     |     |     |     |   75.75 |      2.93 |          |
-|  7 | TOPMed (1)    | gNomad (5)   |     |     |     |     |    1.62 |      0.75 | HLA-B    |
-|  8 | 1000G (12)    | 1000G (15)   |     |     |     |     |   10.13 |      0.11 | ACTB     |
-|  9 | topmed (13)   | topmed (16)  |     |     |     |     |   16.38 |     15.05 | ACTB     |
+| ID | Dataset 1     | Dataset 2   | N_1 | m_1 | N_2 | m_2 | Naive | Improved | Gene  |
+|----+---------------+-------------+-----+-----+-----+-----+-------+----------+-------|
+|  0 | 1000G (0)     | SNP (3)     |     |     |     |     |  1.25 |     0.05 | HLA-B |
+|  1 | 1000G (12)    | gNomad (17) |     |     |     |     |  9.82 |     0.53 | ACTB  |
+|  2 | TOPMed (1)    | gNomad (5)  |     |     |     |     |  2.11 |     1.06 | HLA-B |
+|  3 | 1000G (12)    | 1000G (15)  |     |     |     |     |  9.12 |     0.12 | ACTB  |
+|  4 | topmed (13)   | topmed (16) |     |     |     |     | 15.51 |    11.89 | ACTB  |
+|  5 | TOPMed (2)    | gNomad (4)  |     |     |     |     |  2.10 |     1.13 | HLA-B |
 
 * Data download
 
