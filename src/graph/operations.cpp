@@ -1,5 +1,8 @@
-#include "./graph.hpp"
 #include <cstddef>
+
+#include "./graph.hpp"
+
+
 
 /**
  *
@@ -180,8 +183,8 @@ graph::Graph graph::compute_intersection_graph(eds::EDS &eds_t1,
     -------------
   */
 
-  graph::Graph g = graph::Graph(eds_t1.get_size() + eds_t1.get_eps_count(),
-                                eds_t2.get_size() + eds_t2.get_eps_count());
+  graph::Graph g =
+    graph::Graph(eds_t1.get_size() + eds_t1.get_eps_count(), eds_t2.get_size() + eds_t2.get_eps_count());
 
   if (app_config.verbosity()) { g.dbg_print(); }
 
@@ -438,15 +441,13 @@ std::double_t match_stats_self(eds::EDS& e) {
     t1_letter_maxes[i] += t1_letter_maxes[i+1];
   }
 
-  std::size_t self_prefix_sum =
-    accumulate(t1_letter_maxes.begin(), t1_letter_maxes.end(), 0);
+  std::size_t self_prefix_sum = accumulate(t1_letter_maxes.begin(), t1_letter_maxes.end(), 0);
 
-  //std::cout << "self prefix sum = " << self_prefix_sum << "\n";
+  // std::cout << "self prefix sum = " << self_prefix_sum << "\n";
 
-  std::double_t ms_t1_t1 =
-    static_cast<std::double_t>(self_prefix_sum) / static_cast<std::double_t>(n);
+  std::double_t ms_t1_t1 = static_cast<std::double_t>(self_prefix_sum) / static_cast<std::double_t>(n);
 
-  return ms_t1_t1;
+  return ms_t1_t1 * 2;
 }
 
 std::double_t graph::distance(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds_t2) {
@@ -519,24 +520,17 @@ std::double_t graph::distance(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds_t
 
   // MS_T1_T2
   std::double_t ms_t1_t2 =
-    static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_t1);
-  std::double_t ms_t2_t1 =
-    static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_t2);
+    (static_cast<std::double_t>( ms_w.sum()) / static_cast<std::double_t>(len_t1)) +
+    (static_cast<std::double_t>( ms_q.sum()) / static_cast<std::double_t>(len_t2));
 
   /*
-  std::cout << "ms_t1_sum " << ms_w.sum() << " ms_t2_sum " << ms_q.sum()
-            << " ms_t1_t2 " << ms_t1_t2 << " ms_t2_t1 " << ms_t2_t1
-            << " ms_t1_t1 " << ms_t1_t1 << " ms_t2_t2 " << ms_t2_t2
-            << " log_N_1 " << log_N_1 << " log_N_2: " << log_N_2
-            << "\n";
+  std::cout << "ms_t1_sum " << ms_w.sum() << " ms_t2_sum " << ms_q.sum() << "\n"
+            << " ms_t1_t2 " << ms_t1_t2 << "\n"
+            << " ms_t1_t1 " << ms_t1_t1 << " ms_t2_t2 " << ms_t2_t2 << "\n"
+            << " log_N_1 " << log_N_1 << " log_N_2: " << log_N_2 << "\n";
   */
 
-  std::double_t  d_t1_t2 = log_N_2 / ms_t1_t2 - log_N_1/ ms_t1_t1;
-  std::double_t  d_t2_t1 = log_N_1 / ms_t2_t1 - log_N_2/ ms_t2_t2;
-
-  //return ms_t1_t2 + ms_t2_t1;
-
-  return (d_t1_t2 + d_t2_t1) / 2.0;
+  return ((log_N_1 + log_N_2)/ms_t1_t2) - (log_N_1 / ms_t1_t1) - (log_N_2 / ms_t2_t2);
 }
 
 std::double_t graph::similarity(graph::Graph &g, eds::EDS& eds_t1, eds::EDS& eds_t2) {

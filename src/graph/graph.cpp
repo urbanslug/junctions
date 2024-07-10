@@ -84,7 +84,7 @@ std::size_t graph::Graph::compute_index(std::size_t x, std::size_t y) {
   return (x * (this->N_2 + 1)) + y;
 }
 
-graph::Vertex & graph::Graph::get_node(std::size_t node_idx) {
+graph::Vertex& graph::Graph::get_node(std::size_t node_idx) {
   std::map<size_t, graph::Vertex>::iterator it = sparse_adj.find(node_idx);
   if (it != sparse_adj.end()) {
     return it->second;
