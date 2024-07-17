@@ -107,6 +107,7 @@ matching statistics; the option `-s` denotes that a similarity measure will be
 computed from the matching statistics.
 
 ## Example 3: Breakpoint Matching Statistics
+In this flavour, matching statistics are considered only between breakpoints.
 Consider two ED strings x and y encoded in the corresponding files below:
 
 ```
