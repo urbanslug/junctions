@@ -1,4 +1,4 @@
-# Junctions
+# Pangenome comparison via ED strings
 
 This is a software suite for pangenome comparison via elastic-degenerate (ED) strings.
 
