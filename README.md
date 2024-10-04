@@ -139,5 +139,5 @@ Comparing Elastic-Degenerate Strings: Algorithms, Lower Bounds, and Applications
 
 
 Estéban Gabory, Njagi Moses Mwaniki, Nadia Pisanti, Solon P. Pissis, Jakub Radoszewski, Michelle Sweering, Wiktor Zuba:
-Pangenome Comparison via ED Strings. (in preparation)
+Pangenome Comparison via ED Strings. ([Front. Bioinform.](https://doi.org/10.3389/fbinf.2024.1397036))
 ```
